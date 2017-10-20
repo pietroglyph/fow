@@ -47,7 +47,7 @@ var seattleBainbridgePath = &ferryPath{
 var lastRequested time.Time
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
-	if lastRequested.IsZero() {
+	if lastRequested.IsZero() || data.locations == nil {
 		lastRequested = time.Now()
 
 		// We haven't updated in a while, so we just give a zero value and wait for
