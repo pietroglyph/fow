@@ -1,6 +1,6 @@
 #include <Arduino.h>
 
-int main( void ){
+int main(void){
 
   //Initialise Arduino functionality.
   init();
@@ -10,10 +10,10 @@ int main( void ){
     USBDevice.attach();
   #endif
 
-  while( true ){
+  while(true){
 
     //Process the serial libaries event queue.
-    if( serialEventRun ) serialEventRun();
+    if(serialEventRun) serialEventRun();
   }
   //Execution should never reach this point.
   return 0x00;
