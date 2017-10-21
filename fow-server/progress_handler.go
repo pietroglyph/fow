@@ -47,11 +47,10 @@ var seattleBainbridgePath = &ferryPath{
 var lastRequested time.Time
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
-	if lastRequested.IsZero() || data.locations == nil {
+	// Give dummy data until the data is no longer nil or stale
+	if time.Now().Sub(data.lastUpdated).Seconds() > config.idleAfter || data.locations == nil {
 		lastRequested = time.Now()
 
-		// We haven't updated in a while, so we just give a zero value and wait for
-		// the next request.
 		seattleBainbridgePath.updateLength()
 		fmt.Fprint(w, "0,0;", time.Now().Unix())
 		return

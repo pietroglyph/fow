@@ -8,22 +8,24 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	flag "github.com/ogier/pflag"
 	"github.com/pietroglyph/go-wsf"
 )
 
 type ferryData struct {
-	locations *wsf.VesselLocations
-	updateMux sync.Mutex
+	locations   *wsf.VesselLocations
+	lastUpdated time.Time
+	updateMux   sync.Mutex
 }
 
 type configuration struct {
 	accessCode       string
 	bind             string
 	terminal         int
-	updateFrequency  int
-	idleAfter        int
+	updateFrequency  float64
+	idleAfter        float64
 	routeWidthFactor float64
 }
 
@@ -35,8 +37,8 @@ func main() {
 	flag.StringVarP(&config.accessCode, "accesscode", "c", "", "WSDOT Traveller Information API key (provisioned at https://wsdot.wa.gov/traffic/api/)") // Required
 	flag.StringVarP(&config.bind, "bind", "b", "localhost:8000", "Host IP and port for the webserver to run on.")
 	flag.IntVarP(&config.terminal, "terminal", "t", 3, "Terminal to track ferries to and from.") // 3 is Bainbridge Island
-	flag.IntVarP(&config.updateFrequency, "update", "u", 15, "Frequency in seconds to update data from the REST API.")
-	flag.IntVarP(&config.idleAfter, "idle", "i", 60, "Time in seconds after an update to stop updating.")
+	flag.Float64VarP(&config.updateFrequency, "update", "u", 15, "Frequency in seconds to update data from the REST API.")
+	flag.Float64VarP(&config.idleAfter, "idle", "i", 60, "Time in seconds after an update to stop updating.")
 	flag.Float64VarP(&config.routeWidthFactor, "width", "w", 300, "The 'width' factor of the route, this determines how far away the ferry can be to still be considered on route")
 	flag.Parse()
 

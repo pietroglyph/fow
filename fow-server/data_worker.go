@@ -7,16 +7,14 @@ import (
 	"github.com/pietroglyph/go-wsf"
 )
 
-var lastUpdated time.Time
-
 func (d *ferryData) keepUpdated(wsfClient *wsf.Client) {
 	for {
-		if time.Now().Sub(lastUpdated).Seconds() < float64(config.updateFrequency) {
+		if time.Now().Sub(d.lastUpdated).Seconds() < float64(config.updateFrequency) {
 			continue
 		} else if time.Now().Sub(lastRequested).Seconds() >= float64(config.idleAfter) {
 			continue
 		}
-		lastUpdated = time.Now()
+		d.lastUpdated = time.Now()
 		vesselLocations, err := wsfClient.Vessels.VesselLocations()
 		if err != nil {
 			log.Println(err.Error())
