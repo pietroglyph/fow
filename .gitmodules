@@ -1,0 +1,3 @@
+[submodule "fow-mini/Adafruit-Motor-Shield-library"]
+	path = fow-mini/Adafruit-Motor-Shield-library
+	url = https://github.com/adafruit/Adafruit-Motor-Shield-library/
