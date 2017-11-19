@@ -1,6 +1,6 @@
-#include "Connection.h"
+#include "ConnectionManager.h"
 
-Connection::Connection(char* programName) : name(programName) {
+ConnectionManager::ConnectionManager(char* programName) : name(programName) {
   server = ESP8266WebServer(80);
   delay(5000);
   Serial.begin(115200);
@@ -8,6 +8,7 @@ Connection::Connection(char* programName) : name(programName) {
   Serial.println("\r\nStarting the ferry connection configuration WiFi AP...");
 
   // Setup in soft access point mode
+  WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(name);
 
   // Start a mDNS responder so that users can connect easily
@@ -24,7 +25,6 @@ Connection::Connection(char* programName) : name(programName) {
       ssid = server.arg("ssid");
       password = server.arg("password");
 
-      WiFi.mode(WIFI_AP_STA);
       WiFi.disconnect();
       WiFi.begin(ssid.c_str(), password.c_str());
 
@@ -83,11 +83,11 @@ Connection::Connection(char* programName) : name(programName) {
   Serial.println("HTTP server has been started.");
 }
 
-void Connection::update() {
+void ConnectionManager::update() {
   server.handleClient();
 }
 
-String Connection::get() {
+String ConnectionManager::get() {
   // We're probably not connected, so don't do anything
   if (ssid == "") {
     return "";

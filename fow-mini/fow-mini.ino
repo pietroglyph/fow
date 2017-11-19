@@ -1,6 +1,6 @@
-#include "Connection.h"
+#include "ConnectionManager.h"
 
-Connection conn("fow-mini");
+ConnectionManager conn("fow-mini");
 
 void setup() {
 }

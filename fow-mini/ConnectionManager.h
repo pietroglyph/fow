@@ -1,13 +1,13 @@
-#ifndef Connection_h
-#define Connection_h
+#ifndef ConnectionManager_h
+#define ConnectionManager_h
 
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 
-class Connection {
+class ConnectionManager {
 public:
-  Connection(char* programName);
+  ConnectionManager(char* programName);
 
   void update();
   String get();
