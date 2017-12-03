@@ -1,20 +1,20 @@
 /*
-    Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
+   Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
 
-    This file is part of Ferries Over Winslow.
-    
-    Ferries Over Winslow is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+   This file is part of Ferries Over Winslow.
 
-    Ferries Over Winslow is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Ferries Over Winslow is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
-    You should have received a copy of the GNU General Public License
-    along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
+   Ferries Over Winslow is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package main
@@ -71,7 +71,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		lastRequested = time.Now()
 
 		seattleBainbridgePath.updateLength()
-		fmt.Fprint(w, "0,0;", time.Now().Unix(), "\n")
+		fmt.Fprint(w, "0,0,0", "\n")
 		return
 	}
 	lastRequested = time.Now()
@@ -96,8 +96,8 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		seattleBainbridgePath.progress(&locationData, time.Duration(0)*time.Second),
 		",",
 		seattleBainbridgePath.progress(&locationData, time.Duration(config.updateFrequency)*time.Second),
-		";",
-		time.Time(locationData.TimeStamp).Unix(),
+		",",
+		int64(time.Now().Sub(time.Time(locationData.TimeStamp))/time.Millisecond),
 		"\n",
 	)
 }
