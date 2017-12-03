@@ -52,7 +52,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		lastRequested = time.Now()
 
 		seattleBainbridgePath.updateLength()
-		fmt.Fprint(w, "0,0;", time.Now().Unix(), "\n")
+		fmt.Fprint(w, "0,0;", time.Now().Unix(), "\nEOF")
 		return
 	}
 	lastRequested = time.Now()
@@ -79,7 +79,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		seattleBainbridgePath.progress(&locationData, time.Duration(config.updateFrequency)*time.Second),
 		";",
 		time.Time(locationData.TimeStamp).Unix(),
-		"\n",
+		"\nEOF",
 	)
 }
 
