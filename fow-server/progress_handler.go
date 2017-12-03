@@ -71,7 +71,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		lastRequested = time.Now()
 
 		seattleBainbridgePath.updateLength()
-		fmt.Fprint(w, "0,0,0", "\n")
+		fmt.Fprint(w, formatOutput(0, 0, 0))
 		return
 	}
 	lastRequested = time.Now()
@@ -88,18 +88,19 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	data.updateMux.Unlock()
 
 	if locationData.AtDock || !locationData.InService {
-		fmt.Fprint(w, "0,0;", time.Now().Unix())
+		fmt.Fprint(w, formatOutput(0, 0, 0))
 		return
 	}
 
-	fmt.Fprint(w,
+	fmt.Fprint(w, formatOutput(
 		seattleBainbridgePath.progress(&locationData, time.Duration(0)*time.Second),
-		",",
 		seattleBainbridgePath.progress(&locationData, time.Duration(config.updateFrequency)*time.Second),
-		",",
 		int64(time.Now().Sub(time.Time(locationData.TimeStamp))/time.Millisecond),
-		"\n",
-	)
+	))
+}
+
+func formatOutput(one interface{}, two interface{}, three interface{}) string {
+	return fmt.Sprint(one, ",", two, ",", three)
 }
 
 func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.Duration) float64 {
