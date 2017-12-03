@@ -7,23 +7,23 @@
 #include <ESP8266HTTPClient.h>
 
 class ConnectionManager {
-public:
-  ConnectionManager(String programName);
+  public:
+    ConnectionManager(String programName);
 
-  void update();
-  String get();
-private:
-  /* 
-   *  DNS doesn't work with WiFi client in this code. This bug took me two weeks to fix. I ended up using HTTPClient though
-   *  because of its TCP connection reuse, and convinient request processing (you can manipulate headers and it separates
-   *  the body).
-  */
-  // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
-  const String host = "fow.nalcad.tk";
-  const String path = "/progress";
-  const int port = 80;
-  const unsigned long timeout = 8000; // In milleseconds
-  const String configPage = R"(<!DOCTYPE html>
+    void update();
+    String get();
+  private:
+    /*
+        DNS doesn't work with WiFi client in this code. This bug took me two weeks to fix. I ended up using HTTPClient though
+        because of its TCP connection reuse, and convinient request processing (you can manipulate headers and it separates
+        the body).
+    */
+    // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
+    const String host = "fow.nalcad.tk";
+    const String path = "/progress";
+    const int port = 80;
+    const unsigned long timeout = 8000; // In milleseconds
+    const String configPage = R"(<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -54,12 +54,12 @@ private:
 </body>
   )";
 
-  ESP8266WebServer server = ESP8266WebServer(80);
-  HTTPClient client;
+    ESP8266WebServer server = ESP8266WebServer(80);
+    HTTPClient client;
 
-  String name;
-  String ssid;
-  String password;
+    String name;
+    String ssid;
+    String password;
 };
 
 #endif
