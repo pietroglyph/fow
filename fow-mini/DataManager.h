@@ -2,7 +2,7 @@
     Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
 
     This file is part of Ferries Over Winslow.
-    
+
     Ferries Over Winslow is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -20,22 +20,25 @@
 #ifndef DataManager_h
 #define DataManager_h
 
+#include <vector>
 #include "ConnectionManager.h"
 
 class DataManager {
   public:
     DataManager(ConnectionManager* conn);
 
-    long refreshRate = 5000; // in milliseconds
+    long refreshRate = 12000; // in milliseconds
 
     void update();
     double getProgress();
   private:
+    const unsigned long endDurationAhead = 15000; // The end progress is 15 seconds ahead of the first
     unsigned long lastUpdated = 0;
-    double startProgress;
-    double endProgress;
+    unsigned long progressStartTime = 0;
+    double startProgress = 0;
+    double endProgress = 0;
 
-    void processResponse(String resp);
+    std::vector<String> split(const String &text, char sep);
 
     ConnectionManager* connection;
 };

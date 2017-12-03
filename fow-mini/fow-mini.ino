@@ -2,7 +2,7 @@
     Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
 
     This file is part of Ferries Over Winslow.
-    
+
     Ferries Over Winslow is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
@@ -18,13 +18,21 @@
 */
 
 #include "ConnectionManager.h"
+#include "DataManager.h"
 
-ConnectionManager* conn = 0; // null reference on the heap
+// null references on the heap
+ConnectionManager* conn = 0;
+DataManager* data = 0;
 
 void setup() {
   conn = new ConnectionManager("fow-mini");
+  data = new DataManager(conn);
+  Serial.begin(115200);
+  delay(10);
 }
 
 void loop() {
   conn->update();
+  data->update();
+  Serial.println(data->getProgress());
 }
