@@ -4,6 +4,7 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
+#include <ESP8266HTTPClient.h>
 
 class ConnectionManager {
 public:
@@ -12,9 +13,12 @@ public:
   void update();
   String get();
 private:
-  // DNS doesn't seem to work with this code, so we have to connect to the IP and then give the host in the header
-  // TODO: Make ip/host/port configurable so we don't brick the ferries when these change
-  const String ip = "192.99.57.1";
+  /* 
+   *  DNS doesn't work with WiFi client in this code. This bug took me two weeks to fix. I ended up using HTTPClient though
+   *  because of its TCP connection reuse, and convinient request processing (you can manipulate headers and it separates
+   *  the body).
+  */
+  // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
   const String host = "fow.nalcad.tk";
   const String path = "/progress";
   const int port = 80;
@@ -51,7 +55,7 @@ private:
   )";
 
   ESP8266WebServer server = ESP8266WebServer(80);
-  WiFiClient client;
+  HTTPClient client;
 
   String name;
   String ssid;

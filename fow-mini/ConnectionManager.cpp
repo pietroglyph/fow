@@ -10,6 +10,9 @@ ConnectionManager::ConnectionManager(String programName) : name(programName) {
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(name.c_str());
 
+  // Tell the http client to allow reuse if the server supports it (we make lots of requests, this should decrease overhead)
+  client.setReuse(true);
+
   // Start a mDNS responder so that users can connect easily
   Serial.printf("MDNS responder initalization has %s.\n", MDNS.begin(name.c_str()) ? "been successful" : "failed");
 
@@ -64,7 +67,7 @@ ConnectionManager::ConnectionManager(String programName) : name(programName) {
         break;
     }
     server.send(200, "text/html",
-                String("<html><body style='background-color: white; font-size: 12px; font-family: monospace;'>Status: <br>Network Name: ") + ssid +
+                String("<html><body style='background-color: white; font-size: 12px; font-family: monospace;'>Network Name: ") + ssid +
                 "<br>Password: " + password +
                 "<br>Connection Status: " + connStatus +
                 "</body></html>");
@@ -94,25 +97,13 @@ String ConnectionManager::get() {
     return "";
   }
 
-  if (!client.connect(ip.c_str(), port)) {
-    Serial.printf("Couldn't connect to %s.\n", ip.c_str());
+  client.begin(host, port, path);
+
+  int statusCode = client.GET();
+  if (statusCode != HTTP_CODE_OK) {
+    Serial.printf("Remote server returned a non-OK status code of %i.\n", statusCode);
     return "";
   }
 
-  client.print(String("GET ") + path + " HTTP/1.1\n" +
-               "Host: " + host + "\n" +
-               "Connection: close\n\n");
-
-  unsigned long startTime = millis();
-  while (!client.available()) {
-    if (millis() - startTime > timeout) {
-      Serial.println("GET timed out.");
-      client.stop();
-      return "";
-    }
-  }
-
-  while (client.available() && client.connected()) {
-    return client.readStringUntil('\nEOF');
-  }
+  return client.getString(); // This only returns the response body.
 }
