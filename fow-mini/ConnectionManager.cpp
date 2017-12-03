@@ -1,18 +1,17 @@
 #include "ConnectionManager.h"
 
-ConnectionManager::ConnectionManager(char* programName) : name(programName) {
-  server = ESP8266WebServer(80);
-  delay(5000);
+ConnectionManager::ConnectionManager(String programName) : name(programName) {
   Serial.begin(115200);
+  delay(10);
 
-  Serial.println("\r\nStarting the ferry connection configuration WiFi AP...");
+  Serial.println("\nStarting the ferry connection configuration WiFi AP...");
 
   // Setup in soft access point mode
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(name);
+  WiFi.softAP(name.c_str());
 
   // Start a mDNS responder so that users can connect easily
-  Serial.printf("MDNS responder initalization has %s.\n", MDNS.begin(name) ? "been successful" : "failed");
+  Serial.printf("MDNS responder initalization has %s.\n", MDNS.begin(name.c_str()) ? "been successful" : "failed");
 
   // In case the MDNS responder can't start
   Serial.printf("Server local IP is %s.\n", WiFi.softAPIP().toString().c_str());
@@ -64,10 +63,11 @@ ConnectionManager::ConnectionManager(char* programName) : name(programName) {
         connStatus = "Other";
         break;
     }
-    server.send(200, "text/plain",
-                String("Status: \n\tNetwork Name: ") + ssid +
-                "\n\tPassword: " + password +
-                "\n\tConnection Status: " + connStatus);
+    server.send(200, "text/html",
+                String("<html><body style='background-color: white; font-size: 12px; font-family: monospace;'>Status: <br>Network Name: ") + ssid +
+                "<br>Password: " + password +
+                "<br>Connection Status: " + connStatus +
+                "</body></html>");
   });
 
   server.on("/rawresponse", [&]() {
@@ -88,31 +88,31 @@ void ConnectionManager::update() {
 }
 
 String ConnectionManager::get() {
-  // We're probably not connected, so don't do anything
-  if (ssid == "") {
+  // If we're probably not connected, don't do anything (We have to check for ssid beacuse WL_CONNECTED isn't always reliable)
+  if (ssid == "" || WiFi.status() != WL_CONNECTED) {
+    Serial.println("GET aborted, ssid is blank or WiFi isn't connected.");
     return "";
   }
 
-  if (!client.connect(host, port)) {
-    Serial.printf("Couldn't connect to %s.\n", host);
+  if (!client.connect(ip.c_str(), port)) {
+    Serial.printf("Couldn't connect to %s.\n", ip.c_str());
     return "";
   }
 
-  client.print(String("GET ") + path + " HTTP/1.1\r\n" +
-               "Host: " + host + "\r\n" +
-               "Connection: close\r\n\r\n");
+  client.print(String("GET ") + path + " HTTP/1.1\n" +
+               "Host: " + host + "\n" +
+               "Connection: close\n\n");
 
   unsigned long startTime = millis();
   while (!client.available()) {
     if (millis() - startTime > timeout) {
-      client.stop();
       Serial.println("GET timed out.");
+      client.stop();
       return "";
     }
   }
 
-
-  while (client.available()) {
-    return client.readStringUntil('\n');
+  while (client.available() && client.connected()) {
+    return client.readStringUntil('\nEOF');
   }
 }

@@ -7,16 +7,19 @@
 
 class ConnectionManager {
 public:
-  ConnectionManager(char* programName);
+  ConnectionManager(String programName);
 
   void update();
   String get();
 private:
-  const char* host = "fow.naclad.tk";
-  const char* path = "/progress";
+  // DNS doesn't seem to work with this code, so we have to connect to the IP and then give the host in the header
+  // TODO: Make ip/host/port configurable so we don't brick the ferries when these change
+  const String ip = "192.99.57.1";
+  const String host = "fow.nalcad.tk";
+  const String path = "/progress";
   const int port = 80;
   const unsigned long timeout = 8000; // In milleseconds
-  const char* configPage = R"(<!DOCTYPE html>
+  const String configPage = R"(<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
@@ -28,6 +31,7 @@ private:
     }
     iframe {
       border: none;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='100%' width='100%'><text x='0' y='15' fill='black' font-size='20'>Loading status information...</text></svg>");
     }
   </style>
 </head>
@@ -46,10 +50,10 @@ private:
 </body>
   )";
 
-  ESP8266WebServer server;
+  ESP8266WebServer server = ESP8266WebServer(80);
   WiFiClient client;
 
-  char* name;
+  String name;
   String ssid;
   String password;
 };
