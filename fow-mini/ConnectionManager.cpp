@@ -19,7 +19,7 @@
 
 #include "ConnectionManager.h"
 
-ConnectionManager::ConnectionManager(String programName) : name(programName) {
+ConnectionManager::ConnectionManager(const String programName) : name(programName) {
   Serial.begin(115200);
   delay(10);
 
@@ -112,7 +112,7 @@ void ConnectionManager::update() {
 String ConnectionManager::get() {
   // If we're probably not connected, don't do anything (We have to check for ssid beacuse WL_CONNECTED isn't always reliable)
   if (ssid == "" || WiFi.status() != WL_CONNECTED) {
-    Serial.println("GET aborted, ssid is blank or WiFi isn't connected.");
+    Serial.println("GET aborted, ssid is blank and/or WiFi isn't connected.");
     return "";
   }
 

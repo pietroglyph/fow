@@ -21,25 +21,27 @@
 #define DataManager_h
 
 #include <vector>
+#include <float.h> // for finding the maximum capacity of doubles
 #include "ConnectionManager.h"
 
 class DataManager {
   public:
     DataManager(ConnectionManager* conn);
 
-    long refreshRate = 12000; // in milliseconds
+    long refreshRate = 1000; // in milliseconds
 
     void update();
     double getProgress();
   private:
     const unsigned long endDurationAhead = 15000; // The end progress is 15 seconds ahead of the first
     unsigned long lastUpdated = 0;
-    unsigned long progressStartTime = 0;
+    unsigned long progressStartTimeOffset = 0;
     double startProgress = 0;
     double endProgress = 0;
 
     std::vector<String> split(const String &text, char sep);
 
+    void(* resetFunc) (void) = 0;
     ConnectionManager* connection;
 };
 

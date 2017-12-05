@@ -19,8 +19,6 @@
 
 #include "DataManager.h"
 
-// TODO
-
 DataManager::DataManager(ConnectionManager* conn) : connection(conn) {
   Serial.begin(115200);
   delay(10);
@@ -42,13 +40,21 @@ void DataManager::update() {
   char *end;
   startProgress = atof(response.at(0).c_str());
   endProgress = atof(response.at(1).c_str());
-  progressStartTime = millis() - strtoul(response.at(2).c_str(), &end, 10); // The third number is how long ago (in milliseconds) the first number was valid
+  // progressStartTimeOffset is how long ago (in milliseconds) the first number was valid
+  progressStartTimeOffset = millis() - strtoul(response.at(2).c_str(), &end, 10);
 }
 
 double DataManager::getProgress() {
-  // FIXME: This math is wrong
-  double interpFactor = double(millis() / (millis() - progressStartTime + endDurationAhead + (millis()-lastUpdated)));
-  return ((endProgress - startProgress) * interpFactor) + startProgress;
+  long double divisor = millis() - (progressStartTimeOffset + millis() - lastUpdated) + endDurationAhead;
+  if (millis() > LDBL_MAX) {
+    // We will overflow interpFactor if this is true (unsigned long can get twice as large as long double, even though they're the same precision)
+    // We're forced to reset if this happens, but it's a very edge case so something this drastic is acceptable
+    Serial.println("millis would overflow a double, resetting.");
+    resetFunc();
+    return 0.0;
+  }
+  long double interpFactor = double(millis() / divisor);
+  return (((endProgress - startProgress) * interpFactor) + startProgress);
 }
 
 std::vector<String> DataManager::split(const String &text, char sep) {
@@ -56,7 +62,7 @@ std::vector<String> DataManager::split(const String &text, char sep) {
   size_t start = 0, end = 0;
   while ((end = text.indexOf(sep, start)) != -1) {
     if (end != start) {
-      tokens.push_back(text.substring(start, end - start));
+      tokens.push_back(text.substring(start, end));
     }
     start = end + 1;
   }

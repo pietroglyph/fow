@@ -20,7 +20,7 @@
 #include "ConnectionManager.h"
 #include "DataManager.h"
 
-// null references on the heap
+// null references on the heap (these should never be destroyed, so we don't need to worry about managing this memory)
 ConnectionManager* conn = 0;
 DataManager* data = 0;
 
