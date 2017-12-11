@@ -19,38 +19,83 @@
 
 #include "MotorManager.h"
 
-Adafruit_StepperMotor *primaryAdafruitStepper;
-Adafruit_StepperMotor *secondaryAdafruitStepper;
+// This is weird, we should probably just put it into its own class
+namespace Wrapper {
+std::function<void(void)> l_forwardPrimary;
+std::function<void(void)> l_backwardPrimary;
+std::function<void(void)> l_forwardSecondary;
+std::function<void(void)> l_backwardSecondary;
 
-void primaryForwardStep() {
-  primaryAdafruitStepper->step(1, FORWARD, INTERLEAVE);
+void setMotors(std::function<void(void)> fp, std::function<void(void)> bp, std::function<void(void)> fs, std::function<void(void)> bs) {
+  l_forwardPrimary = fp;
+  l_backwardPrimary = bp;
+  l_forwardSecondary = fs;
+  l_backwardSecondary = bs;
 }
 
-void primaryBackwardStep() {
-  primaryAdafruitStepper->step(1, BACKWARD, INTERLEAVE);
+extern "C" {
+  void forwardPrimaryWrapper() {
+    l_forwardPrimary();
+  }
+  void backwardPrimaryWrapper() {
+    l_backwardPrimary();
+  }
+  void forwardSecondaryWrapper() {
+    l_backwardPrimary();
+  }
+  void backwardSecondaryWrapper() {
+    l_backwardPrimary();
+  }
 }
-
-void secondaryForwardStep() {
-  // XXX: This behavior is undefined if secondary is null (which is easily possible)
-  secondaryAdafruitStepper->step(1, FORWARD, INTERLEAVE);
-}
-
-void secondaryBackwardStep() {
-  // XXX: This behavior is undefined if secondary is null (which is easily possible)
-  secondaryAdafruitStepper->step(1, BACKWARD, INTERLEAVE);
 }
 
 MotorManager::MotorManager(Modes mode) : mode(mode) {
+  using namespace Wrapper;
+
   Serial.begin(115200);
   delay(10);
 
   motorShield = Adafruit_MotorShield();
   motorShield.begin();
 
+  primaryAdafruitStepper = motorShield.getStepper(513, 1);
+  secondaryAdafruitStepper = motorShield.getStepper(513, 3);
+
+  std::function<void(void)> l_forwardPrimary = [&] {
+    if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, FORWARD, SINGLE);
+  };
+  std::function<void(void)> l_backwardPrimary = [&] {
+    if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, BACKWARD, SINGLE);
+  };
+
+  std::function<void(void)> l_forwardSecondary = [&] {
+    if (secondaryAdafruitStepper) secondaryAdafruitStepper->step(1, FORWARD, SINGLE);
+  };
+  std::function<void(void)> l_backwardSecondary = [&] {
+    if (secondaryAdafruitStepper) secondaryAdafruitStepper->step(1, BACKWARD, SINGLE);
+  };
+
+  setMotors(l_forwardPrimary, l_backwardPrimary, l_forwardSecondary, l_backwardSecondary);
+
+  primaryStepper = new AccelStepper(forwardPrimaryWrapper, backwardPrimaryWrapper);
+  secondaryStepper = new AccelStepper(forwardSecondaryWrapper, backwardSecondaryWrapper);
+
+  primaryStepper->setMaxSpeed(300.0);
+  primaryStepper->setAcceleration(100.0);
+
+  secondaryStepper->setMaxSpeed(300.0);
+  secondaryStepper->setAcceleration(100.0);
+
+  // Zero the steppers by making them run to their end range
+  primaryStepper->moveTo(513);
+  secondaryStepper->moveTo(513);
+}
+
+void MotorManager::update() {
   switch (mode) {
     case Modes::SINGLE_TEST :
-      primaryAdafruitStepper = motorShield.getStepper(300, 1);
-      secondaryAdafruitStepper = 0; // null
+      if (primaryStepper->distanceToGo() == 0)
+        primaryStepper->moveTo(-primaryStepper->currentPosition());
       break;
     case Modes::DOUBLE_CLOCK :
       Serial.println("DOUBLE_CLOCK motor mode is unimplemented."); // TODO
@@ -60,23 +105,6 @@ MotorManager::MotorManager(Modes mode) : mode(mode) {
       break;
   }
 
-  primaryStepper = new AccelStepper(primaryForwardStep, primaryBackwardStep);
-  secondaryStepper = new AccelStepper(secondaryForwardStep, secondaryBackwardStep);
-
-  primaryStepper->setMaxSpeed(300.0);
-  primaryStepper->setAcceleration(100.0);
-
-  secondaryStepper->setMaxSpeed(300.0);
-  secondaryStepper->setAcceleration(100.0);
-
-  // Zero the steppers by making them run to their end range
-  primaryStepper->moveTo(1000000); // This appears to be the max for INTERLEAVED steppers
-  secondaryStepper->moveTo(1000000);
-}
-
-void MotorManager::update() {
   primaryStepper->run();
   secondaryStepper->run();
 }
-
-

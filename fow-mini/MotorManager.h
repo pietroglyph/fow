@@ -20,6 +20,7 @@
 #ifndef MotorManager_h
 #define MotorManager_h
 
+#include <functional>
 #include <Wire.h>
 #include <AccelStepper.h>
 #include <Adafruit_MotorShield.h>
@@ -37,10 +38,13 @@ class MotorManager {
     void update();
     void setMode(Modes mode);
   private:
-    Modes mode = Modes::SINGLE_TEST;
+    Modes mode;
+
     Adafruit_MotorShield motorShield;
-    AccelStepper *primaryStepper;
-    AccelStepper *secondaryStepper;
+    Adafruit_StepperMotor *primaryAdafruitStepper = NULL;
+    Adafruit_StepperMotor *secondaryAdafruitStepper = NULL;
+    AccelStepper *primaryStepper = NULL;
+    AccelStepper *secondaryStepper = NULL;
 };
 
 #endif

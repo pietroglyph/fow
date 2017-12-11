@@ -19,14 +19,17 @@
 
 #include "ConnectionManager.h"
 #include "DataManager.h"
+#include "MotorManager.h"
 
 // null references on the heap (these should never be destroyed, so we don't need to worry about managing this memory)
-ConnectionManager* conn = 0;
-DataManager* data = 0;
+ConnectionManager* conn = NULL;
+DataManager* data = NULL;
+MotorManager* motors = NULL;
 
 void setup() {
   conn = new ConnectionManager("fow-mini");
   data = new DataManager(conn);
+  motors = new MotorManager(MotorManager::Modes::SINGLE_TEST);
   Serial.begin(115200);
   delay(10);
 }
@@ -34,5 +37,6 @@ void setup() {
 void loop() {
   conn->update();
   data->update();
+  motors->update();
   Serial.println(data->getProgress());
 }
