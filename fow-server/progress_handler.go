@@ -77,26 +77,39 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	lastRequested = time.Now()
 
 	data.updateMux.Lock()
-	var locationData wsf.VesselLocation
+	var departingLocationData wsf.VesselLocation
+	var arrivingLocationData wsf.VesselLocation
 	for _, v := range *data.locations {
-		if v.DepartingTerminalID != config.terminal {
-			continue
-		}
 		// XXX: Assumes that only one ferry is departing a terminal at one time
-		locationData = v
+		if v.DepartingTerminalID == config.terminal {
+			departingLocationData = v
+		} else if v.ArrivingTerminalID == config.terminal {
+			arrivingLocationData = v
+		}
 	}
 	data.updateMux.Unlock()
 
-	if locationData.AtDock || !locationData.InService {
+	if departingLocationData.AtDock || !departingLocationData.InService {
 		fmt.Fprint(w, formatOutput(0, 0, 0))
-		return
+	} else {
+		fmt.Fprint(w,
+			formatOutput(
+				seattleBainbridgePath.progress(&departingLocationData, time.Duration(0)*time.Second),
+				seattleBainbridgePath.progress(&departingLocationData, time.Duration(config.updateFrequency)*time.Second),
+				int64(time.Now().Sub(time.Time(departingLocationData.TimeStamp))/time.Millisecond),
+			), "\n")
 	}
-
-	fmt.Fprint(w, formatOutput(
-		seattleBainbridgePath.progress(&locationData, time.Duration(0)*time.Second),
-		seattleBainbridgePath.progress(&locationData, time.Duration(config.updateFrequency)*time.Second),
-		int64(time.Now().Sub(time.Time(locationData.TimeStamp))/time.Millisecond),
-	))
+	if arrivingLocationData.AtDock || !arrivingLocationData.InService {
+		fmt.Fprint(w, formatOutput(0, 0, 0))
+	} else {
+		fmt.Fprint(w,
+			formatOutput(
+				// These are reversed, because this route goes the other way
+				seattleBainbridgePath.progress(&arrivingLocationData, time.Duration(config.updateFrequency)*time.Second),
+				seattleBainbridgePath.progress(&arrivingLocationData, time.Duration(0)*time.Second),
+				int64(time.Now().Sub(time.Time(arrivingLocationData.TimeStamp))/time.Millisecond),
+			))
+	}
 }
 
 func formatOutput(one interface{}, two interface{}, three interface{}) string {
@@ -146,7 +159,7 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	}
 	cumulativeDistanceTravelled += subClosestSegmentProgress
 
-	return cumulativeDistanceTravelled / seattleBainbridgePath.length
+	return math.Min(cumulativeDistanceTravelled/seattleBainbridgePath.length, 1) // Make sure that we don't return anything larger than 1
 }
 
 func (p *ferryPath) updateLength() {
