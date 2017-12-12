@@ -19,7 +19,7 @@
 
 #include "MotorManager.h"
 
-// This is weird, we should probably just put it into its own class
+// FIXME: This is weird, we should probably just put this into the MotorManager class itself
 namespace Wrapper {
 std::function<void(void)> l_forwardPrimary;
 std::function<void(void)> l_backwardPrimary;
@@ -41,15 +41,15 @@ extern "C" {
     l_backwardPrimary();
   }
   void forwardSecondaryWrapper() {
-    l_backwardPrimary();
+    l_backwardSecondary();
   }
   void backwardSecondaryWrapper() {
-    l_backwardPrimary();
+    l_backwardSecondary();
   }
 }
 }
 
-MotorManager::MotorManager(Modes mode) : mode(mode) {
+MotorManager::MotorManager(Modes mode, DataManager* data) : mode(mode), data(data) {
   using namespace Wrapper;
 
   Serial.begin(115200);
@@ -58,8 +58,8 @@ MotorManager::MotorManager(Modes mode) : mode(mode) {
   motorShield = Adafruit_MotorShield();
   motorShield.begin();
 
-  primaryAdafruitStepper = motorShield.getStepper(513, 1);
-  secondaryAdafruitStepper = motorShield.getStepper(513, 3);
+  primaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks, 1);
+  secondaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks, 2);
 
   std::function<void(void)> l_forwardPrimary = [&] {
     if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, FORWARD, SINGLE);
@@ -80,28 +80,37 @@ MotorManager::MotorManager(Modes mode) : mode(mode) {
   primaryStepper = new AccelStepper(forwardPrimaryWrapper, backwardPrimaryWrapper);
   secondaryStepper = new AccelStepper(forwardSecondaryWrapper, backwardSecondaryWrapper);
 
-  primaryStepper->setMaxSpeed(300.0);
-  primaryStepper->setAcceleration(100.0);
+  primaryStepper->setMaxSpeed(k_stepperMaxSpeed);
+  primaryStepper->setAcceleration(k_stepperMaxAccel);
 
-  secondaryStepper->setMaxSpeed(300.0);
-  secondaryStepper->setAcceleration(100.0);
+  secondaryStepper->setMaxSpeed(k_stepperMaxSpeed);
+  secondaryStepper->setAcceleration(k_stepperMaxAccel);
 
   // Zero the steppers by making them run to their end range
-  primaryStepper->moveTo(513);
-  secondaryStepper->moveTo(513);
+  primaryStepper->moveTo(k_stepperMaxTicks);
+  secondaryStepper->moveTo(k_stepperMaxTicks);
 }
 
 void MotorManager::update() {
   switch (mode) {
-    case Modes::SINGLE_TEST :
+    case Modes::SINGLE_TEST_PRI :
       if (primaryStepper->distanceToGo() == 0)
         primaryStepper->moveTo(-primaryStepper->currentPosition());
+      break;
+    case Modes::SINGLE_TEST_SEC :
+      if (secondaryStepper->distanceToGo() == 0)
+        secondaryStepper->moveTo(-secondaryStepper->currentPosition());
       break;
     case Modes::DOUBLE_CLOCK :
       Serial.println("DOUBLE_CLOCK motor mode is unimplemented."); // TODO
       break;
     case Modes::DOUBLE_SLIDE :
-      Serial.println("DOUBLE_SLIDE motor mode is unimplemented."); // TODO
+      long progressTicks = (long)(data->getProgress() * k_stepperMaxTicks);
+      if (primaryStepper->targetPosition() != progressTicks)
+        primaryStepper->moveTo(progressTicks);
+      if (secondaryStepper->targetPosition() != progressTicks) // TODO: Make this actually work for two motors
+        secondaryStepper->moveTo(progressTicks);
+      Serial.printf("%d, %d\n", progressTicks, primaryStepper->targetPosition());
       break;
   }
 

@@ -29,7 +29,7 @@ MotorManager* motors = NULL;
 void setup() {
   conn = new ConnectionManager("fow-mini");
   data = new DataManager(conn);
-  motors = new MotorManager(MotorManager::Modes::SINGLE_TEST);
+  motors = new MotorManager(MotorManager::Modes::DOUBLE_SLIDE, data);
   Serial.begin(115200);
   delay(10);
 }
@@ -38,5 +38,4 @@ void loop() {
   conn->update();
   data->update();
   motors->update();
-  Serial.println(data->getProgress());
 }

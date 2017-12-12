@@ -21,6 +21,7 @@
 #define MotorManager_h
 
 #include <functional>
+#include "DataManager.h"
 #include <Wire.h>
 #include <AccelStepper.h>
 #include <Adafruit_MotorShield.h>
@@ -30,15 +31,21 @@ class MotorManager {
     enum class Modes {
       DOUBLE_CLOCK,
       DOUBLE_SLIDE,
-      SINGLE_TEST
+      SINGLE_TEST_PRI,
+      SINGLE_TEST_SEC
     };
 
-    MotorManager(Modes mode);
+    MotorManager(Modes mode, DataManager* data);
 
     void update();
     void setMode(Modes mode);
   private:
+    const int k_stepperMaxTicks = 513;
+    const double k_stepperMaxSpeed = 100.0;
+    const double k_stepperMaxAccel = 100.0;
+  
     Modes mode;
+    DataManager* data;
 
     Adafruit_MotorShield motorShield;
     Adafruit_StepperMotor *primaryAdafruitStepper = NULL;
