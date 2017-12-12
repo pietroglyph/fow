@@ -109,7 +109,7 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	var subClosestSegmentProgress float64 // The progress of the ferry along the closest segment
 
 	// Interpolate forward in time using the heading and the speed
-	distanceAhead := durationAhead.Hours() * 1.852 // A knot is 1.852 KM/h
+	distanceAhead := (durationAhead.Hours() * vesselLoc.Speed) * 1.852001 // We use this magic number to convert to kM/h
 	interpolatedCoordinate := convertGeoPoint(geo.NewPoint(vesselLoc.Latitude, vesselLoc.Longitude).PointAtDistanceAndBearing(distanceAhead, vesselLoc.Heading))
 
 	// Find the closest point

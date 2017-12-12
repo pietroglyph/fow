@@ -19,7 +19,11 @@
 
 #include "MotorManager.h"
 
-// FIXME: This is weird, we should probably just put this into the MotorManager class itself
+/*
+ * We use this namespace to get timing right...
+ * This is not an idomatic use of namespaces;
+ * FIXME?
+*/ 
 namespace Wrapper {
 std::function<void(void)> l_forwardPrimary;
 std::function<void(void)> l_backwardPrimary;
