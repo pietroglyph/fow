@@ -71,7 +71,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		lastRequested = time.Now()
 
 		seattleBainbridgePath.updateLength()
-		fmt.Fprint(w, formatOutput(0, 0, 0))
+		fmt.Fprint(w, formatOutput(0, 0, 0), "\n", formatOutput(0, 0, 0))
 		return
 	}
 	lastRequested = time.Now()
@@ -90,7 +90,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	data.updateMux.Unlock()
 
 	if departingLocationData.AtDock || !departingLocationData.InService {
-		fmt.Fprint(w, formatOutput(0, 0, 0))
+		fmt.Fprint(w, formatOutput(0, 0, 0), "\n")
 	} else {
 		fmt.Fprint(w,
 			formatOutput(
