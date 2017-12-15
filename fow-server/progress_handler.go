@@ -90,7 +90,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 					seattleBainbridgePath.progress(&v, time.Duration(0)*time.Second),
 					seattleBainbridgePath.progress(&v, time.Duration(config.updateFrequency)*time.Second),
 					int64(time.Now().Sub(time.Time(v.TimeStamp))/time.Millisecond),
-				), "\n")
+				), ":")
 		}
 	}
 	data.updateMux.Unlock()
