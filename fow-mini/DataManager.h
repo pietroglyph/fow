@@ -28,7 +28,7 @@ class DataManager {
   public:
     DataManager(ConnectionManager* conn);
 
-    long refreshRate = 1000; // in milliseconds
+    long refreshRate = 5000; // in milliseconds
 
     void update();
     double getProgress(int i);
