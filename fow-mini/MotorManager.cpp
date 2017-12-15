@@ -109,12 +109,12 @@ void MotorManager::update() {
       Serial.println("DOUBLE_CLOCK motor mode is unimplemented."); // TODO
       break;
     case Modes::DOUBLE_SLIDE :
-      long progressTicks = (long)(data->getProgress() * k_stepperMaxTicks);
-      if (primaryStepper->targetPosition() != progressTicks)
-        primaryStepper->moveTo(progressTicks);
-      if (secondaryStepper->targetPosition() != progressTicks) // TODO: Make this actually work for two motors
-        secondaryStepper->moveTo(progressTicks);
-      Serial.printf("%d, %d\n", progressTicks, primaryStepper->targetPosition());
+      long departingProgressTicks = (long)(data->getProgress(0) * k_stepperMaxTicks);
+      long arrivingProgressTicks = (long)(data->getProgress(1) * k_stepperMaxTicks);
+      if (primaryStepper->targetPosition() != departingProgressTicks)
+        primaryStepper->moveTo(departingProgressTicks);
+      if (secondaryStepper->targetPosition() != arrivingProgressTicks)
+        secondaryStepper->moveTo(arrivingProgressTicks);
       break;
   }
 

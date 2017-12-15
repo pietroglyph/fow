@@ -35,7 +35,7 @@ class ConnectionManager {
     /*
         DNS doesn't work with WiFi client in this code. This bug took me two weeks to fix. I ended up using HTTPClient though
         because of its TCP connection reuse, and convinient request processing (you can manipulate headers and it separates
-        the body).
+        the body for you).
     */
     // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
     const String host = "fow.nalcad.tk";

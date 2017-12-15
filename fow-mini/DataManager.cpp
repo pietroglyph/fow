@@ -29,23 +29,37 @@ void DataManager::update() {
     return;
   }
 
-  std::vector<String> response;
-  response = split(connection->get(), ',');
+  std::vector<String> compositeResponse;
+  compositeResponse = split(connection->get(), '\n');
   lastUpdated = millis();
-  if (response.size() != 3) {
-    Serial.printf("Invalid size of %i when splitting response.\n", response.size());
-    return;
-  }
+  
+  for (auto const& responseString : compositeResponse) {
+    std::vector<String> response;
+    response = split(responseString, ',');
+    if (response.size() != 3) {
+      Serial.printf("Invalid size of %i when splitting response.\n", response.size());
+      return;
+    }
 
-  char *end;
-  startProgress = atof(response.at(0).c_str());
-  endProgress = atof(response.at(1).c_str());
-  // progressStartTimeOffset is how long ago (in milliseconds) the first number was valid
-  progressStartTimeOffset = millis() - strtoul(response.at(2).c_str(), &end, 10);
+    Progress progress;
+    char *end;
+    
+    progress.start = atof(response.at(0).c_str());
+    progress.end = atof(response.at(1).c_str());
+    // startTimeOffset is how long ago (in milliseconds) the first number was valid
+    progress.startTimeOffset = millis() - strtoul(response.at(2).c_str(), &end, 10);
+    progresses.push_back(progress);
+    Serial.printf("%f\n", progress.start);
+  }
 }
 
-double DataManager::getProgress() {
-  long double divisor = millis() - (progressStartTimeOffset + millis() - lastUpdated) + endDurationAhead;
+double DataManager::getProgress(int i) {
+  if (i >= progresses.size()) {
+    Serial.println("Progress index is out of bounds.");
+    return 0.0;
+  }
+  Progress progress = progresses.at(i);
+  long double divisor = millis() - (progress.startTimeOffset + millis() - lastUpdated) + endDurationAhead;
   if (millis() > LDBL_MAX) {
     // We will overflow interpFactor if this is true (unsigned long can get twice as large as long double, even though they're the same precision)
     // We're forced to reset if this happens, but it's a very edge case so something this drastic is acceptable
@@ -54,7 +68,7 @@ double DataManager::getProgress() {
     return 0.0;
   }
   long double interpFactor = double(millis() / divisor);
-  return (((endProgress - startProgress) * interpFactor) + startProgress);
+  return (((progress.end - progress.start) * interpFactor) + progress.start);
 }
 
 std::vector<String> DataManager::split(const String &text, char sep) {

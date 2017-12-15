@@ -31,18 +31,22 @@ class DataManager {
     long refreshRate = 1000; // in milliseconds
 
     void update();
-    double getProgress();
+    double getProgress(int i);
   private:
-    const unsigned long endDurationAhead = 15000; // The end progress is 15 seconds ahead of the first
+    typedef struct {
+      unsigned long startTimeOffset = 0;
+      double start = 0;
+      double end = 0;
+    } Progress;
+
     unsigned long lastUpdated = 0;
-    unsigned long progressStartTimeOffset = 0;
-    double startProgress = 0;
-    double endProgress = 0;
+    std::vector<Progress> progresses;
+    ConnectionManager* connection;
+    const unsigned long endDurationAhead = 15000; // The end progress is 15 seconds ahead of the first
 
     std::vector<String> split(const String &text, char sep);
 
     void(* resetFunc) (void) = 0;
-    ConnectionManager* connection;
 };
 
 #endif
