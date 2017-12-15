@@ -77,39 +77,23 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	lastRequested = time.Now()
 
 	data.updateMux.Lock()
-	var departingLocationData wsf.VesselLocation
-	var arrivingLocationData wsf.VesselLocation
 	for _, v := range *data.locations {
-		// XXX: Assumes that only one ferry is departing a terminal at one time
-		if v.DepartingTerminalID == config.terminal {
-			departingLocationData = v
-		} else if v.ArrivingTerminalID == config.terminal {
-			arrivingLocationData = v
+		if v.DepartingTerminalID != config.terminal && v.ArrivingTerminalID != config.terminal {
+			continue
+		}
+
+		if v.AtDock || !v.InService {
+			fmt.Fprint(w, formatOutput(0, 0, 0), "\n")
+		} else {
+			fmt.Fprint(w,
+				formatOutput(
+					seattleBainbridgePath.progress(&v, time.Duration(0)*time.Second),
+					seattleBainbridgePath.progress(&v, time.Duration(config.updateFrequency)*time.Second),
+					int64(time.Now().Sub(time.Time(v.TimeStamp))/time.Millisecond),
+				), "\n")
 		}
 	}
 	data.updateMux.Unlock()
-
-	if departingLocationData.AtDock || !departingLocationData.InService {
-		fmt.Fprint(w, formatOutput(0, 0, 0), "\n")
-	} else {
-		fmt.Fprint(w,
-			formatOutput(
-				seattleBainbridgePath.progress(&departingLocationData, time.Duration(0)*time.Second),
-				seattleBainbridgePath.progress(&departingLocationData, time.Duration(config.updateFrequency)*time.Second),
-				int64(time.Now().Sub(time.Time(departingLocationData.TimeStamp))/time.Millisecond),
-			), "\n")
-	}
-	if arrivingLocationData.AtDock || !arrivingLocationData.InService {
-		fmt.Fprint(w, formatOutput(0, 0, 0))
-	} else {
-		fmt.Fprint(w,
-			formatOutput(
-				// These are reversed, because this route goes the other way
-				seattleBainbridgePath.progress(&arrivingLocationData, time.Duration(config.updateFrequency)*time.Second),
-				seattleBainbridgePath.progress(&arrivingLocationData, time.Duration(0)*time.Second),
-				int64(time.Now().Sub(time.Time(arrivingLocationData.TimeStamp))/time.Millisecond),
-			))
-	}
 }
 
 func formatOutput(one interface{}, two interface{}, three interface{}) string {
