@@ -71,7 +71,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		lastRequested = time.Now()
 
 		seattleBainbridgePath.updateLength()
-		fmt.Fprint(w, formatOutput(0, 0, 0), "\n", formatOutput(0, 0, 0))
+		fmt.Fprint(w, formatOutput(0, 0, 0), ":", formatOutput(0, 0, 0))
 		return
 	}
 	lastRequested = time.Now()
@@ -83,7 +83,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if v.AtDock || !v.InService {
-			fmt.Fprint(w, formatOutput(0, 0, 0), "\n")
+			fmt.Fprint(w, formatOutput(0, 0, 0), ":")
 		} else {
 			fmt.Fprint(w,
 				formatOutput(
