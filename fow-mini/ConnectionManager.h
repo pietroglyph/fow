@@ -29,6 +29,7 @@ class ConnectionManager {
   public:
     ConnectionManager(String programName);
 
+    boolean ready();
     void update();
     String get();
   private:

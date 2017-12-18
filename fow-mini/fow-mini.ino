@@ -29,13 +29,13 @@ MotorManager* motors = NULL;
 void setup() {
   conn = new ConnectionManager("fow-mini");
   data = new DataManager(conn);
-  motors = new MotorManager(MotorManager::Modes::SINGLE_TEST_PRI, data);
-  Serial.begin(115200);
-  delay(10);
+  motors = new MotorManager(MotorManager::Modes::DOUBLE_SLIDE, data);
 }
 
 void loop() {
   conn->update();
-  data->update();
-  motors->update();
+  if (conn->ready()) {
+    data->update();
+    motors->update();
+  }
 }

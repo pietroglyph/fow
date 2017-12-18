@@ -105,6 +105,13 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   Serial.println("HTTP server has been started.");
 }
 
+boolean ConnectionManager::ready() {
+  if (ssid == "" && password == "")
+    return false;
+  else
+    return true;
+}
+
 void ConnectionManager::update() {
   server.handleClient();
 }

@@ -40,10 +40,17 @@ class MotorManager {
     void update();
     void setMode(Modes mode);
   private:
-    const int k_stepperMaxTicks = 513;
+    enum class States {
+      UNCALIBRATED,
+      CALIBRATING,
+      CALIBRATED
+    };
+
+    const int k_stepperMaxTicks = 800;
     const double k_stepperMaxSpeed = 100.0;
     const double k_stepperMaxAccel = 100.0;
-  
+
+    States state = States::UNCALIBRATED;
     Modes mode;
     DataManager* data;
 

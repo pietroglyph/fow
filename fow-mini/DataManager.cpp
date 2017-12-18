@@ -30,7 +30,7 @@ void DataManager::update() {
   }
 
   std::vector<String> compositeResponse;
-  compositeResponse = split(connection->get(), '\n');
+  compositeResponse = split(connection->get(), ':');
   lastUpdated = millis();
   
   for (auto const& responseString : compositeResponse) {
@@ -49,13 +49,12 @@ void DataManager::update() {
     // startTimeOffset is how long ago (in milliseconds) the first number was valid
     progress.startTimeOffset = millis() - strtoul(response.at(2).c_str(), &end, 10);
     progresses.push_back(progress);
-    Serial.printf("%f\n", progress.start);
+    Serial.println(progress.start);
   }
 }
 
 double DataManager::getProgress(int i) {
   if (i >= progresses.size()) {
-    Serial.println("Progress index is out of bounds.");
     return 0.0;
   }
   Progress progress = progresses.at(i);

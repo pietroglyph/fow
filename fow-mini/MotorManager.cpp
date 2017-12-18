@@ -20,10 +20,10 @@
 #include "MotorManager.h"
 
 /*
- * We use this namespace to get timing right...
- * This is not an idomatic use of namespaces;
- * FIXME?
-*/ 
+   We use this namespace to get timing right...
+   This is not an idomatic use of namespaces;
+   FIXME?
+*/
 namespace Wrapper {
 std::function<void(void)> l_forwardPrimary;
 std::function<void(void)> l_backwardPrimary;
@@ -45,7 +45,7 @@ extern "C" {
     l_backwardPrimary();
   }
   void forwardSecondaryWrapper() {
-    l_backwardSecondary();
+    l_forwardSecondary();
   }
   void backwardSecondaryWrapper() {
     l_backwardSecondary();
@@ -62,21 +62,21 @@ MotorManager::MotorManager(Modes mode, DataManager* data) : mode(mode), data(dat
   motorShield = Adafruit_MotorShield();
   motorShield.begin();
 
-  primaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks, 1);
-  secondaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks, 2);
+  primaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 4, 1);
+  secondaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 4, 2);
 
   std::function<void(void)> l_forwardPrimary = [&] {
-    if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, FORWARD, SINGLE);
+    if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, FORWARD, DOUBLE);
   };
   std::function<void(void)> l_backwardPrimary = [&] {
-    if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, BACKWARD, SINGLE);
+    if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, BACKWARD, DOUBLE);
   };
 
   std::function<void(void)> l_forwardSecondary = [&] {
-    if (secondaryAdafruitStepper) secondaryAdafruitStepper->step(1, FORWARD, SINGLE);
+    if (secondaryAdafruitStepper) secondaryAdafruitStepper->step(1, FORWARD, DOUBLE);
   };
   std::function<void(void)> l_backwardSecondary = [&] {
-    if (secondaryAdafruitStepper) secondaryAdafruitStepper->step(1, BACKWARD, SINGLE);
+    if (secondaryAdafruitStepper) secondaryAdafruitStepper->step(1, BACKWARD, DOUBLE);
   };
 
   setMotors(l_forwardPrimary, l_backwardPrimary, l_forwardSecondary, l_backwardSecondary);
@@ -89,13 +89,22 @@ MotorManager::MotorManager(Modes mode, DataManager* data) : mode(mode), data(dat
 
   secondaryStepper->setMaxSpeed(k_stepperMaxSpeed);
   secondaryStepper->setAcceleration(k_stepperMaxAccel);
-
-  // Zero the steppers by making them run to their end range
-  primaryStepper->moveTo(k_stepperMaxTicks);
-  secondaryStepper->moveTo(k_stepperMaxTicks);
 }
 
 void MotorManager::update() {
+  if (state == States::UNCALIBRATED) {
+    primaryStepper->moveTo(k_stepperMaxTicks * 2);
+    secondaryStepper->moveTo(k_stepperMaxTicks * 2);
+    state = States::CALIBRATING;
+    return;
+  } else if (state == States::CALIBRATING) {
+    if (primaryStepper->distanceToGo() == 0 &&
+        secondaryStepper->distanceToGo() == 0)
+      state = States::CALIBRATED;
+    else
+      return;
+  }
+
   switch (mode) {
     case Modes::SINGLE_TEST_PRI :
       if (primaryStepper->distanceToGo() == 0)
@@ -106,7 +115,7 @@ void MotorManager::update() {
         secondaryStepper->moveTo(-secondaryStepper->currentPosition());
       break;
     case Modes::DOUBLE_CLOCK :
-      Serial.println("DOUBLE_CLOCK motor mode is unimplemented."); // TODO
+      Serial.println("DOUBLE_CLOCK motor mode is unimplemented.");
       break;
     case Modes::DOUBLE_SLIDE :
       long departingProgressTicks = (long)(data->getProgress(0) * k_stepperMaxTicks);
