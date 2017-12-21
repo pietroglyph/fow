@@ -32,24 +32,28 @@ void DataManager::update() {
   std::vector<String> compositeResponse;
   compositeResponse = split(connection->get(), ':');
   lastUpdated = millis();
-  
+
+  compositeResponse.pop_back(); // All valid responses end with a ":" so it splits that, and we want to remove it
+
+  if (compositeResponse.size() != 2)
+    Serial.printf("Suspect size of %i when splitting composite response.\n", compositeResponse.size());
+
   for (auto const& responseString : compositeResponse) {
     std::vector<String> response;
     response = split(responseString, ',');
     if (response.size() != 3) {
-      Serial.printf("Invalid size of %i when splitting response.\n", response.size());
+      Serial.printf("Invalid size of %i when splitting non-composite response.\n", response.size());
       return;
     }
 
     Progress progress;
     char *end;
-    
+
     progress.start = atof(response.at(0).c_str());
     progress.end = atof(response.at(1).c_str());
     // startTimeOffset is how long ago (in milliseconds) the first number was valid
     progress.startTimeOffset = millis() - strtoul(response.at(2).c_str(), &end, 10);
     progresses.push_back(progress);
-    Serial.println(progress.start);
   }
 }
 

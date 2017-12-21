@@ -38,12 +38,13 @@ class MotorManager {
     MotorManager(Modes mode, DataManager* data);
 
     void update();
+    void calibrate();
     void setMode(Modes mode);
   private:
     enum class States {
       UNCALIBRATED,
       CALIBRATING,
-      CALIBRATED
+      RUNNING
     };
 
     const int k_stepperMaxTicks = 800;

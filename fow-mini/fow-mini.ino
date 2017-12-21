@@ -37,5 +37,7 @@ void loop() {
   if (conn->ready()) {
     data->update();
     motors->update();
+  } else {
+    motors->calibrate();
   }
 }

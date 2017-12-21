@@ -62,8 +62,8 @@ MotorManager::MotorManager(Modes mode, DataManager* data) : mode(mode), data(dat
   motorShield = Adafruit_MotorShield();
   motorShield.begin();
 
-  primaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 4, 1);
-  secondaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 4, 2);
+  primaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 2, 1);
+  secondaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 2, 2);
 
   std::function<void(void)> l_forwardPrimary = [&] {
     if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, FORWARD, DOUBLE);
@@ -91,19 +91,31 @@ MotorManager::MotorManager(Modes mode, DataManager* data) : mode(mode), data(dat
   secondaryStepper->setAcceleration(k_stepperMaxAccel);
 }
 
-void MotorManager::update() {
+void MotorManager::calibrate() {
+  primaryStepper->run();
+  secondaryStepper->run();
+
   if (state == States::UNCALIBRATED) {
-    primaryStepper->moveTo(k_stepperMaxTicks * 2);
-    secondaryStepper->moveTo(k_stepperMaxTicks * 2);
+    primaryStepper->moveTo(k_stepperMaxTicks * 1.5);
+    secondaryStepper->moveTo(k_stepperMaxTicks * 1.5);
     state = States::CALIBRATING;
     return;
   } else if (state == States::CALIBRATING) {
     if (primaryStepper->distanceToGo() == 0 &&
-        secondaryStepper->distanceToGo() == 0)
-      state = States::CALIBRATED;
-    else
+        secondaryStepper->distanceToGo() == 0) {
+      Serial.println("Calibration finished.");
+      primaryStepper->setCurrentPosition(0);
+      secondaryStepper->setCurrentPosition(0);
+      state = States::RUNNING;
+    } else {
       return;
+    }
   }
+}
+
+void MotorManager::update() {
+  primaryStepper->run();
+  secondaryStepper->run();
 
   switch (mode) {
     case Modes::SINGLE_TEST_PRI :
@@ -118,15 +130,13 @@ void MotorManager::update() {
       Serial.println("DOUBLE_CLOCK motor mode is unimplemented.");
       break;
     case Modes::DOUBLE_SLIDE :
-      long departingProgressTicks = (long)(data->getProgress(0) * k_stepperMaxTicks);
-      long arrivingProgressTicks = (long)(data->getProgress(1) * k_stepperMaxTicks);
+      long departingProgressTicks = -1 * (long)(data->getProgress(0) * k_stepperMaxTicks);
+      long arrivingProgressTicks = -1 * (long)(data->getProgress(1) * k_stepperMaxTicks);
+      Serial.println(departingProgressTicks);
       if (primaryStepper->targetPosition() != departingProgressTicks)
         primaryStepper->moveTo(departingProgressTicks);
       if (secondaryStepper->targetPosition() != arrivingProgressTicks)
         secondaryStepper->moveTo(arrivingProgressTicks);
       break;
   }
-
-  primaryStepper->run();
-  secondaryStepper->run();
 }
