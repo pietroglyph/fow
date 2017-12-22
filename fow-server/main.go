@@ -1,20 +1,20 @@
 /*
-    Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
+   Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
 
-    This file is part of Ferries Over Winslow.
-    
-    Ferries Over Winslow is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+   This file is part of Ferries Over Winslow.
 
-    Ferries Over Winslow is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+   Ferries Over Winslow is free software: you can redistribute it and/or modify
+   it under the terms of the GNU General Public License as published by
+   the Free Software Foundation, either version 3 of the License, or
+   (at your option) any later version.
 
-    You should have received a copy of the GNU General Public License
-    along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
+   Ferries Over Winslow is distributed in the hope that it will be useful,
+   but WITHOUT ANY WARRANTY; without even the implied warranty of
+   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+   GNU General Public License for more details.
+
+   You should have received a copy of the GNU General Public License
+   along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 package main
@@ -46,6 +46,7 @@ type configuration struct {
 	updateFrequency  float64
 	idleAfter        float64
 	routeWidthFactor float64
+	testingMode      bool
 }
 
 var data *ferryData
@@ -59,6 +60,7 @@ func main() {
 	flag.Float64VarP(&config.updateFrequency, "update", "u", 15, "Frequency in seconds to update data from the REST API.")
 	flag.Float64VarP(&config.idleAfter, "idle", "i", 60, "Time in seconds after an update to stop updating.")
 	flag.Float64VarP(&config.routeWidthFactor, "width", "w", 300, "The 'width' factor of the route, this determines how far away the ferry can be to still be considered on route")
+	flag.BoolVarP(&config.testingMode, "fake", "f", false, "Output a fake value so that you don't have to wait for the ferries while they're docked.")
 	flag.Parse()
 
 	// accesscode flag is required

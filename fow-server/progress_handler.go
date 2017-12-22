@@ -66,12 +66,19 @@ var seattleBainbridgePath = &ferryPath{
 var lastRequested time.Time
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
+	if config.testingMode {
+		now := time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
+		rotatingProgressNow := (math.Sin(float64(time.Now().Unix())/30) * 0.5) + 0.5
+		rotatingProgressFuture := (math.Sin((float64(time.Now().Unix())+config.updateFrequency)/30) * 0.5) + 0.5
+		fmt.Fprint(w, formatOutput(rotatingProgressNow, rotatingProgressFuture, now), ":", formatOutput(rotatingProgressNow, rotatingProgressFuture, now), ":")
+	}
+
 	// Give dummy data until the data is no longer nil or stale
 	if time.Now().Sub(data.lastUpdated).Seconds() > config.idleAfter || data.locations == nil {
 		lastRequested = time.Now()
 
 		seattleBainbridgePath.updateLength()
-		fmt.Fprint(w, formatOutput(0, 0, 0), ":", formatOutput(0, 0, 0), ":")
+		fmt.Fprint(w, formatOutput(0, 0, 0), ":", formatOutput(1, 1, 0), ":")
 		return
 	}
 	lastRequested = time.Now()
@@ -83,7 +90,11 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if v.AtDock || !v.InService {
-			fmt.Fprint(w, formatOutput(0, 0, 0), ":")
+			dockedProgress := 0
+			if v.ArrivingTerminalID == config.terminal {
+				dockedProgress = 1
+			}
+			fmt.Fprint(w, formatOutput(dockedProgress, dockedProgress, 0), ":")
 		} else {
 			fmt.Fprint(w,
 				formatOutput(
