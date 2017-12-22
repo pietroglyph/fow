@@ -29,6 +29,10 @@ void DataManager::update() {
     return;
   }
 
+  Serial.println("Requesting fresh data from the server...");
+
+  progresses.clear();
+
   std::vector<String> compositeResponse;
   compositeResponse = split(connection->get(), ':');
   lastUpdated = millis();

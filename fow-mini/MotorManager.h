@@ -47,7 +47,7 @@ class MotorManager {
       RUNNING
     };
 
-    const int k_stepperMaxTicks = 800;
+    const int k_stepperMaxTicks = 812;
     const double k_stepperMaxSpeed = 100.0;
     const double k_stepperMaxAccel = 100.0;
 

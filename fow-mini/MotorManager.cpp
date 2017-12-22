@@ -96,8 +96,8 @@ void MotorManager::calibrate() {
   secondaryStepper->run();
 
   if (state == States::UNCALIBRATED) {
-    primaryStepper->moveTo(k_stepperMaxTicks * 1.5);
-    secondaryStepper->moveTo(k_stepperMaxTicks * 1.5);
+    primaryStepper->moveTo(k_stepperMaxTicks);
+    secondaryStepper->moveTo(k_stepperMaxTicks);
     state = States::CALIBRATING;
     return;
   } else if (state == States::CALIBRATING) {
@@ -132,11 +132,12 @@ void MotorManager::update() {
     case Modes::DOUBLE_SLIDE :
       long departingProgressTicks = -1 * (long)(data->getProgress(0) * k_stepperMaxTicks);
       long arrivingProgressTicks = -1 * (long)(data->getProgress(1) * k_stepperMaxTicks);
-      Serial.println(departingProgressTicks);
-      if (primaryStepper->targetPosition() != departingProgressTicks)
+      if (primaryStepper->targetPosition() != departingProgressTicks) {
         primaryStepper->moveTo(departingProgressTicks);
-      if (secondaryStepper->targetPosition() != arrivingProgressTicks)
+      }
+      if (secondaryStepper->targetPosition() != arrivingProgressTicks) {
         secondaryStepper->moveTo(arrivingProgressTicks);
+      }
       break;
   }
 }
