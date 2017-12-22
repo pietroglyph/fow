@@ -25,6 +25,7 @@ import (
 	"math"
 	"net/http"
 	"time"
+	"sort"
 
 	geo "github.com/kellydunn/golang-geo"
 	"github.com/pietroglyph/go-wsf"
@@ -84,6 +85,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	lastRequested = time.Now()
 
 	data.updateMux.Lock()
+	sort.Sort(byDepartingID(*data.locations))
 	for _, v := range *data.locations {
 		if v.DepartingTerminalID != config.terminal && v.ArrivingTerminalID != config.terminal {
 			continue
@@ -171,3 +173,9 @@ func (p *ferryPath) updateLength() {
 func convertGeoPoint(pnt *geo.Point) geom.Coord {
 	return geom.Coord{X: pnt.Lat(), Y: pnt.Lng()}
 }
+
+type byDepartingID wsf.VesselLocations
+
+func (a byDepartingID) Len() int           { return len(a) }
+func (a byDepartingID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byDepartingID) Less(i, j int) bool { return a[i].DepartingTerminalID < a[j].DepartingTerminalID }
