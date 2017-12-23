@@ -24,8 +24,8 @@ import (
 	"log"
 	"math"
 	"net/http"
-	"time"
 	"sort"
+	"time"
 
 	geo "github.com/kellydunn/golang-geo"
 	"github.com/pietroglyph/go-wsf"
@@ -71,7 +71,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		now := time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
 		rotatingProgressNow := (math.Sin(float64(time.Now().Unix())/30) * 0.5) + 0.5
 		rotatingProgressFuture := (math.Sin((float64(time.Now().Unix())+config.updateFrequency)/30) * 0.5) + 0.5
-		fmt.Fprint(w, formatOutput(rotatingProgressNow, rotatingProgressFuture, now), ":", formatOutput(rotatingProgressNow, rotatingProgressFuture, now), ":")
+		fmt.Fprint(w, formatOutput(rotatingProgressNow, rotatingProgressFuture, now), ":", formatOutput(rotatingProgressNow, rotatingProgressFuture, now), ":", config.updateFrequency)
 	}
 
 	// Give dummy data until the data is no longer nil or stale
@@ -79,7 +79,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		lastRequested = time.Now()
 
 		seattleBainbridgePath.updateLength()
-		fmt.Fprint(w, formatOutput(0, 0, 0), ":", formatOutput(1, 1, 0), ":")
+		fmt.Fprint(w, formatOutput(0, 0, 0), ":", formatOutput(1, 1, 0), ":-1")
 		return
 	}
 	lastRequested = time.Now()
@@ -106,6 +106,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 				), ":")
 		}
 	}
+	fmt.Fprint(w, config.updateFrequency)
 	data.updateMux.Unlock()
 }
 
