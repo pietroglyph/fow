@@ -47,6 +47,7 @@ type configuration struct {
 	idleAfter        float64
 	routeWidthFactor float64
 	testingMode      bool
+	minimumFerries   int
 }
 
 var data *ferryData
@@ -61,6 +62,7 @@ func main() {
 	flag.Float64VarP(&config.idleAfter, "idle", "i", 60, "Time in seconds after an update to stop updating.")
 	flag.Float64VarP(&config.routeWidthFactor, "width", "w", 300, "The 'width' factor of the route, this determines how far away the ferry can be to still be considered on route")
 	flag.BoolVarP(&config.testingMode, "fake", "f", false, "Output a fake value so that you don't have to wait for the ferries while they're docked.")
+	flag.IntVarP(&config.minimumFerries, "minimum-ferries", "m", 2, "The server will ensure that it returns values (default or otherwise) for at least this number of ferries.")
 	flag.Parse()
 
 	// accesscode flag is required

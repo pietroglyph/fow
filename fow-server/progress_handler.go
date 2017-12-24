@@ -84,12 +84,16 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	lastRequested = time.Now()
 
+	var ferriesFound int
+
 	data.updateMux.Lock()
 	sort.Sort(byDepartingID(*data.locations))
 	for _, v := range *data.locations {
 		if v.DepartingTerminalID != config.terminal && v.ArrivingTerminalID != config.terminal {
 			continue
 		}
+
+		ferriesFound++
 
 		if v.AtDock || !v.InService {
 			dockedProgress := 0
@@ -105,6 +109,16 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 					int64(time.Now().Sub(time.Time(v.TimeStamp))/time.Millisecond),
 				), ":")
 		}
+	}
+	for i := ferriesFound; i < config.minimumFerries; i++ {
+		log.Println("foo")
+		var progress int
+		if math.Mod(float64(i), 2) == 0 {
+			progress = 0
+		} else {
+			progress = 1
+		}
+		fmt.Fprint(w, formatOutput(0, progress, 0), ":")
 	}
 	fmt.Fprint(w, config.updateFrequency)
 	data.updateMux.Unlock()
