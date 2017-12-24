@@ -111,7 +111,6 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	for i := ferriesFound; i < config.minimumFerries; i++ {
-		log.Println("foo")
 		var progress int
 		if math.Mod(float64(i), 2) == 0 {
 			progress = 0
