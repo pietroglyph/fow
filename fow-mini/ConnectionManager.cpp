@@ -138,7 +138,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 boolean ConnectionManager::ready() {
   if (ssid == "" && password == "")
     return false;
-  else if (WiFi.status() == WL_CONNECTED)
+  else if (WiFi.status() == WL_CONNECTED && lastGetOk)
     return true;
 }
 
@@ -158,8 +158,10 @@ String ConnectionManager::get() {
   int statusCode = client.GET();
   if (statusCode != HTTP_CODE_OK) {
     Serial.printf("Remote server returned a non-OK status code of %i.\n", statusCode);
+    lastGetOk = false;
     return "";
   }
 
+  lastGetOk = true;
   return client.getString(); // This only returns the response body.
 }

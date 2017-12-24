@@ -50,6 +50,7 @@ class ConnectionManager {
     String name;
     String ssid;
     String password;
+    boolean lastGetOk = false;
 };
 
 #endif
