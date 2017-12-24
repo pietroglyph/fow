@@ -45,8 +45,6 @@ void DataManager::update() {
   }
   progresses.clear();
 
-  Serial.println(endDurationAhead);
-
   compositeResponse.pop_back(); // All valid responses end with a ":" so it splits that, and we want to remove it
 
   if (compositeResponse.size() != 2)
@@ -84,7 +82,9 @@ double DataManager::getProgress(int i) {
     return 0.0;
   }
   long double interpFactor = double(millis() / divisor);
-  return (((progress.end - progress.start) * interpFactor) + progress.start);
+  double result = (((progress.end - progress.start) * interpFactor) + progress.start);
+  Serial.println(result);
+  return result;
 }
 
 std::vector<String> DataManager::split(const String &text, char sep) {

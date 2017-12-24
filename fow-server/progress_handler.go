@@ -118,7 +118,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		} else {
 			progress = 1
 		}
-		fmt.Fprint(w, formatOutput(0, progress, 0), ":")
+		fmt.Fprint(w, formatOutput(progress, progress, 0), ":")
 	}
 	fmt.Fprint(w, config.updateFrequency*1000) // 1000 converts to milliseconds, we don't use time constants because they are arbitrary
 	data.updateMux.Unlock()
