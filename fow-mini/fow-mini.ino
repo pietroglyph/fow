@@ -20,24 +20,30 @@
 #include "ConnectionManager.h"
 #include "DataManager.h"
 #include "MotorManager.h"
+#include "LightManager.h"
 
-// null references on the heap (these should never be destroyed, so we don't need to worry about managing this memory)
+// null references on the heap (these should never be destroyed)
 ConnectionManager* conn = NULL;
 DataManager* data = NULL;
 MotorManager* motors = NULL;
+LightManager* lights = NULL;
 
 void setup() {
   conn = new ConnectionManager("fow-mini");
   data = new DataManager(conn);
-  motors = new MotorManager(MotorManager::Modes::DOUBLE_SLIDE, data);
+  lights = new LightManager();
+  motors = new MotorManager(MotorManager::Modes::DOUBLE_CLOCK, data, lights);
 }
 
 void loop() {
   conn->update();
   if (conn->ready()) {
+    lights->setAllModesOnce(FerryLights::Modes::RUNNING);
     data->update();
     motors->update();
   } else {
+    lights->setAllModesOnce(FerryLights::Modes::DISCONNECTED);
     motors->calibrate();
   }
+  lights->update();
 }

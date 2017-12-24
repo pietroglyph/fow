@@ -21,6 +21,7 @@
 #define MotorManager_h
 
 #include <functional>
+#include "LightManager.h"
 #include "DataManager.h"
 #include <Wire.h>
 #include <AccelStepper.h>
@@ -35,7 +36,7 @@ class MotorManager {
       SINGLE_TEST_SEC
     };
 
-    MotorManager(Modes mode, DataManager* data);
+    MotorManager(Modes mode, DataManager* data, LightManager* lights);
 
     void update();
     void calibrate();
@@ -51,10 +52,12 @@ class MotorManager {
     const double k_stepperMaxSpeed = 100.0;
     const double k_stepperMaxAccel = 100.0;
 
+    FerryLights* departingLights;
+    FerryLights* arrivingLights;
     States state = States::UNCALIBRATED;
     Modes mode;
     DataManager* data;
-
+    LightManager* lights;
     Adafruit_MotorShield motorShield;
     Adafruit_StepperMotor *primaryAdafruitStepper = NULL;
     Adafruit_StepperMotor *secondaryAdafruitStepper = NULL;

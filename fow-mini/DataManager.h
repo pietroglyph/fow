@@ -28,7 +28,7 @@ class DataManager {
   public:
     DataManager(ConnectionManager* conn);
 
-    long refreshRate = 5000; // in milliseconds
+    const unsigned long refreshRate = 5000; // in milliseconds
 
     void update();
     double getProgress(int i);
@@ -42,7 +42,7 @@ class DataManager {
     unsigned long lastUpdated = 0;
     std::vector<Progress> progresses;
     ConnectionManager* connection;
-    const unsigned long endDurationAhead = 15000; // The end progress is 15 seconds ahead of the first
+    unsigned long endDurationAhead = 5000; // The end progress is 5 seconds ahead of the first
 
     std::vector<String> split(const String &text, char sep);
 

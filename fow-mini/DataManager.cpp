@@ -31,11 +31,21 @@ void DataManager::update() {
 
   Serial.println("Requesting fresh data from the server...");
 
-  progresses.clear();
-
   std::vector<String> compositeResponse;
   compositeResponse = split(connection->get(), ':');
   lastUpdated = millis();
+
+  char *end;
+
+  endDurationAhead = strtoul(compositeResponse.back().c_str(), &end, 10);
+  if (endDurationAhead == -1) {
+    // -1 means that the data on the server is stale, so we set it up to check back soon
+    lastUpdated += refreshRate * 0.8;
+    return;
+  }
+  progresses.clear();
+
+  Serial.println(endDurationAhead);
 
   compositeResponse.pop_back(); // All valid responses end with a ":" so it splits that, and we want to remove it
 
@@ -51,7 +61,6 @@ void DataManager::update() {
     }
 
     Progress progress;
-    char *end;
 
     progress.start = atof(response.at(0).c_str());
     progress.end = atof(response.at(1).c_str());

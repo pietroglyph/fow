@@ -20,7 +20,6 @@
 #include "MotorManager.h"
 
 /*
-   We use this namespace to get timing right...
    This is not an idomatic use of namespaces;
    FIXME?
 */
@@ -53,11 +52,10 @@ extern "C" {
 }
 }
 
-MotorManager::MotorManager(Modes mode, DataManager* data) : mode(mode), data(data) {
+MotorManager::MotorManager(Modes mode, DataManager* dataManager, LightManager* lightManager) : mode(mode), data(dataManager), lights(lightManager) {
   using namespace Wrapper;
 
   Serial.begin(115200);
-  delay(10);
 
   motorShield = Adafruit_MotorShield();
   motorShield.begin();
@@ -66,17 +64,17 @@ MotorManager::MotorManager(Modes mode, DataManager* data) : mode(mode), data(dat
   secondaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 2, 2);
 
   std::function<void(void)> l_forwardPrimary = [&] {
-    if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, FORWARD, DOUBLE);
+    primaryAdafruitStepper->step(1, FORWARD, DOUBLE);
   };
   std::function<void(void)> l_backwardPrimary = [&] {
-    if (primaryAdafruitStepper) primaryAdafruitStepper->step(1, BACKWARD, DOUBLE);
+    primaryAdafruitStepper->step(1, BACKWARD, DOUBLE);
   };
 
   std::function<void(void)> l_forwardSecondary = [&] {
-    if (secondaryAdafruitStepper) secondaryAdafruitStepper->step(1, FORWARD, DOUBLE);
+    secondaryAdafruitStepper->step(1, FORWARD, DOUBLE);
   };
   std::function<void(void)> l_backwardSecondary = [&] {
-    if (secondaryAdafruitStepper) secondaryAdafruitStepper->step(1, BACKWARD, DOUBLE);
+    secondaryAdafruitStepper->step(1, BACKWARD, DOUBLE);
   };
 
   setMotors(l_forwardPrimary, l_backwardPrimary, l_forwardSecondary, l_backwardSecondary);
@@ -89,6 +87,21 @@ MotorManager::MotorManager(Modes mode, DataManager* data) : mode(mode), data(dat
 
   secondaryStepper->setMaxSpeed(k_stepperMaxSpeed);
   secondaryStepper->setAcceleration(k_stepperMaxAccel);
+
+  // These magic numbers are the pins for the lights
+  departingLights = new FerryLights(14, 13, 15);
+  arrivingLights = new FerryLights(12, 0, 16);
+
+  lights->registerFerry(departingLights);
+  lights->registerFerry(arrivingLights);
+
+  lights->setupPins();
+
+  departingLights->setMode(FerryLights::Modes::DISCONNECTED);
+  arrivingLights->setMode(FerryLights::Modes::DISCONNECTED);
+
+  departingLights->setDirection(FerryLights::Directions::PORT);
+  arrivingLights->setDirection(FerryLights::Directions::STARBOARD);
 }
 
 void MotorManager::calibrate() {
@@ -107,8 +120,6 @@ void MotorManager::calibrate() {
       primaryStepper->setCurrentPosition(0);
       secondaryStepper->setCurrentPosition(0);
       state = States::RUNNING;
-    } else {
-      return;
     }
   }
 }
@@ -127,17 +138,30 @@ void MotorManager::update() {
         secondaryStepper->moveTo(-secondaryStepper->currentPosition());
       break;
     case Modes::DOUBLE_CLOCK :
-      Serial.println("DOUBLE_CLOCK motor mode is unimplemented.");
-      break;
+      {
+        double departingProgress = data->getProgress(0); // We know which index is which because these are always ordered the same by the server
+        double arrivingProgress = data->getProgress(1);
+        long departingProgressTicks = -1 * (long)(departingProgress * k_stepperMaxTicks);
+        long arrivingProgressTicks = -1 * (long)(arrivingProgress * k_stepperMaxTicks);
+        if (primaryStepper->targetPosition() != departingProgressTicks) {
+ 
+          primaryStepper->moveTo(departingProgressTicks);
+          if (departingProgress == 0 || departingProgress == 1)
+            departingLights->setMode(FerryLights::Modes::DOCKED);
+          else
+            departingLights->setMode(FerryLights::Modes::RUNNING);
+        }
+        if (secondaryStepper->targetPosition() != arrivingProgressTicks) {
+          secondaryStepper->moveTo(arrivingProgressTicks);
+          if (arrivingProgress == 0 || arrivingProgress == 1)
+            arrivingLights->setMode(FerryLights::Modes::DOCKED);
+          else
+            arrivingLights->setMode(FerryLights::Modes::RUNNING);
+        }
+        break;
+      }
     case Modes::DOUBLE_SLIDE :
-      long departingProgressTicks = -1 * (long)(data->getProgress(0) * k_stepperMaxTicks);
-      long arrivingProgressTicks = -1 * (long)(data->getProgress(1) * k_stepperMaxTicks);
-      if (primaryStepper->targetPosition() != departingProgressTicks) {
-        primaryStepper->moveTo(departingProgressTicks);
-      }
-      if (secondaryStepper->targetPosition() != arrivingProgressTicks) {
-        secondaryStepper->moveTo(arrivingProgressTicks);
-      }
+      Serial.println("DOUBLE_SLIDE motor mode is unimplemented.");
       break;
   }
 }

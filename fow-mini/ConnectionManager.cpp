@@ -19,17 +19,47 @@
 
 #include "ConnectionManager.h"
 
+const static char configPage[] PROGMEM = R"(<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Mini-FOW Configuration</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      width: 100%;
+    }
+    iframe {
+      border: none;
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='100%' width='100%'><text x='0' y='15' fill='black' font-size='20'>Loading status information...</text></svg>");
+    }
+  </style>
+</head>
+<body>
+  <h1>Mini Ferries Over Winslow Configuration</h1>
+  <h2>Status</h2>
+  <iframe src="/status" width="100%"></iframe>
+  <h2>Network Configuration</h2>
+  <form method="POST" action="/">
+    Network Name: <input type="text" name="ssid">
+    <br>
+    Password: <input type="password" name="password">
+    <br>
+    <input type="submit" value="Apply">
+  </form>
+</body>
+  )";
+
 ConnectionManager::ConnectionManager(const String programName) : name(programName) {
   Serial.begin(115200);
-  delay(10);
-
+  
   Serial.println("\nStarting the ferry connection configuration WiFi AP...");
 
   // Setup in soft access point mode
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(name.c_str());
 
-  // Tell the http client to allow reuse if the server supports it (we make lots of requests, this should decrease overhead)
+  // Tell the http client to allow reuse if the server supports it (we make lots of requests to the same server, this should decrease overhead)
   client.setReuse(true);
 
   // Start a mDNS responder so that users can connect easily
@@ -108,7 +138,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 boolean ConnectionManager::ready() {
   if (ssid == "" && password == "")
     return false;
-  else
+  else if (WiFi.status() == WL_CONNECTED)
     return true;
 }
 
