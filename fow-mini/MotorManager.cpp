@@ -144,7 +144,6 @@ void MotorManager::update() {
         long departingProgressTicks = -1 * (long)(departingProgress * k_stepperMaxTicks);
         long arrivingProgressTicks = -1 * (long)(arrivingProgress * k_stepperMaxTicks);
         if (primaryStepper->targetPosition() != departingProgressTicks) {
- 
           primaryStepper->moveTo(departingProgressTicks);
           if (departingProgress == 0 || departingProgress == 1)
             departingLights->setMode(FerryLights::Modes::DOCKED);

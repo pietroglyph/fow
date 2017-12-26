@@ -63,7 +63,7 @@ void DataManager::update() {
     progress.start = atof(response.at(0).c_str());
     progress.end = atof(response.at(1).c_str());
     // startTimeOffset is how long ago (in milliseconds) the first number was valid
-    progress.startTimeOffset = millis() - strtoul(response.at(2).c_str(), &end, 10);
+    progress.startTimeOffset = strtoul(response.at(2).c_str(), &end, 10);
     progresses.push_back(progress);
   }
 }
@@ -73,17 +73,10 @@ double DataManager::getProgress(int i) {
     return 0.0;
   }
   Progress progress = progresses.at(i);
-  long double divisor = millis() - (progress.startTimeOffset + millis() - lastUpdated) + endDurationAhead;
-  if (millis() > LDBL_MAX) {
-    // We will overflow interpFactor if this is true (unsigned long can get twice as large as long double, even though they're the same precision)
-    // We're forced to reset if this happens, but it's a very edge case so something this drastic is acceptable
-    Serial.println("millis would overflow a double, resetting.");
-    resetFunc();
-    return 0.0;
-  }
-  long double interpFactor = double(millis() / divisor);
-  double result = (((progress.end - progress.start) * interpFactor) + progress.start);
-  Serial.println(result);
+  if (progress.startTimeOffset == 0)
+    return progress.start; // If the offset is zero, then the ferry is docked
+  long double percentPerMsec = (progress.end - progress.start) / endDurationAhead;
+  long double result = ((millis() - (lastUpdated - progress.startTimeOffset)) * percentPerMsec) + progress.start;
   return result;
 }
 
