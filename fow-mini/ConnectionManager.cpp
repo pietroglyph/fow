@@ -23,7 +23,7 @@ const static char configPage[] PROGMEM = R"(<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Mini-FOW Configuration</title>
+  <title>FOW (Mini) Configuration</title>
   <style>
     body {
       font-family: sans-serif;
@@ -31,12 +31,12 @@ const static char configPage[] PROGMEM = R"(<!DOCTYPE html>
     }
     iframe {
       border: none;
-      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='100%' width='100%'><text x='0' y='15' fill='black' font-size='20'>Loading status information...</text></svg>");
+      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='100%' width='100%'><text x='0' y='15' fill='black' font-size='20'>Connecting...</text></svg>");
     }
   </style>
 </head>
 <body>
-  <h1>Mini Ferries Over Winslow Configuration</h1>
+  <h1>Ferries Over Winslow (Mini) Configuration</h1>
   <h2>Status</h2>
   <iframe src="/status" width="100%"></iframe>
   <h2>Network Configuration</h2>

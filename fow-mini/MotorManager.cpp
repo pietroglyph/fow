@@ -52,6 +52,7 @@ extern "C" {
 }
 }
 
+// This class also manages lights to some extent, which is not single responisibility. We should _at least_ rename this class. TODO
 MotorManager::MotorManager(Modes mode, DataManager* dataManager, LightManager* lightManager) : mode(mode), data(dataManager), lights(lightManager) {
   using namespace Wrapper;
 
