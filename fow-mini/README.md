@@ -1,5 +1,7 @@
 # Ferries Over Winslow Mini
 This is the code that runs on a microcontroller to power smaller-scale displays (clocks, sliding displays, etc.) The client is written in C++ and runs with the Arduino support libraries, but actually runs on an ESP8266.
+## Configuring your Mini
+The microcontroller broadcasts a network called `fow-mini`, on which it serves a configuration webpage. Once you connect to that network, you can enter `192.168.4.1` into your web browser. On that page you should enter in the network name and password and press apply. The status box will show your connection status. If you can't connect, check the network name and password, and try positioning your microcontroller closer to the access point you're connecting to. If you're having trouble connecting, feel free to [post an issue on Github](https://github.com/pietroglyph/fow/issues/new).
 ## Flashing your microcontroller
 The easiest way to get the code onto your ESP8266 (the code requires an ESP8266, but it doesn't really matter what's on the rest of the board, the NodeMCU DEVKIT 1.0 and Adafruit Feather Huzzah are both known to work) is to use the Arduino IDE (based on Processing), and use the IDE's included tools to get the required libraries and tooling to compile your code and flash it to the ESP8266.
 
