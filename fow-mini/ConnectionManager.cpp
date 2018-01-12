@@ -21,33 +21,60 @@
 
 const static char configPage[] PROGMEM = R"(<!DOCTYPE html>
 <html>
+<!doctype html>
+<html>
 <head>
-  <meta charset="utf-8">
-  <title>FOW (Mini) Configuration</title>
-  <style>
-    body {
-      font-family: sans-serif;
-      width: 100%;
-    }
-    iframe {
-      border: none;
-      background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' height='100%' width='100%'><text x='0' y='15' fill='black' font-size='20'>Connecting...</text></svg>");
-    }
-  </style>
+<meta charset="UTF-8">
+<title>(Mini) Ferries Over Winsolow Configuration</title>
 </head>
 <body>
-  <h1>Ferries Over Winslow (Mini) Configuration</h1>
-  <h2>Status</h2>
-  <iframe src="/status" width="100%"></iframe>
-  <h2>Network Configuration</h2>
-  <form method="POST" action="/">
+
+<style>
+  html {
+    height: 100%;}
+  body {
+    font-family: Gotham, "Helvetica Neue", Helvetica, Arial, "sans-serif";
+    color: white;
+      background-size: cover;
+      background-repeat:no-repeat;
+    background: #44A08D;  /* fallback for old browsers */
+    background: -webkit-linear-gradient(#093637, #44A08D);
+    background: -o-linear-gradient(#093637, #44A08D);
+    background: radial-gradient(#44A08D, #093637);  /* Chrome 10-25, Safari 5.1-6 */ /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */ }
+  h1 {
+    font-size: 200%;
+    text-align: center;}
+  h2 {
+    font-size: 150%;
+    text-align: left;}
+  p  {
+    font-size: 100%;
+    text-align: center;
+    opacity: .5;}
+  form  {
+    font-size: 100%;
+    text-align: left;}
+  hr {width:80%;}
+  iframe {
+    border: none;
+    height: 5em;
+    }
+</style>
+  <h1>FerryClock Setup</h1>
+  <p>Get FerryClock motoring within your local wireless network</p>
+  <hr>
+    <h2>Status</h2>
+    <iframe src="/status" width="100%"></iframe>
+    <h2>Network Configuration</h2>
+    <form method="POST" action="/">
     Network Name: <input type="text" name="ssid">
     <br>
     Password: <input type="password" name="password">
     <br>
     <input type="submit" value="Apply">
-  </form>
+    </form>
 </body>
+</html>
   )";
 
 ConnectionManager::ConnectionManager(const String programName) : name(programName) {
@@ -116,7 +143,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
         break;
     }
     server.send(200, "text/html",
-                String("<html><body style='background-color: white; font-size: 12px; font-family: monospace;'>Network Name: ") + ssid +
+                String("<html><body style='color: white; font-size: 14px; font-family: monospace;'>Network Name: ") + ssid +
                 "<br>Password: " + password +
                 "<br>Connection Status: " + connStatus +
                 "</body></html>");
