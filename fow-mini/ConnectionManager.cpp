@@ -25,7 +25,7 @@ const static char configPage[] PROGMEM = R"(<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>(Mini) Ferries Over Winsolow Configuration</title>
+<title>(Mini) Ferries Over Winslow Configuration</title>
 </head>
 <body>
 

@@ -17,8 +17,8 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MotorManager_h
-#define MotorManager_h
+#ifndef OutputManager_h
+#define OutputManager_h
 
 #include <functional>
 #include "LightManager.h"
@@ -27,7 +27,7 @@
 #include <AccelStepper.h>
 #include <Adafruit_MotorShield.h>
 
-class MotorManager {
+class OutputManager {
   public:
     enum class Modes {
       DOUBLE_CLOCK,
@@ -36,7 +36,7 @@ class MotorManager {
       SINGLE_TEST_SEC
     };
 
-    MotorManager(Modes mode, DataManager* data, LightManager* lights);
+    OutputManager(Modes mode, DataManager* data, LightManager* lights);
 
     void update();
     void calibrate();
@@ -63,6 +63,35 @@ class MotorManager {
     Adafruit_StepperMotor *secondaryAdafruitStepper = NULL;
     AccelStepper *primaryStepper = NULL;
     AccelStepper *secondaryStepper = NULL;
+};
+
+class FerryLights {
+  public:
+    FerryLights(int dockPin, int starboardPin, int portPin);
+
+    enum class Modes {
+      RUNNING,
+      DOCKED,
+      DISCONNECTED
+    };
+    enum class Directions {
+      PORT, STARBOARD
+    };
+
+    void update();
+    void setMode(Modes mode);
+    void setDirection(Directions direction);
+    void setupPins();
+  private:
+    Modes mode;
+    Directions direction;
+
+    const int k_dockLightIntensity = 128;
+    const int k_directionLightIntensity = 2;
+
+    int dockPin;
+    int starboardPin;
+    int portPin;
 };
 
 #endif
