@@ -28,6 +28,7 @@ import (
 
 func (d *ferryData) keepUpdated(wsfClient *wsf.Client) {
 	for {
+		time.Sleep(time.Duration(config.updateFrequency) * time.Second)
 		if time.Now().Sub(d.lastUpdated).Seconds() < float64(config.updateFrequency) {
 			continue
 		} else if time.Now().Sub(lastRequested).Seconds() >= float64(config.idleAfter) {
