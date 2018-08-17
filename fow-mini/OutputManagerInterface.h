@@ -17,28 +17,25 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ConnectionManager.h"
-#include "DataManager.h"
-#include "OutputManagerInterface.h"
-#include "ClockOutputManager.h"
+#ifndef OutputManagerInterface_h
+#define OutputManagerInterface_h
 
-// null references on the heap (these should never be destroyed)
-ConnectionManager* conn = NULL;
-DataManager* data = NULL;
-OutputManagerInterface* output = NULL;
+#include <functional>
 
-void setup() {
-  conn = new ConnectionManager("fow-mini");
-  data = new DataManager();
-  output = new ClockOutputManager();
-}
+class OutputManagerInterface {
+  public:
+    // We never delete objects who implement this class, so we don't need a virtual destructor
+  
+    // Passing functions insulates the implementor of this interface from the details of the structure that stores the data
+    virtual void update(std::function<double (int)> dataSupplier);
+    virtual void calibrate();
+  protected:
+    // Child classes don't need to use these, but they're provided for convinence
+    enum class States {
+      UNCALIBRATED,
+      CALIBRATING,
+      RUNNING
+    };
+};
 
-void loop() {
-  conn->update();
-  if (conn->ready()) {
-    data->update(conn->get());
-    output->update([](int ferryIndex){return data->getProgress(ferryIndex);}); // We wrap this in a lambda because std::function won't take a member function
-  } else {
-    output->calibrate();
-  }
-}
+#endif

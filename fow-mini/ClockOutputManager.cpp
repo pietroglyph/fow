@@ -17,7 +17,7 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "MotorManager.h"
+#include "ClockOutputManager.h"
 
 /*
    This is not an idomatic use of namespaces;
@@ -53,7 +53,7 @@ extern "C" {
 }
 
 // This class also manages lights to some extent, which is not single responisibility. We should _at least_ rename this class. TODO
-MotorManager::MotorManager(Modes mode, DataManager* dataManager, LightManager* lightManager) : mode(mode), data(dataManager), lights(lightManager) {
+ClockOutputManager::ClockOutputManager() {
   using namespace Wrapper;
 
   Serial.begin(115200);
@@ -90,78 +90,65 @@ MotorManager::MotorManager(Modes mode, DataManager* dataManager, LightManager* l
   secondaryStepper->setAcceleration(k_stepperMaxAccel);
 
   // These magic numbers are the pins for the lights
-  departingLights = new FerryLights(14, 13, 15);
-  arrivingLights = new FerryLights(12, 0, 16);
+  departingLights = new LightHelper(14, 13, 15);
+  arrivingLights = new LightHelper(12, 0, 16);
 
-  lights->registerFerry(departingLights);
-  lights->registerFerry(arrivingLights);
+  departingLights->setupPins();
+  arrivingLights->setupPins();
 
-  lights->setupPins();
+  setLightMode(LightHelper::Modes::DISCONNECTED);
 
-  departingLights->setMode(FerryLights::Modes::DISCONNECTED);
-  arrivingLights->setMode(FerryLights::Modes::DISCONNECTED);
-
-  departingLights->setDirection(FerryLights::Directions::PORT);
-  arrivingLights->setDirection(FerryLights::Directions::STARBOARD);
+  departingLights->setDirection(LightHelper::Directions::PORT);
+  arrivingLights->setDirection(LightHelper::Directions::STARBOARD);
 }
 
-void MotorManager::calibrate() {
+void ClockOutputManager::calibrate() {
   primaryStepper->run();
   secondaryStepper->run();
 
-  if (state == States::UNCALIBRATED) {
+  setLightMode(LightHelper::Modes::DISCONNECTED);
+
+  if (state == OutputManagerInterface::States::UNCALIBRATED) {
     primaryStepper->moveTo(k_stepperMaxTicks);
     secondaryStepper->moveTo(k_stepperMaxTicks);
-    state = States::CALIBRATING;
+    state = OutputManagerInterface::States::CALIBRATING;
     return;
-  } else if (state == States::CALIBRATING) {
+  } else if (state == OutputManagerInterface::States::CALIBRATING) {
     if (primaryStepper->distanceToGo() == 0 &&
         secondaryStepper->distanceToGo() == 0) {
       Serial.println("Calibration finished.");
       primaryStepper->setCurrentPosition(0);
       secondaryStepper->setCurrentPosition(0);
-      state = States::RUNNING;
+      state = OutputManagerInterface::States::RUNNING;
     }
   }
 }
 
-void MotorManager::update() {
+void ClockOutputManager::update(std::function<double (int)> dataSupplier) {
   primaryStepper->run();
   secondaryStepper->run();
 
-  switch (mode) {
-    case Modes::SINGLE_TEST_PRI :
-      if (primaryStepper->distanceToGo() == 0)
-        primaryStepper->moveTo(-primaryStepper->currentPosition());
-      break;
-    case Modes::SINGLE_TEST_SEC :
-      if (secondaryStepper->distanceToGo() == 0)
-        secondaryStepper->moveTo(-secondaryStepper->currentPosition());
-      break;
-    case Modes::DOUBLE_CLOCK :
-      {
-        double departingProgress = data->getProgress(0); // We know which index is which because these are always ordered the same by the server
-        double arrivingProgress = data->getProgress(1);
-        long departingProgressTicks = -1 * (long)(departingProgress * k_stepperMaxTicks);
-        long arrivingProgressTicks = -1 * (long)(arrivingProgress * k_stepperMaxTicks);
-        if (primaryStepper->targetPosition() != departingProgressTicks) {
-          primaryStepper->moveTo(departingProgressTicks);
-          if (departingProgress == 0 || departingProgress == 1)
-            departingLights->setMode(FerryLights::Modes::DOCKED);
-          else
-            departingLights->setMode(FerryLights::Modes::RUNNING);
-        }
-        if (secondaryStepper->targetPosition() != arrivingProgressTicks) {
-          secondaryStepper->moveTo(arrivingProgressTicks);
-          if (arrivingProgress == 0 || arrivingProgress == 1)
-            arrivingLights->setMode(FerryLights::Modes::DOCKED);
-          else
-            arrivingLights->setMode(FerryLights::Modes::RUNNING);
-        }
-        break;
-      }
-    case Modes::DOUBLE_SLIDE :
-      Serial.println("DOUBLE_SLIDE motor mode is unimplemented.");
-      break;
+  double departingProgress = dataSupplier(0); // We know which index is which because these are always ordered the same by the server
+  double arrivingProgress = dataSupplier(1);
+  long departingProgressTicks = -1 * (long)(departingProgress * k_stepperMaxTicks);
+  long arrivingProgressTicks = -1 * (long)(arrivingProgress * k_stepperMaxTicks);
+  if (primaryStepper->targetPosition() != departingProgressTicks) {
+    primaryStepper->moveTo(departingProgressTicks);
+    if (departingProgress == 0 || departingProgress == 1)
+      departingLights->setMode(LightHelper::Modes::DOCKED);
+    else
+      departingLights->setMode(LightHelper::Modes::RUNNING);
   }
+  if (secondaryStepper->targetPosition() != arrivingProgressTicks) {
+    secondaryStepper->moveTo(arrivingProgressTicks);
+    if (arrivingProgress == 0 || arrivingProgress == 1)
+      arrivingLights->setMode(LightHelper::Modes::DOCKED);
+    else
+      arrivingLights->setMode(LightHelper::Modes::RUNNING);
+  }
+}
+
+void ClockOutputManager::setLightMode(LightHelper::Modes mode) {
+  departingLights->setMode(mode);
+  arrivingLights->setMode(mode);
 }

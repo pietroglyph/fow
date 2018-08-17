@@ -19,12 +19,12 @@
 
 #include "DataManager.h"
 
-DataManager::DataManager(ConnectionManager* conn) : connection(conn) {
+DataManager::DataManager() {
   Serial.begin(115200);
   delay(10);
 }
 
-void DataManager::update() {
+void DataManager::update(String rawDataString) {
   if (millis() - lastUpdated < refreshRate) {
     return;
   }
@@ -32,7 +32,7 @@ void DataManager::update() {
   Serial.println("Requesting fresh data from the server...");
 
   std::vector<String> compositeResponse;
-  compositeResponse = split(connection->get(), ':');
+  compositeResponse = split(rawDataString, ':');
   lastUpdated = millis();
 
   char *end;

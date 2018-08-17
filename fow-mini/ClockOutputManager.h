@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
+    Copyright (c) 2017-2018 Declan Freeman-Gleason. All rights reserved.
 
     This file is part of Ferries Over Winslow.
 
@@ -17,81 +17,37 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef OutputManager_h
-#define OutputManager_h
+#ifndef ClockOutputManager_h
+#define ClockOutputManager_h
 
 #include <functional>
-#include "LightManager.h"
-#include "DataManager.h"
+#include "LightHelper.h"
+#include "OutputManagerInterface.h"
 #include <Wire.h>
 #include <AccelStepper.h>
 #include <Adafruit_MotorShield.h>
 
-class OutputManager {
+class ClockOutputManager : public OutputManagerInterface {
   public:
-    enum class Modes {
-      DOUBLE_CLOCK,
-      DOUBLE_SLIDE,
-      SINGLE_TEST_PRI,
-      SINGLE_TEST_SEC
-    };
+    ClockOutputManager();
 
-    OutputManager(Modes mode, DataManager* data, LightManager* lights);
-
-    void update();
+    void update(std::function<double (int)> dataSupplier);
     void calibrate();
-    void setMode(Modes mode);
   private:
-    enum class States {
-      UNCALIBRATED,
-      CALIBRATING,
-      RUNNING
-    };
-
     const int k_stepperMaxTicks = 812;
     const double k_stepperMaxSpeed = 100.0;
     const double k_stepperMaxAccel = 100.0;
 
-    FerryLights* departingLights;
-    FerryLights* arrivingLights;
-    States state = States::UNCALIBRATED;
-    Modes mode;
-    DataManager* data;
-    LightManager* lights;
+    void setLightMode(LightHelper::Modes mode);
+
+    LightHelper* departingLights;
+    LightHelper* arrivingLights;
+    OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
     Adafruit_MotorShield motorShield;
     Adafruit_StepperMotor *primaryAdafruitStepper = NULL;
     Adafruit_StepperMotor *secondaryAdafruitStepper = NULL;
     AccelStepper *primaryStepper = NULL;
     AccelStepper *secondaryStepper = NULL;
-};
-
-class FerryLights {
-  public:
-    FerryLights(int dockPin, int starboardPin, int portPin);
-
-    enum class Modes {
-      RUNNING,
-      DOCKED,
-      DISCONNECTED
-    };
-    enum class Directions {
-      PORT, STARBOARD
-    };
-
-    void update();
-    void setMode(Modes mode);
-    void setDirection(Directions direction);
-    void setupPins();
-  private:
-    Modes mode;
-    Directions direction;
-
-    const int k_dockLightIntensity = 128;
-    const int k_directionLightIntensity = 2;
-
-    int dockPin;
-    int starboardPin;
-    int portPin;
 };
 
 #endif

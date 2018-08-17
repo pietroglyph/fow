@@ -22,15 +22,15 @@
 
 #include <vector>
 #include <float.h> // for finding the maximum capacity of doubles
-#include "ConnectionManager.h"
+#include <Arduino.h>
 
 class DataManager {
   public:
-    DataManager(ConnectionManager* conn);
+    DataManager();
 
     const unsigned long refreshRate = 5000; // in milliseconds
 
-    void update();
+    void update(String rawDataString);
     double getProgress(int i);
   private:
     typedef struct {
@@ -41,8 +41,7 @@ class DataManager {
 
     unsigned long lastUpdated = 0;
     std::vector<Progress> progresses;
-    ConnectionManager* connection;
-    unsigned long endDurationAhead = 5000; // The end progress is 5 seconds ahead of the first
+    unsigned long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first
 
     std::vector<String> split(const String &text, char sep);
 
