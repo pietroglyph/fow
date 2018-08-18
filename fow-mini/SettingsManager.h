@@ -37,14 +37,15 @@ class SettingsManager {
     bool isInSetupMode();
     void exitSetupMode(); // There is no way to enter setup mode because that only happens on a full reset, which is handled internally
     void updateFullResetTimer();
-   private:
-     // maximum amount of time allowed between reset button presses for a full reset to occur, in milleseconds
-     const int fullResetButtonPressDelayMs = 3000;
-     const int eepromSize = 512; // In bytes
-     const int maximumSettingLength = eepromSize / 4; // In bytes
-     const int flagByteAddress = 0;
 
-     int getAddressForSetting(Setting setting);
+    const int maximumSettingLength = eepromSize / 4; // In bytes
+  private:
+    // maximum amount of time allowed between reset button presses for a full reset to occur, in milleseconds
+    const int fullResetButtonPressDelayMs = 3000;
+    const int eepromSize = 512; // In bytes
+    const int flagByteAddress = 0;
+
+    int getAddressForSetting(Setting setting);
 };
 
 #endif

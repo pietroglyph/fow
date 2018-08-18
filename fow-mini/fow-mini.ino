@@ -28,6 +28,7 @@ DataManager* data = NULL;
 OutputManagerInterface* output = NULL;
 
 void setup() {
+  Serial.begin(115200);
   conn = new ConnectionManager("fow-mini");
   data = new DataManager();
   output = new ClockOutputManager();
@@ -36,8 +37,10 @@ void setup() {
 void loop() {
   conn->update();
   if (conn->ready()) {
-    data->update(conn->get());
-    output->update([](int ferryIndex){return data->getProgress(ferryIndex);}); // We wrap this in a lambda because std::function won't take a member function
+    if (data->shouldUpdate()) data->update(conn->get());
+    output->update([](int ferryIndex) {
+      return data->getProgress(ferryIndex);
+    }); // We wrap this in a lambda because std::function won't take a member function
   } else {
     output->calibrate();
   }

@@ -20,6 +20,7 @@
 #ifndef ConnectionManager_h
 #define ConnectionManager_h
 
+#include "SettingsManager.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
@@ -29,7 +30,7 @@ class ConnectionManager {
   public:
     ConnectionManager(String programName);
 
-    boolean ready();
+    bool ready();
     void update();
     String get();
   private:
@@ -38,6 +39,7 @@ class ConnectionManager {
         because of its TCP connection reuse, and convinient request processing (you can manipulate headers and it separates
         the body for you).
     */
+
     // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
     const String host = "fow.nalcad.tk";
     const String path = "/progress";
@@ -45,11 +47,15 @@ class ConnectionManager {
     const unsigned long timeout = 8000; // In milleseconds
 
     ESP8266WebServer server = ESP8266WebServer(80);
+    SettingsManager settingsManager = SettingsManager();
     HTTPClient client;
 
     String name;
-    String ssid;
-    String password;
+    String ssid = "";
+    String password = "";
+    bool setupMode = true;
+
+    void connectToWiFiNetwork();
 };
 
 #endif

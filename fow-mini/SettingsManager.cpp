@@ -5,7 +5,7 @@ SettingsManager::SettingsManager() {
 }
 
 void SettingsManager::updateFullResetTimer() {
-  
+
 }
 
 String SettingsManager::getSetting(Setting setting) {

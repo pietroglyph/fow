@@ -38,7 +38,7 @@ class ClockOutputManager : public OutputManagerInterface {
     const double k_stepperMaxSpeed = 100.0;
     const double k_stepperMaxAccel = 100.0;
 
-    void setLightMode(LightHelper::Modes mode);
+    void updateLightMode(LightHelper::Modes mode);
 
     LightHelper* departingLights;
     LightHelper* arrivingLights;

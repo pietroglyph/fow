@@ -20,17 +20,9 @@
 #include "DataManager.h"
 
 DataManager::DataManager() {
-  Serial.begin(115200);
-  delay(10);
 }
 
 void DataManager::update(String rawDataString) {
-  if (millis() - lastUpdated < refreshRate) {
-    return;
-  }
-
-  Serial.println("Requesting fresh data from the server...");
-
   std::vector<String> compositeResponse;
   compositeResponse = split(rawDataString, ':');
   lastUpdated = millis();
@@ -66,6 +58,11 @@ void DataManager::update(String rawDataString) {
     progress.startTimeOffset = strtoul(response.at(2).c_str(), &end, 10);
     progresses.push_back(progress);
   }
+}
+
+bool DataManager::shouldUpdate() {
+  if (millis() - lastUpdated < refreshRate) return false;
+  return true;
 }
 
 double DataManager::getProgress(int i) {

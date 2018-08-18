@@ -52,11 +52,8 @@ extern "C" {
 }
 }
 
-// This class also manages lights to some extent, which is not single responisibility. We should _at least_ rename this class. TODO
 ClockOutputManager::ClockOutputManager() {
   using namespace Wrapper;
-
-  Serial.begin(115200);
 
   motorShield = Adafruit_MotorShield();
   motorShield.begin();
@@ -96,7 +93,7 @@ ClockOutputManager::ClockOutputManager() {
   departingLights->setupPins();
   arrivingLights->setupPins();
 
-  setLightMode(LightHelper::Modes::DISCONNECTED);
+  updateLightMode(LightHelper::Modes::DISCONNECTED);
 
   departingLights->setDirection(LightHelper::Directions::PORT);
   arrivingLights->setDirection(LightHelper::Directions::STARBOARD);
@@ -106,7 +103,7 @@ void ClockOutputManager::calibrate() {
   primaryStepper->run();
   secondaryStepper->run();
 
-  setLightMode(LightHelper::Modes::DISCONNECTED);
+  updateLightMode(LightHelper::Modes::DISCONNECTED);
 
   if (state == OutputManagerInterface::States::UNCALIBRATED) {
     primaryStepper->moveTo(k_stepperMaxTicks);
@@ -125,6 +122,8 @@ void ClockOutputManager::calibrate() {
 }
 
 void ClockOutputManager::update(std::function<double (int)> dataSupplier) {
+  if (state != OutputManagerInterface::States::RUNNING) return;
+  
   primaryStepper->run();
   secondaryStepper->run();
 
@@ -148,7 +147,9 @@ void ClockOutputManager::update(std::function<double (int)> dataSupplier) {
   }
 }
 
-void ClockOutputManager::setLightMode(LightHelper::Modes mode) {
+void ClockOutputManager::updateLightMode(LightHelper::Modes mode) {
   departingLights->setMode(mode);
   arrivingLights->setMode(mode);
+  departingLights->update();
+  arrivingLights->update();
 }

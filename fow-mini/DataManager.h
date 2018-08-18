@@ -31,6 +31,7 @@ class DataManager {
     const unsigned long refreshRate = 5000; // in milliseconds
 
     void update(String rawDataString);
+    bool shouldUpdate();
     double getProgress(int i);
   private:
     typedef struct {

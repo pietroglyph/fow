@@ -19,68 +19,109 @@
 
 #include "ConnectionManager.h"
 
-const static char configPage[] PROGMEM = R"(<!DOCTYPE html>
+const static char configPage[] PROGMEM = R"(
+<!DOCTYPE html>
 <html>
-<!doctype html>
-<html>
-<head>
-<meta charset="UTF-8">
-<title>(Mini) Ferries Over Winslow Configuration</title>
-</head>
-<body>
-
-<style>
-  html {
-    height: 100%;}
-  body {
-    font-family: Gotham, "Helvetica Neue", Helvetica, Arial, "sans-serif";
-    color: white;
-      background-size: cover;
-      background-repeat:no-repeat;
-    background: #44A08D;  /* fallback for old browsers */
-    background: -webkit-linear-gradient(#093637, #44A08D);
-    background: -o-linear-gradient(#093637, #44A08D);
-    background: radial-gradient(#44A08D, #093637);  /* Chrome 10-25, Safari 5.1-6 */ /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */ }
-  h1 {
-    font-size: 200%;
-    text-align: center;}
-  h2 {
-    font-size: 150%;
-    text-align: left;}
-  p  {
-    font-size: 100%;
-    text-align: center;
-    opacity: .5;}
-  form  {
-    font-size: 100%;
-    text-align: left;}
-  hr {width:80%;}
-  iframe {
-    border: none;
-    height: 5em;
-    }
-</style>
-  <h1>FerryClock Setup</h1>
-  <p>Get FerryClock motoring within your local wireless network</p>
-  <hr>
+  <head>
+  <meta charset="UTF-8">
+  <title>(Mini) Ferries Over Winslow Configuration</title>
+  </head>
+  <body>
+    <style>
+      html {
+        height: 100%;
+      }
+      body {
+        font-family: Gotham, "Helvetica Neue", "Helvetica", "Arial", sans-serif;
+        color: white;
+        background-size: cover;
+        background-repeat:no-repeat;
+        background: #44A08D;  /* fallback for old browsers */
+        background: -webkit-linear-gradient(#093637, #44A08D);
+        background: -o-linear-gradient(#093637, #44A08D);
+        background: radial-gradient(#44A08D, #093637);  /* Chrome 10-25, Safari 5.1-6 */ /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */ }
+      h1 {
+        font-size: 200%;
+        text-align: center;
+      }
+      h2 {
+        font-size: 150%;
+        text-align: left;
+      }
+      p {
+        font-size: 100%;
+        text-align: center;
+        opacity: .5;
+      }
+      form {
+        font-size: 100%;
+        text-align: left;
+      }
+      hr {
+        width:80%;
+      }
+      iframe {
+        border: none;
+        height: 10vh;
+        width: 100%;
+      }
+      noscript {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100vh;
+        text-align: center;
+        background-color: red;
+        font-weight: bold;
+        font-size: 120%;
+      }
+    </style>
+    <h1>FerryClock Setup</h1>
+    <p>Get FerryClock motoring within your local wireless network</p>
+    <hr>
     <h2>Status</h2>
-    <iframe src="/status" width="100%"></iframe>
+    <iframe src="/status"></iframe>
     <h2>Network Configuration</h2>
+    <noscript>The Ferries Over Winslow configuration page will not work without JavaScript enabled.</noscript>
     <form method="POST" action="/">
-    Network Name: <input type="text" name="ssid">
-    <br>
-    Password: <input type="password" name="password">
-    <br>
-    <input type="submit" value="Apply">
+      Network Name: <input type="text" name="ssid">
+      <br>
+      Password: <input type="password" name="password">
+      <br>
+      <input type="submit" value="Apply">
     </form>
-</body>
+    <script>
+      const CONFIRM_TEXT = "The connection was successful. You can exit setup mode, which will disable the setup WiFi network. You will only be able to change the configuration by doing a full reset (press the rest button 3 times). Would you like to exit setup mode?"
+      window.onload = function(e) {
+        fetch("/promptforexitsetup").then((response) => {
+          if (response.ok && confirm(CONFIRM_TEXT)) {
+            fetch("/exitsetup").then(() => alert("Successfully exited setup mode."));
+          }
+        });
+      }
+    </script>
+  </body>
 </html>
   )";
 
 ConnectionManager::ConnectionManager(const String programName) : name(programName) {
-  Serial.begin(115200);
-  
-  Serial.println("\nStarting the ferry connection configuration WiFi AP...");
+
+  Serial.println("Checking EEPROM for saved WiFi credentials...");
+  if (!settingsManager.isInSetupMode()) {
+    setupMode = false;
+
+    ssid = settingsManager.getSetting(SettingsManager::Setting::SSID);
+    password = settingsManager.getSetting(SettingsManager::Setting::PASSWORD);
+
+    Serial.printf("Saved credentials found. SSID: %s, Password: %s.\n", ssid.c_str(), password.c_str());
+
+    connectToWiFiNetwork();
+    return;
+  }
+  setupMode = true;
+
+  Serial.println("No saved credentials found. Starting the ferry connection configuration WiFi AP...");
 
   // Setup in soft access point mode
   WiFi.mode(WIFI_AP_STA);
@@ -102,20 +143,10 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     if (server.hasArg("ssid") || server.hasArg("password")) {
       ssid = server.arg("ssid");
       password = server.arg("password");
+      ssid.remove(settingsManager.maximumSettingLength - 1);
+      password.remove(settingsManager.maximumSettingLength - 1);
 
-      WiFi.disconnect();
-      WiFi.begin(ssid.c_str(), password.c_str());
-
-      unsigned long startTime = millis();
-      while (WiFi.status() != WL_CONNECTED) {
-        if (millis() - startTime > timeout) {
-          Serial.print("\nWiFi connection attempt timed out.\n");
-          return;
-        }
-        delay(500);
-        Serial.print(".");
-      }
-      Serial.printf("\nConnected to WiFi with a private IP of %s.\n", WiFi.localIP().toString().c_str());
+      connectToWiFiNetwork();
     }
   });
 
@@ -124,7 +155,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     switch (WiFi.status()) {
       case WL_CONNECTED :
         if (ssid == "" || password == "") {
-          connStatus = "Disconnected"; // We get WL_CONNECTED only with an AP connection, so this kind of fixes that
+          connStatus = "Disconnected"; // We get WL_CONNECTED only with an AP connection, so this kind of deals with that
           break;
         }
         connStatus = "Connected";
@@ -149,8 +180,23 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
                 "</body></html>");
   });
 
-  server.on("/rawresponse", [&]() {
-    server.send(200, "text/plain", this->get());
+  server.on("/promptforexitsetup", [&]() {
+    bool shouldPrompt = WiFi.status() == WL_CONNECTED && (ssid != "" || password != "");
+    server.send(shouldPrompt ? 200 : 500, "text/plain", shouldPrompt ? "true" : "false");
+  });
+
+  server.on("/exitsetup", [&]() {
+    if (WiFi.status() != WL_CONNECTED || (ssid == "" && password == "")) return;
+
+    server.send(200, "text/plain", "Exiting setup...");
+
+    setupMode = false;
+
+    WiFi.softAPdisconnect(true);
+
+    settingsManager.setSetting(SettingsManager::Setting::SSID, ssid);
+    settingsManager.setSetting(SettingsManager::Setting::PASSWORD, password);
+    settingsManager.exitSetupMode();
   });
 
   // Handle requests to the /config path by changing configuration
@@ -162,15 +208,16 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   Serial.println("HTTP server has been started.");
 }
 
-boolean ConnectionManager::ready() {
+bool ConnectionManager::ready() {
   if (ssid == "" && password == "")
     return false;
   else if (WiFi.status() == WL_CONNECTED)
     return true;
+  else return false;
 }
 
 void ConnectionManager::update() {
-  server.handleClient();
+  if (setupMode) server.handleClient();
 }
 
 String ConnectionManager::get() {
@@ -189,4 +236,20 @@ String ConnectionManager::get() {
   }
 
   return client.getString(); // This only returns the response body.
+}
+
+void ConnectionManager::connectToWiFiNetwork() {
+  WiFi.disconnect();
+  WiFi.begin(ssid.c_str(), password.c_str());
+
+  unsigned long startTime = millis();
+  while (WiFi.status() != WL_CONNECTED) {
+    if (millis() - startTime > timeout) {
+      Serial.print("\nWiFi connection attempt timed out.\n");
+      return;
+    }
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.printf("\nConnected to WiFi with a private IP of %s.\n", WiFi.localIP().toString().c_str());
 }
