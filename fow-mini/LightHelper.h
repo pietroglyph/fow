@@ -17,16 +17,16 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LightManager_h
-#define LightManager_h
+#ifndef LightHelper_h
+#define LightHelper_h
 
 #include <Wire.h>
 #include <vector>
 #include "Arduino.h" // XXX: I have no idea why this needs to be included
 
-class FerryLights {
+class LightHelper {
   public:
-    FerryLights(int dockPin, int starboardPin, int portPin);
+    LightHelper(int dockPin, int starboardPin, int portPin);
 
     enum class Modes {
       RUNNING,
@@ -51,17 +51,6 @@ class FerryLights {
     int dockPin;
     int starboardPin;
     int portPin;
-};
-
-class LightManager {
-  public:
-    void registerFerry(FerryLights* ferryLights);
-    void update();
-    void setupPins();
-    void setAllModesOnce(FerryLights::Modes mode);
-  private:
-    std::vector<FerryLights*> ferries;
-    FerryLights::Modes lastMode;
 };
 
 #endif

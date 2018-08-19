@@ -19,31 +19,29 @@
 
 #include "ConnectionManager.h"
 #include "DataManager.h"
-#include "MotorManager.h"
-#include "LightManager.h"
+#include "OutputManagerInterface.h"
+#include "ClockOutputManager.h"
 
 // null references on the heap (these should never be destroyed)
 ConnectionManager* conn = NULL;
 DataManager* data = NULL;
-MotorManager* motors = NULL;
-LightManager* lights = NULL;
+OutputManagerInterface* output = NULL;
 
 void setup() {
+  Serial.begin(115200);
   conn = new ConnectionManager("fow-mini");
-  data = new DataManager(conn);
-  lights = new LightManager();
-  motors = new MotorManager(MotorManager::Modes::DOUBLE_CLOCK, data, lights);
+  data = new DataManager();
+  output = new ClockOutputManager();
 }
 
 void loop() {
   conn->update();
   if (conn->ready()) {
-    lights->setAllModesOnce(FerryLights::Modes::RUNNING);
-    data->update();
-    motors->update();
+    if (data->shouldUpdate()) data->update(conn->get());
+    output->update([](int ferryIndex) {
+      return data->getProgress(ferryIndex);
+    }); // We wrap this in a lambda because std::function won't take a member function
   } else {
-    lights->setAllModesOnce(FerryLights::Modes::DISCONNECTED);
-    motors->calibrate();
+    output->calibrate();
   }
-  lights->update();
 }

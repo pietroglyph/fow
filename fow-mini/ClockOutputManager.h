@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
+    Copyright (c) 2017-2018 Declan Freeman-Gleason. All rights reserved.
 
     This file is part of Ferries Over Winslow.
 
@@ -17,47 +17,32 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef MotorManager_h
-#define MotorManager_h
+#ifndef ClockOutputManager_h
+#define ClockOutputManager_h
 
 #include <functional>
-#include "LightManager.h"
-#include "DataManager.h"
+#include "LightHelper.h"
+#include "OutputManagerInterface.h"
 #include <Wire.h>
 #include <AccelStepper.h>
 #include <Adafruit_MotorShield.h>
 
-class MotorManager {
+class ClockOutputManager : public OutputManagerInterface {
   public:
-    enum class Modes {
-      DOUBLE_CLOCK,
-      DOUBLE_SLIDE,
-      SINGLE_TEST_PRI,
-      SINGLE_TEST_SEC
-    };
+    ClockOutputManager();
 
-    MotorManager(Modes mode, DataManager* data, LightManager* lights);
-
-    void update();
+    void update(std::function<double (int)> dataSupplier);
     void calibrate();
-    void setMode(Modes mode);
   private:
-    enum class States {
-      UNCALIBRATED,
-      CALIBRATING,
-      RUNNING
-    };
+    const int stepperMaxTicks = 812;
+    const double stepperMaxSpeed = 100.0;
+    const double stepperMaxAccel = 100.0;
 
-    const int k_stepperMaxTicks = 812;
-    const double k_stepperMaxSpeed = 100.0;
-    const double k_stepperMaxAccel = 100.0;
+    void updateLightMode(LightHelper::Modes mode);
 
-    FerryLights* departingLights;
-    FerryLights* arrivingLights;
-    States state = States::UNCALIBRATED;
-    Modes mode;
-    DataManager* data;
-    LightManager* lights;
+    LightHelper* departingLights;
+    LightHelper* arrivingLights;
+    OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
     Adafruit_MotorShield motorShield;
     Adafruit_StepperMotor *primaryAdafruitStepper = NULL;
     Adafruit_StepperMotor *secondaryAdafruitStepper = NULL;

@@ -17,36 +17,25 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef DataManager_h
-#define DataManager_h
+#ifndef OutputManagerInterface_h
+#define OutputManagerInterface_h
 
-#include <vector>
-#include <float.h> // for finding the maximum capacity of doubles
-#include <Arduino.h>
+#include <functional>
 
-class DataManager {
+class OutputManagerInterface {
   public:
-    DataManager();
-
-    const unsigned long refreshRate = 5000; // in milliseconds
-
-    void update(String rawDataString);
-    bool shouldUpdate();
-    double getProgress(int i);
-  private:
-    typedef struct {
-      unsigned long startTimeOffset = 0;
-      double start = 0;
-      double end = 0;
-    } Progress;
-
-    unsigned long lastUpdated = 0;
-    std::vector<Progress> progresses;
-    unsigned long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first
-
-    std::vector<String> split(const String &text, char sep);
-
-    void(* resetFunc) (void) = 0;
+    // We never delete objects who implement this class, so we don't need a virtual destructor
+  
+    // Passing functions insulates the implementor of this interface from the details of the structure that stores the data
+    virtual void update(std::function<double (int)> dataSupplier);
+    virtual void calibrate();
+  protected:
+    // Child classes don't need to use these, but they're provided for convinence
+    enum class States {
+      UNCALIBRATED,
+      CALIBRATING,
+      RUNNING
+    };
 };
 
 #endif

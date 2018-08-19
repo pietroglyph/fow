@@ -17,36 +17,11 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "LightManager.h"
+#include "LightHelper.h"
 
-void LightManager::registerFerry(FerryLights* ferryLights) {
-  ferries.push_back(ferryLights);
-}
+LightHelper::LightHelper(int dockPin, int starboardPin, int portPin) : dockPin(dockPin), starboardPin(starboardPin), portPin(portPin) {}
 
-void LightManager::update() {
-  for (auto const& ferry : ferries) {
-    ferry->update();
-  }
-}
-
-void LightManager::setupPins() {
-  for (auto const& ferry : ferries) {
-    ferry->setupPins();
-  }
-}
-
-void LightManager::setAllModesOnce(FerryLights::Modes mode) {
-  if (lastMode == mode)
-    return;
-  for (auto const& ferry : ferries) {
-    ferry->setMode(mode);
-  }
-  lastMode = mode;
-}
-
-FerryLights::FerryLights(int dockPin, int starboardPin, int portPin) : dockPin(dockPin), starboardPin(starboardPin), portPin(portPin) {}
-
-void FerryLights::update() {
+void LightHelper::update() {
   switch (mode) {
     case Modes::RUNNING :
       analogWrite(dockPin, 0);
@@ -72,16 +47,16 @@ void FerryLights::update() {
   }
 }
 
-void FerryLights::setupPins() {
+void LightHelper::setupPins() {
   pinMode(dockPin, OUTPUT);
   pinMode(starboardPin, OUTPUT);
   pinMode(portPin, OUTPUT);
 }
 
-void FerryLights::setMode(Modes mode) {
+void LightHelper::setMode(Modes mode) {
   this->mode = mode;
 }
 
-void FerryLights::setDirection(Directions direction) {
+void LightHelper::setDirection(Directions direction) {
   this->direction = direction;
 }
