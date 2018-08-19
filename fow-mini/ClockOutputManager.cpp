@@ -58,21 +58,27 @@ ClockOutputManager::ClockOutputManager() {
   motorShield = Adafruit_MotorShield();
   motorShield.begin();
 
-  primaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 2, 1);
-  secondaryAdafruitStepper = motorShield.getStepper(k_stepperMaxTicks * 2, 2);
+  primaryAdafruitStepper = motorShield.getStepper(stepperMaxTicks * 2, 1);
+  secondaryAdafruitStepper = motorShield.getStepper(stepperMaxTicks * 2, 2);
 
+  /*
+   * Using onestep instead of step here is very important, because step blocks,
+   * while onestep doesn't. step will sometimes block for a very long time,
+   * because of other seemingly random timing minutae, causes a soft watchdog
+   * timer reset.
+  */
   std::function<void(void)> l_forwardPrimary = [&] {
-    primaryAdafruitStepper->step(1, FORWARD, DOUBLE);
+    primaryAdafruitStepper->onestep(FORWARD, DOUBLE);
   };
   std::function<void(void)> l_backwardPrimary = [&] {
-    primaryAdafruitStepper->step(1, BACKWARD, DOUBLE);
+    primaryAdafruitStepper->onestep(BACKWARD, DOUBLE);
   };
 
   std::function<void(void)> l_forwardSecondary = [&] {
-    secondaryAdafruitStepper->step(1, FORWARD, DOUBLE);
+    secondaryAdafruitStepper->onestep(FORWARD, DOUBLE);
   };
   std::function<void(void)> l_backwardSecondary = [&] {
-    secondaryAdafruitStepper->step(1, BACKWARD, DOUBLE);
+    secondaryAdafruitStepper->onestep(BACKWARD, DOUBLE);
   };
 
   setMotors(l_forwardPrimary, l_backwardPrimary, l_forwardSecondary, l_backwardSecondary);
@@ -80,11 +86,11 @@ ClockOutputManager::ClockOutputManager() {
   primaryStepper = new AccelStepper(forwardPrimaryWrapper, backwardPrimaryWrapper);
   secondaryStepper = new AccelStepper(forwardSecondaryWrapper, backwardSecondaryWrapper);
 
-  primaryStepper->setMaxSpeed(k_stepperMaxSpeed);
-  primaryStepper->setAcceleration(k_stepperMaxAccel);
+  primaryStepper->setMaxSpeed(stepperMaxSpeed);
+  primaryStepper->setAcceleration(stepperMaxAccel);
 
-  secondaryStepper->setMaxSpeed(k_stepperMaxSpeed);
-  secondaryStepper->setAcceleration(k_stepperMaxAccel);
+  secondaryStepper->setMaxSpeed(stepperMaxSpeed);
+  secondaryStepper->setAcceleration(stepperMaxAccel);
 
   // These magic numbers are the pins for the lights
   departingLights = new LightHelper(14, 13, 15);
@@ -106,10 +112,9 @@ void ClockOutputManager::calibrate() {
   updateLightMode(LightHelper::Modes::DISCONNECTED);
 
   if (state == OutputManagerInterface::States::UNCALIBRATED) {
-    primaryStepper->moveTo(k_stepperMaxTicks);
-    secondaryStepper->moveTo(k_stepperMaxTicks);
+    primaryStepper->moveTo(stepperMaxTicks);
+    secondaryStepper->moveTo(stepperMaxTicks);
     state = OutputManagerInterface::States::CALIBRATING;
-    return;
   } else if (state == OutputManagerInterface::States::CALIBRATING) {
     if (primaryStepper->distanceToGo() == 0 &&
         secondaryStepper->distanceToGo() == 0) {
@@ -122,15 +127,18 @@ void ClockOutputManager::calibrate() {
 }
 
 void ClockOutputManager::update(std::function<double (int)> dataSupplier) {
-  if (state != OutputManagerInterface::States::RUNNING) return;
-  
+  if (state != OutputManagerInterface::States::RUNNING) {
+    calibrate();
+    return;
+  }
+
   primaryStepper->run();
   secondaryStepper->run();
 
   double departingProgress = dataSupplier(0); // We know which index is which because these are always ordered the same by the server
   double arrivingProgress = dataSupplier(1);
-  long departingProgressTicks = -1 * (long)(departingProgress * k_stepperMaxTicks);
-  long arrivingProgressTicks = -1 * (long)(arrivingProgress * k_stepperMaxTicks);
+  long departingProgressTicks = -1 * (long)(departingProgress * stepperMaxTicks);
+  long arrivingProgressTicks = -1 * (long)(arrivingProgress * stepperMaxTicks);
   if (primaryStepper->targetPosition() != departingProgressTicks) {
     primaryStepper->moveTo(departingProgressTicks);
     if (departingProgress == 0 || departingProgress == 1)

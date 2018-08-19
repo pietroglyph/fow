@@ -34,9 +34,9 @@ class ClockOutputManager : public OutputManagerInterface {
     void update(std::function<double (int)> dataSupplier);
     void calibrate();
   private:
-    const int k_stepperMaxTicks = 812;
-    const double k_stepperMaxSpeed = 100.0;
-    const double k_stepperMaxAccel = 100.0;
+    const int stepperMaxTicks = 812;
+    const double stepperMaxSpeed = 100.0;
+    const double stepperMaxAccel = 100.0;
 
     void updateLightMode(LightHelper::Modes mode);
 
