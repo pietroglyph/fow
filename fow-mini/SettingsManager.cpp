@@ -28,14 +28,14 @@ void SettingsManager::updateFullResetTimer() {
     hasTurnedOnResetBit = true;
 
     Serial.println("Checking reset bits...");
-    
+
     byte b = EEPROM.read(flagByteAddress);
     originalFlagByte = b;
-    b = (b>>1) | b; // Add a 1 after the last bit that is 1, or the second most significant bit, whichever comes first
+    b = (b >> 1) | b; // Add a 1 after the last bit that is 1, or the second most significant bit, whichever comes first
     if (b == 0x00) b = 0x40; // Special case if b initially equals 0x00
 
     // Check how many ones there are after the most significant bit; we reset if there are as many ones as there are presses for a full reset
-    if ((b | 0x80) >= static_cast<byte>(0xFF<<(7-pressesForFullReset))) {
+    if ((b | 0x80) >= static_cast<byte>(0xFF << (7 - pressesForFullReset))) {
       Serial.println("Full reset triggered. Clearing flag bit and restarting...");
       EEPROM.write(flagByteAddress, 0x00);
       EEPROM.commit();
@@ -43,12 +43,12 @@ void SettingsManager::updateFullResetTimer() {
       hasTurnedOffResetBit = true;
       return;
     }
-    
+
     EEPROM.write(flagByteAddress, b);
     EEPROM.commit();
   } else if (millis() > fullResetButtonPressDelay && !hasTurnedOffResetBit) {
     hasTurnedOffResetBit = true;
-    
+
     EEPROM.write(flagByteAddress, originalFlagByte);
     EEPROM.commit();
   }
@@ -60,7 +60,7 @@ String SettingsManager::getSetting(Setting setting) {
   for (int i = 0; i < maximumSettingLength; i++) {
     byte b = EEPROM.read(startAddress + i);
     if (b == '\0') break;
-    else resultBuf += b;
+    else resultBuf += static_cast<char>(b);
   }
   return resultBuf; // The String class adds the NUL character at the end, so we don't have to worry about it
 }

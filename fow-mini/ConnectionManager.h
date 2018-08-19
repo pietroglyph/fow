@@ -35,6 +35,7 @@ class ConnectionManager {
     bool ready();
     void update();
     String get();
+    bool isConnectedToWiFi();
   private:
     /*
         DNS doesn't work with WiFi client in this code. This bug took me two weeks to fix. I ended up using HTTPClient though
@@ -57,6 +58,7 @@ class ConnectionManager {
     String ssid = "";
     String password = "";
     bool setupMode = true;
+    bool connectionTimedOut = false;
 
     void connectToWiFiNetwork();
 };

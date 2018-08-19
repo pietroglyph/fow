@@ -185,12 +185,12 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   });
 
   server.on("/promptforexitsetup", [&]() {
-    bool shouldPrompt = WiFi.status() == WL_CONNECTED && (ssid != "" || password != "");
+    bool shouldPrompt = isConnectedToWiFi();
     server.send(shouldPrompt ? HTTP_CODE_OK : HTTP_CODE_INTERNAL_SERVER_ERROR, "text/plain", shouldPrompt ? "true" : "false");
   });
 
   server.on("/exitsetup", [&]() {
-    if (WiFi.status() != WL_CONNECTED || (ssid == "" && password == "")) return;
+    if (isConnectedToWiFi()) return;
 
     server.send(HTTP_CODE_OK, "text/plain", "Exiting setup...");
 
@@ -212,11 +212,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 }
 
 bool ConnectionManager::ready() {
-  if (ssid == "" && password == "")
-    return false;
-  else if (WiFi.status() == WL_CONNECTED)
-    return true;
-  else return false;
+  return isConnectedToWiFi();
 }
 
 void ConnectionManager::update() {
@@ -224,12 +220,12 @@ void ConnectionManager::update() {
 
   if (setupMode) server.handleClient();
   // Periodically attempt to reconnect if we're not in setup mode, and still disconnected. We cast to a long to avoid underflow.
-  else if (!setupMode && (WiFi.status() != WL_CONNECTED || ssid == "") && lastPeriodicReconnectAttempt - static_cast<long>(millis()) >= periodicReconnectDelay) connectToWiFiNetwork();
+  else if (!isConnectedToWiFi() && lastPeriodicReconnectAttempt - static_cast<long>(millis()) >= periodicReconnectDelay) connectToWiFiNetwork();
 }
 
 String ConnectionManager::get() {
   // If we're probably not connected, don't do anything (We have to check for ssid beacuse WL_CONNECTED isn't always reliable)
-  if (ssid == "" || WiFi.status() != WL_CONNECTED) {
+  if (!isConnectedToWiFi()) {
     Serial.println("GET aborted, ssid is blank and/or WiFi isn't connected.");
     return "";
   }
@@ -249,11 +245,13 @@ void ConnectionManager::connectToWiFiNetwork() {
   client.end();
   WiFi.disconnect();
   WiFi.begin(ssid.c_str(), password.c_str());
+  connectionTimedOut = false;
 
   unsigned long startTime = millis();
   while (WiFi.status() != WL_CONNECTED) {
     if (static_cast<long>(millis()) - startTime > timeout) {
       Serial.println("\nWiFi connection attempt timed out.");
+      connectionTimedOut = true;
       return;
     }
     for (int i = 0; i < 500; i++) {
@@ -267,4 +265,8 @@ void ConnectionManager::connectToWiFiNetwork() {
 
   // Make a connection to the remote server
   client.begin(host, port, path);
+}
+
+bool ConnectionManager::isConnectedToWiFi() {
+  return !(ssid == "" || WiFi.status() != WL_CONNECTED || connectionTimedOut);
 }
