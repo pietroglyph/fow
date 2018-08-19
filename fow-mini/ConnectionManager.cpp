@@ -106,8 +106,13 @@ const static char configPage[] PROGMEM = R"(
   )";
 
 ConnectionManager::ConnectionManager(const String programName) : name(programName) {
+  // Tell the http client to allow reuse if the server supports it (we make lots of requests to the same server, this should decrease overhead)
+  client.setReuse(true);
 
   Serial.println("Checking EEPROM for saved WiFi credentials...");
+
+  settingsManager.updateFullResetTimer();
+
   if (!settingsManager.isInSetupMode()) {
     setupMode = false;
 
@@ -116,7 +121,9 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
     Serial.printf("Saved credentials found. SSID: %s, Password: %s.\n", ssid.c_str(), password.c_str());
 
+    WiFi.softAPdisconnect(true); // Make sure that we don't broadcast
     connectToWiFiNetwork();
+
     return;
   }
   setupMode = true;
@@ -127,9 +134,6 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(name.c_str());
 
-  // Tell the http client to allow reuse if the server supports it (we make lots of requests to the same server, this should decrease overhead)
-  client.setReuse(true);
-
   // Start a mDNS responder so that users can connect easily
   Serial.printf("MDNS responder initalization has %s.\n", MDNS.begin(name.c_str()) ? "been successful" : "failed");
 
@@ -138,7 +142,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   // Handle requests to the base path by showing a simple config page
   server.on("/", [&]() {
-    server.send(200, "text/html", configPage);
+    server.send(HTTP_CODE_OK, "text/html", configPage);
 
     if (server.hasArg("ssid") || server.hasArg("password")) {
       ssid = server.arg("ssid");
@@ -173,7 +177,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
         connStatus = "Other";
         break;
     }
-    server.send(200, "text/html",
+    server.send(HTTP_CODE_OK, "text/html",
                 String("<html><body style='color: white; font-size: 14px; font-family: monospace;'>Network Name: ") + ssid +
                 "<br>Password: " + password +
                 "<br>Connection Status: " + connStatus +
@@ -182,13 +186,13 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   server.on("/promptforexitsetup", [&]() {
     bool shouldPrompt = WiFi.status() == WL_CONNECTED && (ssid != "" || password != "");
-    server.send(shouldPrompt ? 200 : 500, "text/plain", shouldPrompt ? "true" : "false");
+    server.send(shouldPrompt ? HTTP_CODE_OK : HTTP_CODE_INTERNAL_SERVER_ERROR, "text/plain", shouldPrompt ? "true" : "false");
   });
 
   server.on("/exitsetup", [&]() {
     if (WiFi.status() != WL_CONNECTED || (ssid == "" && password == "")) return;
 
-    server.send(200, "text/plain", "Exiting setup...");
+    server.send(HTTP_CODE_OK, "text/plain", "Exiting setup...");
 
     setupMode = false;
 
@@ -204,7 +208,6 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   // Add service to MDNS-SD
   MDNS.addService("http", "tcp", port);
-
   Serial.println("HTTP server has been started.");
 }
 
@@ -217,7 +220,11 @@ bool ConnectionManager::ready() {
 }
 
 void ConnectionManager::update() {
+  settingsManager.updateFullResetTimer();
+
   if (setupMode) server.handleClient();
+  // Periodically attempt to reconnect if we're not in setup mode, and still disconnected. We cast to a long to avoid underflow.
+  else if (!setupMode && (WiFi.status() != WL_CONNECTED || ssid == "") && lastPeriodicReconnectAttempt - static_cast<long>(millis()) >= periodicReconnectDelay) connectToWiFiNetwork();
 }
 
 String ConnectionManager::get() {
@@ -226,8 +233,6 @@ String ConnectionManager::get() {
     Serial.println("GET aborted, ssid is blank and/or WiFi isn't connected.");
     return "";
   }
-
-  client.begin(host, port, path);
 
   int statusCode = client.GET();
   if (statusCode != HTTP_CODE_OK) {
@@ -239,17 +244,27 @@ String ConnectionManager::get() {
 }
 
 void ConnectionManager::connectToWiFiNetwork() {
+  lastPeriodicReconnectAttempt = static_cast<long>(millis());
+
+  client.end();
   WiFi.disconnect();
   WiFi.begin(ssid.c_str(), password.c_str());
 
   unsigned long startTime = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - startTime > timeout) {
-      Serial.print("\nWiFi connection attempt timed out.\n");
+    if (static_cast<long>(millis()) - startTime > timeout) {
+      Serial.println("\nWiFi connection attempt timed out.");
       return;
     }
-    delay(500);
+    for (int i = 0; i < 500; i++) {
+      delay(1);
+      // This is a bit of a janky way to delay 500ms, but we really need to update the reset flag bits on time
+      settingsManager.updateFullResetTimer();
+    }
     Serial.print(".");
   }
   Serial.printf("\nConnected to WiFi with a private IP of %s.\n", WiFi.localIP().toString().c_str());
+
+  // Make a connection to the remote server
+  client.begin(host, port, path);
 }

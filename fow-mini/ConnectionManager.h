@@ -30,6 +30,8 @@ class ConnectionManager {
   public:
     ConnectionManager(String programName);
 
+    long lastPeriodicReconnectAttempt;
+
     bool ready();
     void update();
     String get();
@@ -44,7 +46,8 @@ class ConnectionManager {
     const String host = "fow.nalcad.tk";
     const String path = "/progress";
     const int port = 80;
-    const unsigned long timeout = 8000; // In milleseconds
+    const long timeout = 8000; // In milleseconds
+    const long periodicReconnectDelay = 60000;
 
     ESP8266WebServer server = ESP8266WebServer(80);
     SettingsManager settingsManager = SettingsManager();
