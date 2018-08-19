@@ -1,4 +1,4 @@
-/*
+/*`
     Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
 
     This file is part of Ferries Over Winslow.
@@ -41,9 +41,14 @@ class SettingsManager {
     const int maximumSettingLength = eepromSize / 4; // In bytes
   private:
     // maximum amount of time allowed between reset button presses for a full reset to occur, in milleseconds
-    const int fullResetButtonPressDelayMs = 3000;
+    const unsigned long fullResetButtonPressDelay = 3000;
+    const int pressesForFullReset = 3; // Number of presses to start a full reset
     const int eepromSize = 512; // In bytes
     const int flagByteAddress = 0;
+    
+    bool hasTurnedOnResetBit = false;
+    bool hasTurnedOffResetBit = false;
+    byte originalFlagByte;
 
     int getAddressForSetting(Setting setting);
 };
