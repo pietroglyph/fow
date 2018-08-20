@@ -153,6 +153,8 @@ void ClockOutputManager::update(std::function<double (int)> dataSupplier) {
     else
       arrivingLights->setMode(LightHelper::Modes::RUNNING);
   }
+  arrivingLights->update();
+  departingLights->update();
 }
 
 void ClockOutputManager::updateLightMode(LightHelper::Modes mode) {
