@@ -67,13 +67,6 @@ var seattleBainbridgePath = &ferryPath{
 var lastRequested time.Time
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
-	if config.testingMode {
-		now := time.Now().UnixNano() / (int64(time.Millisecond) / int64(time.Nanosecond))
-		rotatingProgressNow := (math.Sin(float64(time.Now().Unix())/30) * 0.5) + 0.5
-		rotatingProgressFuture := (math.Sin((float64(time.Now().Unix())+config.updateFrequency)/30) * 0.5) + 0.5
-		fmt.Fprint(w, formatOutput(rotatingProgressNow, rotatingProgressFuture, now), ":", formatOutput(rotatingProgressNow, rotatingProgressFuture, now), ":", config.updateFrequency)
-	}
-
 	// Give dummy data until the data is no longer nil or stale
 	if time.Now().Sub(data.lastUpdated).Seconds() > config.idleAfter || data.locations == nil {
 		lastRequested = time.Now()
