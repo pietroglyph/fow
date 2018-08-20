@@ -38,7 +38,7 @@ class SettingsManager {
     void exitSetupMode(); // There is no way to enter setup mode because that only happens on a full reset, which is handled internally
     void updateFullResetTimer();
 
-    const int maximumSettingLength = eepromSize / 4; // In bytes
+    const int maximumSettingLength = 128; // In bytes
   private:
     // maximum amount of time allowed between reset button presses for a full reset to occur, in milleseconds
     const unsigned long fullResetButtonPressDelay = 3000;

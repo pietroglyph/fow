@@ -24,7 +24,7 @@ SettingsManager::SettingsManager() {
 }
 
 void SettingsManager::updateFullResetTimer() {
-  if (millis() < fullResetButtonPressDelay && !hasTurnedOnResetBit) {
+  if (!hasTurnedOnResetBit) {
     hasTurnedOnResetBit = true;
 
     Serial.println("Checking reset bits...");
@@ -37,10 +37,10 @@ void SettingsManager::updateFullResetTimer() {
     // Check how many ones there are after the most significant bit; we reset if there are as many ones as there are presses for a full reset
     if ((b | 0x80) >= static_cast<byte>(0xFF << (7 - pressesForFullReset))) {
       Serial.println("Full reset triggered. Clearing flag bit and restarting...");
+      hasTurnedOffResetBit = true;
       EEPROM.write(flagByteAddress, 0x00);
       EEPROM.commit();
       ESP.restart();
-      hasTurnedOffResetBit = true;
       return;
     }
 
@@ -67,7 +67,6 @@ String SettingsManager::getSetting(Setting setting) {
 
 void SettingsManager::setSetting(Setting setting, String value) {
   int startAddress = getAddressForSetting(setting);
-  int lastIndex;
   for (int i = 0; i < value.length() + 1 && i < maximumSettingLength; i++) { // We add 1 to value.length() to get the NUL character at the end
     EEPROM.write(startAddress + i, value.charAt(i));
   }
