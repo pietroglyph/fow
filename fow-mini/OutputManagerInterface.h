@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2017 Declan Freeman-Gleason. All rights reserved.
+    Copyright (c) 2017, 2018 Declan Freeman-Gleason. All rights reserved.
 
     This file is part of Ferries Over Winslow.
 
@@ -25,7 +25,7 @@
 class OutputManagerInterface {
   public:
     // We never delete objects who implement this class, so we don't need a virtual destructor
-  
+
     // Passing functions insulates the implementor of this interface from the details of the structure that stores the data
     virtual void update(std::function<double (int)> dataSupplier);
     virtual void calibrate();
