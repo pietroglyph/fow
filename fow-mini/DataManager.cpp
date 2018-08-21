@@ -27,7 +27,7 @@ void DataManager::update(String rawDataString) {
   compositeResponse = split(rawDataString, ':');
   lastUpdated = millis();
 
-  char *end;
+  char* end;
 
   endDurationAhead = strtoul(compositeResponse.back().c_str(), &end, 10);
   if (endDurationAhead == -1) {
@@ -73,7 +73,7 @@ double DataManager::getProgress(int i) {
   if (progress.startTimeOffset == 0)
     return progress.start; // If the offset is zero, then the ferry is docked
   long double percentPerMsec = (progress.end - progress.start) / endDurationAhead;
-  long double result = ((millis() - (lastUpdated - progress.startTimeOffset)) * percentPerMsec) + progress.start;
+  long double result = ((static_cast<long double>(millis()) - (lastUpdated - progress.startTimeOffset)) * percentPerMsec) + progress.start;
   return result;
 }
 

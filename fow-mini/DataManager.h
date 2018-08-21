@@ -44,9 +44,7 @@ class DataManager {
     std::vector<Progress> progresses;
     unsigned long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first
 
-    std::vector<String> split(const String &text, char sep);
-
-    void(* resetFunc) (void) = 0;
+    std::vector<String> split(const String& text, char sep);
 };
 
 #endif

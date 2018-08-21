@@ -62,23 +62,23 @@ ClockOutputManager::ClockOutputManager() {
   secondaryAdafruitStepper = motorShield.getStepper(stepperMaxTicks * 2, 2);
 
   /*
-   * Using onestep instead of step here is very important, because step blocks,
-   * while onestep doesn't. step will sometimes block for a very long time,
-   * because of other seemingly random timing minutae, causes a soft watchdog
-   * timer reset.
+     Using onestep instead of step here is very important, because step blocks,
+     while onestep doesn't. step will sometimes block for a very long time,
+     because of other seemingly random timing minutae, causes a soft watchdog
+     timer reset.
   */
   std::function<void(void)> l_forwardPrimary = [&] {
-    primaryAdafruitStepper->onestep(FORWARD, DOUBLE);
+    primaryAdafruitStepper->onestep(FORWARD, steppingMode);
   };
   std::function<void(void)> l_backwardPrimary = [&] {
-    primaryAdafruitStepper->onestep(BACKWARD, DOUBLE);
+    primaryAdafruitStepper->onestep(BACKWARD, steppingMode);
   };
 
   std::function<void(void)> l_forwardSecondary = [&] {
-    secondaryAdafruitStepper->onestep(FORWARD, DOUBLE);
+    secondaryAdafruitStepper->onestep(FORWARD, steppingMode);
   };
   std::function<void(void)> l_backwardSecondary = [&] {
-    secondaryAdafruitStepper->onestep(BACKWARD, DOUBLE);
+    secondaryAdafruitStepper->onestep(BACKWARD, steppingMode);
   };
 
   setMotors(l_forwardPrimary, l_backwardPrimary, l_forwardSecondary, l_backwardSecondary);
@@ -93,16 +93,16 @@ ClockOutputManager::ClockOutputManager() {
   secondaryStepper->setAcceleration(stepperMaxAccel);
 
   // These magic numbers are the pins for the lights
-  departingLights = new LightHelper(14, 13, 15);
-  arrivingLights = new LightHelper(12, 0, 16);
+  primaryLights = new LightHelper(14, 13, 15);
+  secondaryLights = new LightHelper(12, 0, 16);
 
-  departingLights->setupPins();
-  arrivingLights->setupPins();
+  primaryLights->setupPins();
+  secondaryLights->setupPins();
 
   updateLightMode(LightHelper::Modes::DISCONNECTED);
 
-  departingLights->setDirection(LightHelper::Directions::PORT);
-  arrivingLights->setDirection(LightHelper::Directions::STARBOARD);
+  primaryLights->setDirection(LightHelper::Directions::PORT);
+  secondaryLights->setDirection(LightHelper::Directions::STARBOARD);
 }
 
 void ClockOutputManager::calibrate() {
@@ -116,12 +116,13 @@ void ClockOutputManager::calibrate() {
     secondaryStepper->moveTo(stepperMaxTicks);
     state = OutputManagerInterface::States::CALIBRATING;
   } else if (state == OutputManagerInterface::States::CALIBRATING) {
-    if (primaryStepper->distanceToGo() == 0 &&
-        secondaryStepper->distanceToGo() == 0) {
+    if (!primaryStepper->isRunning() && !secondaryStepper->isRunning()) {
       Serial.println("Calibration finished.");
       primaryStepper->setCurrentPosition(0);
       secondaryStepper->setCurrentPosition(0);
       state = OutputManagerInterface::States::RUNNING;
+      // This fixes a bug where we get 0 as an actual ferry position, and don't set the light mode as a result
+      updateLightMode(LightHelper::Modes::RUNNING);
     }
   }
 }
@@ -131,35 +132,33 @@ void ClockOutputManager::update(std::function<double (int)> dataSupplier) {
     calibrate();
     return;
   }
+  
+  double primaryProgress = dataSupplier(0); // We know which index is which because these are always ordered the same by the server
+  double secondaryProgress = dataSupplier(1);
+  updateOutput(primaryProgress, primaryStepper, primaryAdafruitStepper, primaryLights, &primaryRecalibratedTime);
+  updateOutput(secondaryProgress, secondaryStepper, secondaryAdafruitStepper, secondaryLights, &secondaryRecalibratedTime);
+}
 
-  primaryStepper->run();
-  secondaryStepper->run();
-
-  double departingProgress = dataSupplier(0); // We know which index is which because these are always ordered the same by the server
-  double arrivingProgress = dataSupplier(1);
-  long departingProgressTicks = -1 * (long)(departingProgress * stepperMaxTicks);
-  long arrivingProgressTicks = -1 * (long)(arrivingProgress * stepperMaxTicks);
-  if (primaryStepper->targetPosition() != departingProgressTicks) {
-    primaryStepper->moveTo(departingProgressTicks);
-    if (departingProgress == 0 || departingProgress == 1)
-      departingLights->setMode(LightHelper::Modes::DOCKED);
-    else
-      departingLights->setMode(LightHelper::Modes::RUNNING);
+void ClockOutputManager::updateOutput(double progress, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, LightHelper* lights, unsigned long* recalibrationTime) {
+  stepper->run();
+  
+  long progressTicks = -1 * (long)(progress * stepperMaxTicks);
+  if (stepper->targetPosition() != progressTicks) {
+    if (progress == 0 || progress == 1) lights->setMode(LightHelper::Modes::DOCKED);
+    else lights->setMode(LightHelper::Modes::RUNNING);
+    stepper->moveTo(progressTicks);
   }
-  if (secondaryStepper->targetPosition() != arrivingProgressTicks) {
-    secondaryStepper->moveTo(arrivingProgressTicks);
-    if (arrivingProgress == 0 || arrivingProgress == 1)
-      arrivingLights->setMode(LightHelper::Modes::DOCKED);
-    else
-      arrivingLights->setMode(LightHelper::Modes::RUNNING);
-  }
-  arrivingLights->update();
-  departingLights->update();
+  // We totally bypass AccelStepper here because it's much simpler to use the underlying stepper to recalibrate when we dock
+  if (millis() - *recalibrationTime <= recalibrationOverdriveTime && (progress == 0 || progress == 1) && !stepper->isRunning())
+    rawStepper->onestep(progress == 0 ? FORWARD : BACKWARD, steppingMode);
+  else if (stepper->isRunning() && (progress == 0 || progress == 1)) *recalibrationTime = millis();
+  
+  lights->update();
 }
 
 void ClockOutputManager::updateLightMode(LightHelper::Modes mode) {
-  departingLights->setMode(mode);
-  arrivingLights->setMode(mode);
-  departingLights->update();
-  arrivingLights->update();
+  primaryLights->setMode(mode);
+  secondaryLights->setMode(mode);
+  primaryLights->update();
+  secondaryLights->update();
 }

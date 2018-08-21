@@ -299,8 +299,8 @@ void ConnectionManager::update() {
   settingsManager.updateFullResetTimer();
 
   if (setupMode) server.handleClient();
-  // Periodically attempt to reconnect if we're not in setup mode, and still disconnected. We cast to a long to avoid underflow.
-  else if (!isConnectedToWiFi() && lastPeriodicReconnectAttempt - static_cast<long>(millis()) >= periodicReconnectDelay) connectToWiFiNetwork();
+  // Periodically attempt to reconnect if we're not in setup mode, and still disconnected.
+  else if (!isConnectedToWiFi() && lastPeriodicReconnectAttempt - millis() >= periodicReconnectDelay) connectToWiFiNetwork();
 }
 
 String ConnectionManager::get() {
@@ -320,7 +320,7 @@ String ConnectionManager::get() {
 }
 
 void ConnectionManager::connectToWiFiNetwork() {
-  lastPeriodicReconnectAttempt = static_cast<long>(millis());
+  lastPeriodicReconnectAttempt = millis();
 
   client.end();
   WiFi.disconnect();
@@ -329,7 +329,7 @@ void ConnectionManager::connectToWiFiNetwork() {
 
   unsigned long startTime = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    if (static_cast<long>(millis()) - startTime > timeout) {
+    if (millis() - startTime > timeout) {
       Serial.println("\nWiFi connection attempt timed out.");
       connectionTimedOut = true;
       return;

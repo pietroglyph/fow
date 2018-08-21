@@ -37,17 +37,22 @@ class ClockOutputManager : public OutputManagerInterface {
     const int stepperMaxTicks = 812;
     const double stepperMaxSpeed = 100.0;
     const double stepperMaxAccel = 100.0;
+    const unsigned long recalibrationOverdriveTime = 1000; // In milleseconds
+    const uint8_t steppingMode = DOUBLE;
 
     void updateLightMode(LightHelper::Modes mode);
+    void updateOutput(double progress, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, LightHelper* lights, unsigned long* recalibrationFlag);
 
-    LightHelper* departingLights;
-    LightHelper* arrivingLights;
+    LightHelper* primaryLights;
+    LightHelper* secondaryLights;
     OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
     Adafruit_MotorShield motorShield;
-    Adafruit_StepperMotor *primaryAdafruitStepper = NULL;
-    Adafruit_StepperMotor *secondaryAdafruitStepper = NULL;
-    AccelStepper *primaryStepper = NULL;
-    AccelStepper *secondaryStepper = NULL;
+    Adafruit_StepperMotor* primaryAdafruitStepper = NULL;
+    Adafruit_StepperMotor* secondaryAdafruitStepper = NULL;
+    AccelStepper* primaryStepper = NULL;
+    AccelStepper* secondaryStepper = NULL;
+    unsigned long primaryRecalibratedTime;
+    unsigned long secondaryRecalibratedTime;
 };
 
 #endif
