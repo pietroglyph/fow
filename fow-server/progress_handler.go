@@ -183,7 +183,6 @@ func convertGeoPoint(pnt *geo.Point) geom.Coord {
 
 type byDepartingID wsf.VesselLocations
 
-// We sort by the unique vessel ID, because almost everything else might switch at some time
 func (a byDepartingID) Len() int           { return len(a) }
 func (a byDepartingID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byDepartingID) Less(i, j int) bool { return a[i].VesselID < a[j].VesselID }
+func (a byDepartingID) Less(i, j int) bool { return a[i].DepartingTerminalID < a[j].DepartingTerminalID }
