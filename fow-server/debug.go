@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -35,11 +36,23 @@ func debugHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	progress, err := seattleBainbridgePath.progress(&wsf.VesselLocation{Latitude: latitude, Longitude: longitude, Speed: 16.5, Heading: 180}, time.Duration(0)*time.Second)
+	progress, err := currentPath.progress(&wsf.VesselLocation{Latitude: latitude, Longitude: longitude, Speed: 16.5, Heading: 180}, time.Duration(0)*time.Second)
 	if err != nil {
 		http.Error(w, err.Error(), 404)
 		return
 	}
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	fmt.Fprint(w, progress)
+}
+
+func pathCoordInfoHandler(w http.ResponseWriter, r *http.Request) {
+	jsonBytes, err := json.Marshal(currentPath.coords)
+	if err != nil {
+		http.Error(w, "Couldn't marshal path coords into JSON.", 500)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Write(jsonBytes)
 }

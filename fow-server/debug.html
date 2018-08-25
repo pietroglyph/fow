@@ -33,6 +33,16 @@
         });
         map.addLayer(marker);
 
+        fetch("/debug/path/coords").then((resp) => resp.json().then((pathCoords) => {
+          let polylineLatLngsArray = [];
+          for (let i = 0; i < pathCoords.length; i++) {
+            polylineLatLngsArray.push([pathCoords[i].X, pathCoords[i].Y]);
+          }
+
+          let polyline = L.polyline(polylineLatLngsArray, {color: 'red'}).addTo(map);
+          map.fitBounds(polyline.getBounds());
+        }));
+
         updateProgressForPosition(STARTING_POS);
       };
 

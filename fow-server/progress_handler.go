@@ -62,14 +62,13 @@ var seattleBainbridgePath = &ferryPath{
 		{X: 47.602869, Y: -122.342291},
 		{X: 47.602824, Y: -122.339544},
 	},
-	length: -1, // updateLength must be called to set this to the right value
+	length: -1, // calculateLength must be called to set this to the right value
 }
 
-var lastRequested time.Time
-
-func init() {
-	seattleBainbridgePath.updateLength()
-}
+var (
+	lastRequested time.Time
+	currentPath   *ferryPath // Set depending on the route set by the user
+)
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
 	// Give dummy data until the data is no longer nil or stale
@@ -99,12 +98,12 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 			}
 			fmt.Fprint(w, formatOutput(dockedProgress, dockedProgress, 0), ":")
 		} else {
-			progressNow, err := seattleBainbridgePath.progress(&boat, time.Duration(0)*time.Second)
+			progressNow, err := currentPath.progress(&boat, time.Duration(0)*time.Second)
 			if err != nil {
 				// We just print the error and use the progress value of 0 that ferryPath.progress returns
 				log.Println(err.Error())
 			}
-			progressLater, err := seattleBainbridgePath.progress(&boat, time.Duration(config.updateFrequency)*time.Second)
+			progressLater, err := currentPath.progress(&boat, time.Duration(config.updateFrequency)*time.Second)
 			if err != nil {
 				log.Println(err.Error())
 			}
@@ -145,23 +144,23 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	// Find the closest point
 	closestSegment = -1
 	smallestDistanceToSegment := -1.0
-	for i, v := range seattleBainbridgePath.coords {
+	for i, v := range currentPath.coords {
 		if i <= 0 {
 			continue
 		}
 		var slope geom.Coord
 		// Get the negative reciprocal of the slope of the segment we're testing against
 		// so that the tester segment is perpendicular if it intersects
-		slope.X = (seattleBainbridgePath.coords[i-1].Minus(v).Y * config.routeWidthFactor) * -1
-		slope.Y = (seattleBainbridgePath.coords[i-1].Minus(v).X * config.routeWidthFactor) * -1
+		slope.X = (currentPath.coords[i-1].Minus(v).Y * config.routeWidthFactor) * -1
+		slope.Y = (currentPath.coords[i-1].Minus(v).X * config.routeWidthFactor) * -1
 		intersectionTestSegment := geom.Segment{A: interpolatedCoordinate.Plus(slope), B: interpolatedCoordinate.Minus(slope)}
-		p, ok := intersectionTestSegment.Intersection(&geom.Segment{A: seattleBainbridgePath.coords[i-1], B: v})
+		p, ok := intersectionTestSegment.Intersection(&geom.Segment{A: currentPath.coords[i-1], B: v})
 		if ok {
 			distanceToSegment := p.DistanceFrom(interpolatedCoordinate)
 			if distanceToSegment < smallestDistanceToSegment || smallestDistanceToSegment == -1.0 {
 				smallestDistanceToSegment = distanceToSegment
 				closestSegment = i
-				subClosestSegmentProgress = p.DistanceFrom(seattleBainbridgePath.coords[i-1])
+				subClosestSegmentProgress = p.DistanceFrom(currentPath.coords[i-1])
 			}
 		}
 	}
@@ -171,14 +170,14 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	}
 
 	for i := 1; i < closestSegment; i++ {
-		cumulativeDistanceTravelled += seattleBainbridgePath.coords[i].DistanceFrom(seattleBainbridgePath.coords[i-1])
+		cumulativeDistanceTravelled += currentPath.coords[i].DistanceFrom(currentPath.coords[i-1])
 	}
 	cumulativeDistanceTravelled += subClosestSegmentProgress
 
-	return math.Min(cumulativeDistanceTravelled/seattleBainbridgePath.length, 1), nil // Make sure that we don't return anything larger than 1
+	return math.Min(cumulativeDistanceTravelled/currentPath.length, 1), nil // Make sure that we don't return anything larger than 1
 }
 
-func (p *ferryPath) updateLength() {
+func (p *ferryPath) calculateLength() {
 	var length float64
 	for i, v := range p.coords {
 		if i <= 0 {

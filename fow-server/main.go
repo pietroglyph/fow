@@ -79,6 +79,8 @@ func main() {
 			return
 		}
 	}
+	currentPath = seattleBainbridgePath // This is the only available path, but we could switch based on a flag if we wanted to later
+	currentPath.calculateLength()
 
 	log.Println("Flags parsed.")
 
@@ -96,6 +98,7 @@ func main() {
 			http.ServeFile(w, r, "./debug.html")
 		})
 		http.HandleFunc("/debug/get/", debugHandler)
+		http.HandleFunc("/debug/path/coords", pathCoordInfoHandler)
 	}
 	http.HandleFunc("/progress", progressHandler)
 	http.ListenAndServe(config.bind, nil)
