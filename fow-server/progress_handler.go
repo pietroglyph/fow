@@ -132,7 +132,7 @@ func formatOutput(one interface{}, two interface{}, three interface{}) string {
 	return fmt.Sprint(one, ",", two, ",", three)
 }
 
-func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.Duration) (float64, error) {
+func (path *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.Duration) (float64, error) {
 	var cumulativeDistanceTravelled float64
 	var closestSegment int
 	var subClosestSegmentProgress float64 // The progress of the ferry along the closest segment
@@ -141,30 +141,30 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	distanceAhead := (durationAhead.Hours() * vesselLoc.Speed) * 1.852001 // We use this magic number to convert to kM/h
 	interpolatedCoordinate := convertGeoPoint(geo.NewPoint(vesselLoc.Latitude, vesselLoc.Longitude).PointAtDistanceAndBearing(distanceAhead, vesselLoc.Heading))
 
-	// Find the our progress along the connected line segments of currentPath
+	// Find the our progress along the connected line segments of p
 	closestSegment = -1
 	smallestDistanceToSegment := -1.0
-	for i, v := range currentPath.coords {
+	for i, v := range path.coords {
 		if i <= 0 {
 			continue
 		}
 		var slope geom.Coord
 		// Get the negative reciprocal of the slope of the segment we're testing against
 		// so that the tester segment is perpendicular if it intersects
-		slope.X = (currentPath.coords[i-1].Minus(v).Y * config.routeWidthFactor) * -1
-		slope.Y = (currentPath.coords[i-1].Minus(v).X * config.routeWidthFactor) * -1
+		slope.X = (path.coords[i-1].Minus(v).Y * config.routeWidthFactor) * -1
+		slope.Y = (path.coords[i-1].Minus(v).X * config.routeWidthFactor) * -1
 		intersectionTestSegment := geom.Segment{A: interpolatedCoordinate.Plus(slope), B: interpolatedCoordinate.Minus(slope)}
-		intersectionPoint, ok := intersectionTestSegment.Intersection(&geom.Segment{A: currentPath.coords[i-1], B: v})
+		intersectionPoint, ok := intersectionTestSegment.Intersection(&geom.Segment{A: path.coords[i-1], B: v})
 		if ok {
 			distanceToIntersection := intersectionPoint.DistanceFrom(interpolatedCoordinate)
 			if distanceToIntersection < smallestDistanceToSegment || smallestDistanceToSegment == -1.0 {
 				smallestDistanceToSegment = distanceToIntersection
 				closestSegment = i
-				subClosestSegmentProgress = intersectionPoint.DistanceFrom(currentPath.coords[i-1])
+				subClosestSegmentProgress = intersectionPoint.DistanceFrom(path.coords[i-1])
 			}
 		}
 		distanceToSegmentStart := v.DistanceFrom(interpolatedCoordinate)
-		if distanceToSegmentStart < smallestDistanceToSegment || smallestDistanceToSegment == -1.0 {
+		if (distanceToSegmentStart < smallestDistanceToSegment || smallestDistanceToSegment == -1.0) && distanceToSegmentStart <= config.routeWidthFactor {
 			smallestDistanceToSegment = distanceToSegmentStart
 			closestSegment = i
 			subClosestSegmentProgress = 0
@@ -176,22 +176,22 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	}
 
 	for i := 1; i < closestSegment; i++ {
-		cumulativeDistanceTravelled += currentPath.coords[i].DistanceFrom(currentPath.coords[i-1])
+		cumulativeDistanceTravelled += path.coords[i].DistanceFrom(path.coords[i-1])
 	}
 	cumulativeDistanceTravelled += subClosestSegmentProgress
 
-	return math.Min(cumulativeDistanceTravelled/currentPath.length, 1), nil // Make sure that we don't return anything larger than 1
+	return math.Min(cumulativeDistanceTravelled/path.length, 1), nil // Make sure that we don't return anything larger than 1
 }
 
-func (p *ferryPath) calculateLength() {
+func (path *ferryPath) calculateLength() {
 	var length float64
-	for i, v := range p.coords {
+	for i, v := range path.coords {
 		if i <= 0 {
 			continue
 		}
-		length += math.Sqrt(math.Pow(p.coords[i-1].X-v.X, 2) + math.Pow(p.coords[i-1].Y-v.Y, 2))
+		length += math.Sqrt(math.Pow(path.coords[i-1].X-v.X, 2) + math.Pow(path.coords[i-1].Y-v.Y, 2))
 	}
-	p.length = length
+	path.length = length
 }
 
 func convertGeoPoint(pnt *geo.Point) geom.Coord {

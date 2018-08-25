@@ -48,6 +48,7 @@ type configuration struct {
 	routeWidthFactor float64
 	minimumFerries   int
 	debugMode        bool
+	debugPagePath    string
 }
 
 var data *ferryData
@@ -63,6 +64,7 @@ func main() {
 	flag.Float64VarP(&config.routeWidthFactor, "width", "w", 300, "The 'width' factor of the route, this determines how far away the ferry can be to still be considered on route.")
 	flag.IntVarP(&config.minimumFerries, "minimum-ferries", "m", 2, "The server will ensure that it returns values (default or otherwise) for at least this number of ferries.")
 	flag.BoolVar(&config.debugMode, "debug", false, "Serve a debugging page on /debug.")
+	flag.StringVar(&config.debugPagePath, "debug-page", "./debug.html", "Path to the debug.html file.")
 	flag.Parse()
 
 	// accesscode flag is required
@@ -96,7 +98,7 @@ func main() {
 	if config.debugMode {
 		log.Println("Serving debug information under /debug.")
 		http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
-			http.ServeFile(w, r, "./debug.html")
+			http.ServeFile(w, r, config.debugPagePath)
 		})
 		http.HandleFunc("/debug/get/", debugHandler)
 		http.HandleFunc("/debug/path/coords", pathCoordInfoHandler)
