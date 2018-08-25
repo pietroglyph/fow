@@ -94,6 +94,7 @@ func main() {
 	log.Println("Trying to bind to", config.bind+"...")
 
 	if config.debugMode {
+		log.Println("Serving debug information under /debug.")
 		http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, "./debug.html")
 		})
