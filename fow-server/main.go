@@ -47,6 +47,7 @@ type configuration struct {
 	idleAfter        float64
 	routeWidthFactor float64
 	minimumFerries   int
+	debugMode        bool
 }
 
 var data *ferryData
@@ -59,8 +60,9 @@ func main() {
 	flag.IntVarP(&config.terminal, "terminal", "t", 3, "Terminal to track ferries to and from.") // 3 is Bainbridge Island
 	flag.Float64VarP(&config.updateFrequency, "update", "u", 15, "Frequency in seconds to update data from the REST API.")
 	flag.Float64VarP(&config.idleAfter, "idle", "i", 60, "Time in seconds after an update to stop updating.")
-	flag.Float64VarP(&config.routeWidthFactor, "width", "w", 300, "The 'width' factor of the route, this determines how far away the ferry can be to still be considered on route")
+	flag.Float64VarP(&config.routeWidthFactor, "width", "w", 300, "The 'width' factor of the route, this determines how far away the ferry can be to still be considered on route.")
 	flag.IntVarP(&config.minimumFerries, "minimum-ferries", "m", 2, "The server will ensure that it returns values (default or otherwise) for at least this number of ferries.")
+	flag.BoolVar(&config.debugMode, "debug", false, "Serve a debugging page on /debug.")
 	flag.Parse()
 
 	// accesscode flag is required
@@ -89,6 +91,12 @@ func main() {
 
 	log.Println("Trying to bind to", config.bind+"...")
 
+	if config.debugMode {
+		http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, "./debug.html")
+		})
+		http.HandleFunc("/debug/get/", debugHandler)
+	}
 	http.HandleFunc("/progress", progressHandler)
 	http.ListenAndServe(config.bind, nil)
 }

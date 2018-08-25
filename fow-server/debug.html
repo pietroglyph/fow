@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Ferries Over Winslow Server Debug</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.3.4/dist/leaflet.css"
+   integrity="sha512-puBpdR0798OZvTTbP4A8Ix/l+A4dHDD0DGqYW6RQ+9jxkRFclaxxQb/SJAWZfWAkuyeQUytO7+7N4QKrDh+drA=="
+   crossorigin=""/>
+   <script src="https://unpkg.com/leaflet@1.3.4/dist/leaflet.js"
+   integrity="sha512-nMMmRyTVoLYqjP9hrbed9S+FzjZHW5gY1TWCHA5ckwXZBadntCNs8kEqAWdrb9O7rxbCaA4lKTIWjDXZxflOcA=="
+   crossorigin=""></script>
+  </head>
+  <body>
+    <h1>Ferries Over Winslow Server Debug Page</h1>
+    <noscript><p>This page needs JavaScript to work, and you have it disabled.</p></noscript>
+    <p>Marker progress: <span id="progress">unknown</span></p>
+    <div id="map" style="height: 50vh;"></div>
+    <script>
+      const STARTING_POS = new L.LatLng(47.60795, -122.44519);
+
+      var progressSpan;
+      window.onload = function() {
+        progressSpan = document.querySelector("#progress")
+
+        let map = L.map("map").setView(STARTING_POS, 13);
+        L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        let marker = new L.marker(STARTING_POS, {draggable: "true"});
+        marker.on("dragend", function(event) {
+          updateProgressForPosition(event.target.getLatLng())
+        });
+        map.addLayer(marker);
+
+        updateProgressForPosition(STARTING_POS);
+      };
+
+      function updateProgressForPosition(latlng) {
+        if (!latlng.hasOwnProperty("lat") || !latlng.hasOwnProperty("lng")) return;
+
+        fetch("/debug/get/"+latlng.lat+","+latlng.lng).then((resp) => resp.text().then((text) => progressSpan.innerText = text));
+      }
+    </script>
+  </body>
+</html>

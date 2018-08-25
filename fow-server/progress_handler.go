@@ -20,6 +20,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -61,17 +62,20 @@ var seattleBainbridgePath = &ferryPath{
 		{X: 47.602869, Y: -122.342291},
 		{X: 47.602824, Y: -122.339544},
 	},
-	length: 0,
+	length: -1, // updateLength must be called to set this to the right value
 }
 
 var lastRequested time.Time
+
+func init() {
+	seattleBainbridgePath.updateLength()
+}
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
 	// Give dummy data until the data is no longer nil or stale
 	if time.Now().Sub(data.lastUpdated).Seconds() > config.idleAfter || data.locations == nil {
 		lastRequested = time.Now()
 
-		seattleBainbridgePath.updateLength()
 		fmt.Fprint(w, formatOutput(0, 0, 0), ":", formatOutput(1, 1, 0), ":-1")
 		return
 	}
@@ -81,25 +85,34 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 
 	data.updateMux.Lock()
 	sort.Sort(byDepartingID(*data.locations))
-	for _, v := range *data.locations {
-		if v.DepartingTerminalID != config.terminal && v.ArrivingTerminalID != config.terminal {
+	for _, boat := range *data.locations {
+		if boat.DepartingTerminalID != config.terminal && boat.ArrivingTerminalID != config.terminal {
 			continue
 		}
 
 		ferriesFound++
 
-		if v.AtDock || !v.InService {
+		if boat.AtDock || !boat.InService {
 			dockedProgress := 0
-			if v.ArrivingTerminalID == config.terminal {
+			if boat.ArrivingTerminalID == config.terminal {
 				dockedProgress = 1
 			}
 			fmt.Fprint(w, formatOutput(dockedProgress, dockedProgress, 0), ":")
 		} else {
+			progressNow, err := seattleBainbridgePath.progress(&boat, time.Duration(0)*time.Second)
+			if err != nil {
+				// We just print the error and use the progress value of 0 that ferryPath.progress returns
+				log.Println(err.Error())
+			}
+			progressLater, err := seattleBainbridgePath.progress(&boat, time.Duration(config.updateFrequency)*time.Second)
+			if err != nil {
+				log.Println(err.Error())
+			}
 			fmt.Fprint(w,
 				formatOutput(
-					seattleBainbridgePath.progress(&v, time.Duration(0)*time.Second),
-					seattleBainbridgePath.progress(&v, time.Duration(config.updateFrequency)*time.Second),
-					int64(time.Now().Sub(time.Time(v.TimeStamp))/time.Millisecond),
+					progressNow,
+					progressLater,
+					int64(time.Now().Sub(time.Time(boat.TimeStamp))/time.Millisecond),
 				), ":")
 		}
 	}
@@ -120,7 +133,7 @@ func formatOutput(one interface{}, two interface{}, three interface{}) string {
 	return fmt.Sprint(one, ",", two, ",", three)
 }
 
-func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.Duration) float64 {
+func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.Duration) (float64, error) {
 	var cumulativeDistanceTravelled float64
 	var closestSegment int
 	var subClosestSegmentProgress float64 // The progress of the ferry along the closest segment
@@ -154,8 +167,7 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	}
 
 	if closestSegment == -1 {
-		log.Println("Ferry is not on path, consider increasing the width flag's value")
-		return 0
+		return 0, errors.New("Ferry is not on path, consider increasing the width flag's value")
 	}
 
 	for i := 1; i < closestSegment; i++ {
@@ -163,7 +175,7 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	}
 	cumulativeDistanceTravelled += subClosestSegmentProgress
 
-	return math.Min(cumulativeDistanceTravelled/seattleBainbridgePath.length, 1) // Make sure that we don't return anything larger than 1
+	return math.Min(cumulativeDistanceTravelled/seattleBainbridgePath.length, 1), nil // Make sure that we don't return anything larger than 1
 }
 
 func (p *ferryPath) updateLength() {
