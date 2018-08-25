@@ -141,7 +141,7 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 	distanceAhead := (durationAhead.Hours() * vesselLoc.Speed) * 1.852001 // We use this magic number to convert to kM/h
 	interpolatedCoordinate := convertGeoPoint(geo.NewPoint(vesselLoc.Latitude, vesselLoc.Longitude).PointAtDistanceAndBearing(distanceAhead, vesselLoc.Heading))
 
-	// Find the closest point
+	// Find the our progress along the connected line segments of currentPath
 	closestSegment = -1
 	smallestDistanceToSegment := -1.0
 	for i, v := range currentPath.coords {
@@ -154,14 +154,20 @@ func (p *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.D
 		slope.X = (currentPath.coords[i-1].Minus(v).Y * config.routeWidthFactor) * -1
 		slope.Y = (currentPath.coords[i-1].Minus(v).X * config.routeWidthFactor) * -1
 		intersectionTestSegment := geom.Segment{A: interpolatedCoordinate.Plus(slope), B: interpolatedCoordinate.Minus(slope)}
-		p, ok := intersectionTestSegment.Intersection(&geom.Segment{A: currentPath.coords[i-1], B: v})
+		intersectionPoint, ok := intersectionTestSegment.Intersection(&geom.Segment{A: currentPath.coords[i-1], B: v})
 		if ok {
-			distanceToSegment := p.DistanceFrom(interpolatedCoordinate)
-			if distanceToSegment < smallestDistanceToSegment || smallestDistanceToSegment == -1.0 {
-				smallestDistanceToSegment = distanceToSegment
+			distanceToIntersection := intersectionPoint.DistanceFrom(interpolatedCoordinate)
+			if distanceToIntersection < smallestDistanceToSegment || smallestDistanceToSegment == -1.0 {
+				smallestDistanceToSegment = distanceToIntersection
 				closestSegment = i
-				subClosestSegmentProgress = p.DistanceFrom(currentPath.coords[i-1])
+				subClosestSegmentProgress = intersectionPoint.DistanceFrom(currentPath.coords[i-1])
 			}
+		}
+		distanceToSegmentStart := v.DistanceFrom(interpolatedCoordinate)
+		if distanceToSegmentStart < smallestDistanceToSegment || smallestDistanceToSegment == -1.0 {
+			smallestDistanceToSegment = distanceToSegmentStart
+			closestSegment = i
+			subClosestSegmentProgress = 0
 		}
 	}
 
