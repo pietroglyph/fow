@@ -1,4 +1,4 @@
-# Ferries Over WInslow
+# Ferries Over Winslow
 This is the code for robotic ferries running on a wire over a street, tracking the progress of the actual boats. There is also code here for miniature Arduino-powered ferries that have the same functionality as the large one.
 ## Communication and Processing
 The code is based upon a client-server model. The client is a small microcontroller that controls actuators and sensors. It communicates over TCP/IP with a more powerful server running on an internet connected computer.
