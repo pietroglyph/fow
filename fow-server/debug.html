@@ -59,7 +59,7 @@
         };
         map.on("dblclick", function(event) {
           newPathPolyline.addLatLng(event.latlng);
-          newPathCode.innerText += `{X: ${event.latlng.lat}, Y: ${event.latlng.lng}}\n`
+          newPathCode.innerText += `{X: ${event.latlng.lat}, Y: ${event.latlng.lng}},\n`
         });
 
         updateProgressForPosition(STARTING_POS);
