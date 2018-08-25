@@ -15,12 +15,20 @@
     <noscript><p>This page needs JavaScript to work, and you have it disabled.</p></noscript>
     <p>Marker progress: <span id="progress">unknown</span></p>
     <div id="map" style="height: 50vh;"></div>
+    <div>
+      <h2>Points for New Path (Double Click on Map to Add)</h2>
+      <code id="newpath-code"></code>
+      <br>
+      <button id="newpath-clear">Clear New Path</button>
+    </div>
     <script>
       const STARTING_POS = new L.LatLng(47.60795, -122.44519);
 
       var progressSpan;
       window.onload = function() {
-        progressSpan = document.querySelector("#progress")
+        progressSpan = document.querySelector("#progress");
+        let clearNewPathButton = document.querySelector("#newpath-clear");
+        let newPathCode = document.querySelector("#newpath-code");
 
         let map = L.map("map").setView(STARTING_POS, 13);
         L.tileLayer('https://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -29,7 +37,7 @@
 
         let marker = new L.marker(STARTING_POS, {draggable: "true"});
         marker.on("dragend", function(event) {
-          updateProgressForPosition(event.target.getLatLng())
+          updateProgressForPosition(event.target.getLatLng());
         });
         map.addLayer(marker);
 
@@ -40,8 +48,19 @@
           }
 
           let polyline = L.polyline(polylineLatLngsArray, {color: 'red'}).addTo(map);
+          polyline.bindPopup("Currently used reference ferry path.")
           map.fitBounds(polyline.getBounds());
         }));
+
+        let newPathPolyline = L.polyline([], {color: "blue"}).addTo(map);
+        clearNewPathButton.onclick = function() {
+          newPathCode.innerText = "";
+          newPathPolyline.setLatLngs([]);
+        };
+        map.on("dblclick", function(event) {
+          newPathPolyline.addLatLng(event.latlng);
+          newPathCode.innerText += `{X: ${event.latlng.lat}, Y: ${event.latlng.lng}}\n`
+        });
 
         updateProgressForPosition(STARTING_POS);
       };
