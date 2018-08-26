@@ -41,7 +41,7 @@
         });
         map.addLayer(marker);
 
-        fetch("/debug/path/coords").then((resp) => resp.json().then((pathCoords) => {
+        fetch("./debug/path/coords").then((resp) => resp.json().then((pathCoords) => {
           let polylineLatLngsArray = [];
           for (let i = 0; i < pathCoords.length; i++) {
             polylineLatLngsArray.push([pathCoords[i].X, pathCoords[i].Y]);
@@ -68,7 +68,7 @@
       function updateProgressForPosition(latlng) {
         if (!latlng.hasOwnProperty("lat") || !latlng.hasOwnProperty("lng")) return;
 
-        fetch("/debug/get/"+latlng.lat+","+latlng.lng).then((resp) => resp.text().then((text) => progressSpan.innerText = text));
+        fetch("./debug/get/"+latlng.lat+","+latlng.lng).then((resp) => resp.text().then((text) => progressSpan.innerText = text));
       }
     </script>
   </body>
