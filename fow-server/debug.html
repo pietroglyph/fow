@@ -16,13 +16,20 @@
     <p>Marker progress: <span id="progress">unknown</span></p>
     <div id="map" style="height: 50vh;"></div>
     <div>
-      <h2>Points for New Path (Double Click on Map to Add)</h2>
+      <h3>Points for New Path (Double Click on Map to Add)</h3>
+      <small>You can define a new path which can be easily used in the server code</small>
       <code id="newpath-code"></code>
       <br>
       <button id="newpath-clear">Clear New Path</button>
     </div>
     <script>
       const STARTING_POS = new L.LatLng(47.60795, -122.44519);
+      const FERRY_ICON = new L.Icon({
+        iconUrl: "http://www.ferries-over-winslow.org/images/elevbot.png",
+        iconSize: [42, 14],
+        iconAnchor: [21, 7],
+        popupAnchor: [0, -10]
+      });
 
       var progressSpan;
       window.onload = function() {
@@ -35,11 +42,12 @@
             attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
 
-        let marker = new L.marker(STARTING_POS, {draggable: "true"});
+        let marker = new L.marker(STARTING_POS, {draggable: "true", icon: FERRY_ICON});
         marker.on("dragend", function(event) {
           updateProgressForPosition(event.target.getLatLng());
         });
         map.addLayer(marker);
+        marker.bindPopup("Drag this marker to change the simulated location of the boat.").openPopup();
 
         fetch("./debug/path/coords").then((resp) => resp.json().then((pathCoords) => {
           let polylineLatLngsArray = [];
