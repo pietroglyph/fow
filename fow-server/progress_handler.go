@@ -33,41 +33,40 @@ import (
 	"github.com/skelterjohn/geom"
 )
 
-type ferryPath struct {
-	coords []geom.Coord
-	length float64
+type ferryPath []geom.Coord
+type processedFerryPath struct {
+	originalPath     *ferryPath
+	subdividedCoords []geom.Coord
+	length           float64
 }
 
 var seattleBainbridgePath = &ferryPath{
-	coords: []geom.Coord{
-		{X: 47.622453, Y: -122.509274},
-		{X: 47.620197, Y: -122.498288},
-		{X: 47.620009, Y: -122.497602},
-		{X: 47.619546, Y: -122.496700},
-		{X: 47.619170, Y: -122.496078},
-		{X: 47.618331, Y: -122.495220},
-		{X: 47.617825, Y: -122.494855},
-		{X: 47.617116, Y: -122.494469},
-		{X: 47.608176, Y: -122.491014},
-		{X: 47.607757, Y: -122.490735},
-		{X: 47.607163, Y: -122.490134},
-		{X: 47.606643, Y: -122.489362},
-		{X: 47.606353, Y: -122.488804},
-		{X: 47.605934, Y: -122.487774},
-		{X: 47.605688, Y: -122.486615},
-		{X: 47.605471, Y: -122.484770},
-		{X: 47.605326, Y: -122.482388},
-		{X: 47.604169, Y: -122.352440},
-		{X: 47.603069, Y: -122.343750},
-		{X: 47.602869, Y: -122.342291},
-		{X: 47.602824, Y: -122.339544},
-	},
-	length: -1, // calculateLength must be called to set this to the right value
+	{X: 47.622453, Y: -122.509274},
+	{X: 47.620197, Y: -122.498288},
+	{X: 47.620009, Y: -122.497602},
+	{X: 47.619546, Y: -122.496700},
+	{X: 47.619170, Y: -122.496078},
+	{X: 47.618331, Y: -122.495220},
+	{X: 47.617825, Y: -122.494855},
+	{X: 47.617116, Y: -122.494469},
+	{X: 47.608176, Y: -122.491014},
+	{X: 47.607757, Y: -122.490735},
+	{X: 47.607163, Y: -122.490134},
+	{X: 47.606643, Y: -122.489362},
+	{X: 47.606353, Y: -122.488804},
+	{X: 47.605934, Y: -122.487774},
+	{X: 47.605688, Y: -122.486615},
+	{X: 47.605471, Y: -122.484770},
+	{X: 47.605326, Y: -122.482388},
+	{X: 47.604169, Y: -122.352440},
+	{X: 47.603069, Y: -122.343750},
+	{X: 47.602869, Y: -122.342291},
+	{X: 47.602824, Y: -122.339544},
 }
 
 var (
 	lastRequested time.Time
-	currentPath   *ferryPath // Set depending on the route set by the user
+	currentPath   *processedFerryPath // Set depending on the route set by the user
 )
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
@@ -132,66 +131,61 @@ func formatOutput(one interface{}, two interface{}, three interface{}) string {
 	return fmt.Sprint(one, ",", two, ",", three)
 }
 
-func (path *ferryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.Duration) (float64, error) {
+func (path *processedFerryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.Duration) (float64, error) {
 	var cumulativeDistanceTravelled float64
 	var closestSegment int
-	var subClosestSegmentProgress float64 // The progress of the ferry along the closest segment
 
 	// Interpolate forward in time using the heading and the speed
 	distanceAhead := (durationAhead.Hours() * vesselLoc.Speed) * 1.852001 // We use this magic number to convert to kM/h
 	interpolatedCoordinate := convertGeoPoint(geo.NewPoint(vesselLoc.Latitude, vesselLoc.Longitude).PointAtDistanceAndBearing(distanceAhead, vesselLoc.Heading))
 
-	// Find the our progress along the connected line segments of p
+	// Find the our progress along the connected line segments of path
 	closestSegment = -1
 	smallestDistanceToSegment := -1.0
-	for i, v := range path.coords {
-		if i <= 0 {
-			continue
-		}
-		var slope geom.Coord
-		// Get the negative reciprocal of the slope of the segment we're testing against
-		// so that the tester segment is perpendicular if it intersects
-		slope.X = (path.coords[i-1].Minus(v).Y * config.routeWidthFactor) * -1
-		slope.Y = (path.coords[i-1].Minus(v).X * config.routeWidthFactor) * -1
-		intersectionTestSegment := geom.Segment{A: interpolatedCoordinate.Plus(slope), B: interpolatedCoordinate.Minus(slope)}
-		intersectionPoint, ok := intersectionTestSegment.Intersection(&geom.Segment{A: path.coords[i-1], B: v})
-		if ok {
-			distanceToIntersection := intersectionPoint.DistanceFrom(interpolatedCoordinate)
-			if distanceToIntersection < smallestDistanceToSegment || smallestDistanceToSegment == -1.0 {
-				smallestDistanceToSegment = distanceToIntersection
-				closestSegment = i
-				subClosestSegmentProgress = intersectionPoint.DistanceFrom(path.coords[i-1])
-			}
-		}
-		distanceToSegmentStart := v.DistanceFrom(interpolatedCoordinate)
-		if (distanceToSegmentStart < smallestDistanceToSegment || smallestDistanceToSegment == -1.0) && distanceToSegmentStart <= config.routeWidthFactor {
-			smallestDistanceToSegment = distanceToSegmentStart
+	for i, v := range path.subdividedCoords {
+		distance := interpolatedCoordinate.DistanceFrom(v)
+		if distance < smallestDistanceToSegment || smallestDistanceToSegment == -1 {
 			closestSegment = i
-			subClosestSegmentProgress = 0
+			smallestDistanceToSegment = distance
 		}
 	}
-
 	if closestSegment == -1 {
-		return 0, errors.New("Ferry is not on path, consider increasing the width flag's value")
+		return 0, errors.New("Reference path is invalid")
 	}
-
 	for i := 1; i < closestSegment; i++ {
-		cumulativeDistanceTravelled += path.coords[i].DistanceFrom(path.coords[i-1])
+		cumulativeDistanceTravelled += path.subdividedCoords[i].DistanceFrom(path.subdividedCoords[i-1])
 	}
-	cumulativeDistanceTravelled += subClosestSegmentProgress
 
 	return math.Min(cumulativeDistanceTravelled/path.length, 1), nil // Make sure that we don't return anything larger than 1
 }
 
-func (path *ferryPath) calculateLength() {
+func (path *ferryPath) getProcessedPath() *processedFerryPath {
 	var length float64
-	for i, v := range path.coords {
+	processedPath := &processedFerryPath{
+		originalPath: path,
+	}
+	for i, v := range *path {
 		if i <= 0 {
 			continue
 		}
-		length += math.Sqrt(math.Pow(path.coords[i-1].X-v.X, 2) + math.Pow(path.coords[i-1].Y-v.Y, 2))
+
+		rootCoord := (*path)[i-1]
+
+		// Subdivide the path into a bunch of segments with a maximum length of config.subdividedSegmentMinSize
+		processedPath.subdividedCoords = append(processedPath.subdividedCoords, rootCoord)
+		segmentTotalLength := v.DistanceFrom(rootCoord)
+		for s := 1; s < int(math.Ceil(segmentTotalLength/config.subdividedSegmentMaxSize)); s++ {
+			subsegmentLengthPercentage := (config.subdividedSegmentMaxSize * float64(s)) / segmentTotalLength
+			newCoord := v.Minus(rootCoord)
+			newCoord.Scale(subsegmentLengthPercentage, subsegmentLengthPercentage)
+			newCoord = newCoord.Plus(rootCoord)
+			processedPath.subdividedCoords = append(processedPath.subdividedCoords, newCoord)
+		}
+
+		length += v.DistanceFrom(rootCoord)
 	}
-	path.length = length
+	processedPath.length = length
+	return processedPath
 }
 
 func convertGeoPoint(pnt *geo.Point) geom.Coord {

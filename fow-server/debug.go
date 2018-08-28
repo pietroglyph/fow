@@ -46,7 +46,7 @@ func debugHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func pathCoordInfoHandler(w http.ResponseWriter, r *http.Request) {
-	jsonBytes, err := json.Marshal(currentPath.coords)
+	jsonBytes, err := json.Marshal(currentPath.originalPath)
 	if err != nil {
 		http.Error(w, "Couldn't marshal path coords into JSON.", 500)
 		return

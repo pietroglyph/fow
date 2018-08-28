@@ -40,15 +40,15 @@ type ferryData struct {
 }
 
 type configuration struct {
-	accessCode       string
-	bind             string
-	terminal         int
-	updateFrequency  float64
-	idleAfter        float64
-	routeWidthFactor float64
-	minimumFerries   int
-	debugMode        bool
-	debugPagePath    string
+	accessCode               string
+	bind                     string
+	terminal                 int
+	updateFrequency          float64
+	idleAfter                float64
+	subdividedSegmentMaxSize float64
+	minimumFerries           int
+	debugMode                bool
+	debugPagePath            string
 }
 
 var data *ferryData
@@ -61,7 +61,7 @@ func main() {
 	flag.IntVarP(&config.terminal, "terminal", "t", 3, "Terminal to track ferries to and from.") // 3 is Bainbridge Island
 	flag.Float64VarP(&config.updateFrequency, "update", "u", 15, "Frequency in seconds to update data from the REST API.")
 	flag.Float64VarP(&config.idleAfter, "idle", "i", 60, "Time in seconds after an update to stop updating.")
-	flag.Float64VarP(&config.routeWidthFactor, "width", "w", 300, "The 'width' factor of the route, this determines how far away the ferry can be to still be considered on route.")
+	flag.Float64VarP(&config.subdividedSegmentMaxSize, "segment-size", "s", 10e-6, "The minimum size of a segment on the subdivided reference ferry path. The smaller the smoother and more accurate the estimates.")
 	flag.IntVarP(&config.minimumFerries, "minimum-ferries", "m", 2, "The server will ensure that it returns values (default or otherwise) for at least this number of ferries.")
 	flag.BoolVar(&config.debugMode, "debug", false, "Serve a debugging page on /debug.")
 	flag.StringVar(&config.debugPagePath, "debug-path", "./debug.html", "Path to the debug.html file.")
@@ -81,8 +81,7 @@ func main() {
 			return
 		}
 	}
-	currentPath = seattleBainbridgePath // This is the only available path, but we could switch based on a flag if we wanted to later
-	currentPath.calculateLength()
+	currentPath = seattleBainbridgePath.getProcessedPath() // This is the only available path, but we could switch based on a flag if we wanted to later
 
 	log.Println("Flags parsed.")
 
