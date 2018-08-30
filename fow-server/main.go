@@ -87,7 +87,7 @@ func main() {
 
 	client := wsf.NewClient(nil)
 	client.AccessCode = config.accessCode
-	client.UserAgent = "fow-mini/100"
+	client.UserAgent = "fow-server/0.1.0 (https://github.com/pietroglyph/fow)"
 
 	data = &ferryData{}
 	go data.keepUpdated(client)
