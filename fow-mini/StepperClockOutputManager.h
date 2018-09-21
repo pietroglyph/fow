@@ -5,7 +5,7 @@
 
     Ferries Over Winslow is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
+    the Free Software Foundation, eitherE version 3 of the License, or
     (at your option) any later version.
 
     Ferries Over Winslow is distributed in the hope that it will be useful,
@@ -17,8 +17,8 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef ClockOutputManager_h
-#define ClockOutputManager_h
+#ifndef StepperClockOutputManager_h
+#define StepperClockOutputManager_h
 
 #include <functional>
 #include "LightHelper.h"
@@ -27,9 +27,9 @@
 #include <AccelStepper.h>
 #include <Adafruit_MotorShield.h>
 
-class ClockOutputManager : public OutputManagerInterface {
+class StepperClockOutputManager : public OutputManagerInterface {
   public:
-    ClockOutputManager();
+    StepperClockOutputManager();
 
     void update(std::function<double (int)> dataSupplier);
     void calibrate();

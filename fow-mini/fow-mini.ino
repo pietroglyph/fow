@@ -20,7 +20,7 @@
 #include "ConnectionManager.h"
 #include "DataManager.h"
 #include "OutputManagerInterface.h"
-#include "ClockOutputManager.h"
+#include "ServoClockOutputManager.h"
 
 // null references on the heap (these should never be destroyed)
 ConnectionManager* conn = NULL;
@@ -31,7 +31,7 @@ void setup() {
   Serial.begin(115200);
   conn = new ConnectionManager("fow-mini");
   data = new DataManager();
-  output = new ClockOutputManager();
+  output = new ServoClockOutputManager();
 }
 
 void loop() {

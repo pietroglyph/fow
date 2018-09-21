@@ -17,7 +17,7 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "ClockOutputManager.h"
+#include "StepperClockOutputManager.h"
 
 /*
    This is not an idomatic use of namespaces;
@@ -52,7 +52,7 @@ extern "C" {
 }
 }
 
-ClockOutputManager::ClockOutputManager() {
+StepperClockOutputManager::StepperClockOutputManager() {
   using namespace Wrapper;
 
   motorShield = Adafruit_MotorShield();
@@ -105,7 +105,7 @@ ClockOutputManager::ClockOutputManager() {
   secondaryLights->setDirection(LightHelper::Directions::STARBOARD);
 }
 
-void ClockOutputManager::calibrate() {
+void StepperClockOutputManager::calibrate() {
   primaryStepper->run();
   secondaryStepper->run();
 
@@ -127,21 +127,21 @@ void ClockOutputManager::calibrate() {
   }
 }
 
-void ClockOutputManager::update(std::function<double (int)> dataSupplier) {
+void StepperClockOutputManager::update(std::function<double (int)> dataSupplier) {
   if (state != OutputManagerInterface::States::RUNNING) {
     calibrate();
     return;
   }
-  
+
   double primaryProgress = dataSupplier(0); // We know which index is which because these are always ordered the same by the server
   double secondaryProgress = dataSupplier(1);
   updateOutput(primaryProgress, primaryStepper, primaryAdafruitStepper, primaryLights, &primaryRecalibratedTime);
   updateOutput(secondaryProgress, secondaryStepper, secondaryAdafruitStepper, secondaryLights, &secondaryRecalibratedTime);
 }
 
-void ClockOutputManager::updateOutput(double progress, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, LightHelper* lights, unsigned long* recalibrationTime) {
+void StepperClockOutputManager::updateOutput(double progress, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, LightHelper* lights, unsigned long* recalibrationTime) {
   stepper->run();
-  
+
   long progressTicks = -1 * (long)(progress * stepperMaxTicks);
   if (stepper->targetPosition() != progressTicks) {
     if (progress == 0 || progress == 1) lights->setMode(LightHelper::Modes::DOCKED);
@@ -152,11 +152,11 @@ void ClockOutputManager::updateOutput(double progress, AccelStepper* stepper, Ad
   if (millis() - *recalibrationTime <= recalibrationOverdriveTime && (progress == 0 || progress == 1) && !stepper->isRunning())
     rawStepper->onestep(progress == 0 ? FORWARD : BACKWARD, steppingMode);
   else if (stepper->isRunning() && (progress == 0 || progress == 1)) *recalibrationTime = millis();
-  
+
   lights->update();
 }
 
-void ClockOutputManager::updateLightMode(LightHelper::Modes mode) {
+void StepperClockOutputManager::updateLightMode(LightHelper::Modes mode) {
   primaryLights->setMode(mode);
   secondaryLights->setMode(mode);
   primaryLights->update();
