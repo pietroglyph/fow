@@ -17,16 +17,16 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef LightHelper_h
-#define LightHelper_h
+#ifndef FerryHelper_h
+#define FerryHelper_h
 
 #include <Wire.h>
 #include <vector>
 #include "Arduino.h" // XXX: I have no idea why this needs to be included
 
-class LightHelper {
+class FerryHelper {
   public:
-    LightHelper(int dockPin, int starboardPin, int portPin);
+    FerryHelper(int starboardPin, int portPin, int lightIntensity);
 
     enum class Modes {
       RUNNING,
@@ -45,10 +45,7 @@ class LightHelper {
     Modes mode;
     Directions direction;
 
-    const int k_dockLightIntensity = 128;
-    const int k_directionLightIntensity = 2;
-
-    int dockPin;
+    int lightIntensity;
     int starboardPin;
     int portPin;
 };

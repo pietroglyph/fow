@@ -17,46 +17,42 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "LightHelper.h"
+#include "FerryHelper.h"
 
-LightHelper::LightHelper(int dockPin, int starboardPin, int portPin) : dockPin(dockPin), starboardPin(starboardPin), portPin(portPin) {}
+FerryHelper::FerryHelper(int starboardPin, int portPin, int lightIntensity) : portPin(portPin), starboardPin(starboardPin), lightIntensity(lightIntensity) {}
 
-void LightHelper::update() {
+void FerryHelper::update() {
   switch (mode) {
     case Modes::RUNNING :
-      analogWrite(dockPin, 0);
       if (direction == Directions::STARBOARD) {
-        analogWrite(starboardPin, k_directionLightIntensity);
+        analogWrite(starboardPin, lightIntensity / 10); // Starboard is assumed to be green, and it needs about 10% of red's PWM value to match luminance
         analogWrite(portPin, 0);
       } else {
         analogWrite(starboardPin, 0);
-        analogWrite(portPin, k_directionLightIntensity);
+        analogWrite(portPin, lightIntensity);
       }
       break;
     case Modes::DOCKED :
-      analogWrite(dockPin, k_dockLightIntensity);
       analogWrite(starboardPin, 0);
       analogWrite(portPin, 0);
       break;
     case Modes::DISCONNECTED :
       double pulsingIntensity = sin(millis() / 150) * 64 + 64;
-      analogWrite(dockPin, pulsingIntensity);
       analogWrite(starboardPin, pulsingIntensity);
       analogWrite(portPin, pulsingIntensity);
       break;
   }
 }
 
-void LightHelper::setupPins() {
-  pinMode(dockPin, OUTPUT);
+void FerryHelper::setupPins() {
   pinMode(starboardPin, OUTPUT);
   pinMode(portPin, OUTPUT);
 }
 
-void LightHelper::setMode(Modes mode) {
+void FerryHelper::setMode(Modes mode) {
   this->mode = mode;
 }
 
-void LightHelper::setDirection(Directions direction) {
+void FerryHelper::setDirection(Directions direction) {
   this->direction = direction;
 }

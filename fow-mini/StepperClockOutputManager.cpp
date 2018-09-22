@@ -93,23 +93,27 @@ StepperClockOutputManager::StepperClockOutputManager() {
   secondaryStepper->setAcceleration(stepperMaxAccel);
 
   // These magic numbers are the pins for the lights
-  primaryLights = new LightHelper(14, 13, 15);
-  secondaryLights = new LightHelper(12, 0, 16);
+  primaryLights = new FerryHelper(13, 15, lightIntensity);
+  secondaryLights = new FerryHelper(0, 16, lightIntensity);
 
   primaryLights->setupPins();
   secondaryLights->setupPins();
+  pinMode(departingDockLightPin, OUTPUT);
+  pinMode(arrivingDockLightPin, OUTPUT);
+  analogWrite(departingDockLightPin, 0);
+  analogWrite(arrivingDockLightPin, 0);
 
-  updateLightMode(LightHelper::Modes::DISCONNECTED);
+  updateLightMode(FerryHelper::Modes::DISCONNECTED);
 
-  primaryLights->setDirection(LightHelper::Directions::PORT);
-  secondaryLights->setDirection(LightHelper::Directions::STARBOARD);
+  primaryLights->setDirection(FerryHelper::Directions::PORT);
+  secondaryLights->setDirection(FerryHelper::Directions::STARBOARD);
 }
 
 void StepperClockOutputManager::calibrate() {
   primaryStepper->run();
   secondaryStepper->run();
 
-  updateLightMode(LightHelper::Modes::DISCONNECTED);
+  updateLightMode(FerryHelper::Modes::DISCONNECTED);
 
   if (state == OutputManagerInterface::States::UNCALIBRATED) {
     primaryStepper->moveTo(stepperMaxTicks);
@@ -122,7 +126,7 @@ void StepperClockOutputManager::calibrate() {
       secondaryStepper->setCurrentPosition(0);
       state = OutputManagerInterface::States::RUNNING;
       // This fixes a bug where we get 0 as an actual ferry position, and don't set the light mode as a result
-      updateLightMode(LightHelper::Modes::RUNNING);
+      updateLightMode(FerryHelper::Modes::RUNNING);
     }
   }
 }
@@ -133,19 +137,28 @@ void StepperClockOutputManager::update(std::function<double (int)> dataSupplier)
     return;
   }
 
-  double primaryProgress = dataSupplier(0); // We know which index is which because these are always ordered the same by the server
-  double secondaryProgress = dataSupplier(1);
-  updateOutput(primaryProgress, primaryStepper, primaryAdafruitStepper, primaryLights, &primaryRecalibratedTime);
-  updateOutput(secondaryProgress, secondaryStepper, secondaryAdafruitStepper, secondaryLights, &secondaryRecalibratedTime);
+  int departingDockLightVal = 0;
+  int arrivingDockLightVal = 0;
+
+  // We know which index is which because these are always ordered the same by the server
+  updateOutput(dataSupplier(0), primaryStepper, primaryAdafruitStepper, primaryLights, &departingDockLightVal, &arrivingDockLightVal, &primaryRecalibratedTime);
+  updateOutput(dataSupplier(1), secondaryStepper, secondaryAdafruitStepper, secondaryLights, &departingDockLightVal, &arrivingDockLightVal, &secondaryRecalibratedTime);
+
+  analogWrite(departingDockLightPin, departingDockLightVal * lightIntensity);
+  analogWrite(arrivingDockLightPin, arrivingDockLightVal * lightIntensity);
 }
 
-void StepperClockOutputManager::updateOutput(double progress, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, LightHelper* lights, unsigned long* recalibrationTime) {
+void StepperClockOutputManager::updateOutput(double progress, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal, unsigned long* recalibrationTime) {
   stepper->run();
 
   long progressTicks = -1 * (long)(progress * stepperMaxTicks);
   if (stepper->targetPosition() != progressTicks) {
-    if (progress == 0 || progress == 1) lights->setMode(LightHelper::Modes::DOCKED);
-    else lights->setMode(LightHelper::Modes::RUNNING);
+    if (progress == 0 || progress == 1) {
+      lights->setMode(FerryHelper::Modes::DOCKED);
+      if (progress == 0) *arrivingDockLightVal = 1;
+      else if (progress == 1) *departingDockLightVal = 1;
+    }
+    else lights->setMode(FerryHelper::Modes::RUNNING);
     stepper->moveTo(progressTicks);
   }
   // We totally bypass AccelStepper here because it's much simpler to use the underlying stepper to recalibrate when we dock
@@ -156,7 +169,7 @@ void StepperClockOutputManager::updateOutput(double progress, AccelStepper* step
   lights->update();
 }
 
-void StepperClockOutputManager::updateLightMode(LightHelper::Modes mode) {
+void StepperClockOutputManager::updateLightMode(FerryHelper::Modes mode) {
   primaryLights->setMode(mode);
   secondaryLights->setMode(mode);
   primaryLights->update();

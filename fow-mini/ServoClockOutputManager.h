@@ -21,7 +21,7 @@
 #define ServoClockOutputManager_h
 
 #include <functional>
-#include "LightHelper.h"
+#include "FerryHelper.h"
 #include "OutputManagerInterface.h"
 #include <Wire.h>
 #include <Servo.h>
@@ -34,14 +34,17 @@ class ServoClockOutputManager : public OutputManagerInterface {
     void calibrate();
   private:
     const int servoMaxPosition = 170;
+    const int lightIntensity = 255;
+    const int departingDockLightPin = 2;
+    const int arrivingDockLightPin = 14;
 
-    void updateLightMode(LightHelper::Modes mode);
-    void updateOutput(double progress, Servo* stepper, LightHelper* lights);
+    void updateLightMode(FerryHelper::Modes mode);
+    void updateOutput(double progress, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
 
     Servo primaryServo;
     Servo secondaryServo;
-    LightHelper* primaryLights;
-    LightHelper* secondaryLights;
+    FerryHelper* primaryLights;
+    FerryHelper* secondaryLights;
     OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
 };
 

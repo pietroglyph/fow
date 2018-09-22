@@ -29,7 +29,7 @@ OutputManagerInterface* output = NULL;
 
 void setup() {
   Serial.begin(115200);
-  conn = new ConnectionManager("fow-mini");
+  conn = new ConnectionManager("fow-setup");
   data = new DataManager();
   output = new ServoClockOutputManager();
 }
