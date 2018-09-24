@@ -19,13 +19,13 @@
 
 #include "FerryHelper.h"
 
-FerryHelper::FerryHelper(int starboardPin, int portPin, int lightIntensity) : portPin(portPin), starboardPin(starboardPin), lightIntensity(lightIntensity) {}
+FerryHelper::FerryHelper(int portPin, int starboardPin, int lightIntensity) : portPin(portPin), starboardPin(starboardPin), lightIntensity(lightIntensity) {}
 
 void FerryHelper::update() {
   switch (mode) {
     case Modes::RUNNING :
       if (direction == Directions::STARBOARD) {
-        analogWrite(starboardPin, lightIntensity / 10); // Starboard is assumed to be green, and it needs about 10% of red's PWM value to match luminance
+        analogWrite(starboardPin, lightIntensity * starboardLuminanceScaleFactor);
         analogWrite(portPin, 0);
       } else {
         analogWrite(starboardPin, 0);
@@ -37,9 +37,10 @@ void FerryHelper::update() {
       analogWrite(portPin, 0);
       break;
     case Modes::DISCONNECTED :
-      double pulsingIntensity = sin(millis() / 150) * 64 + 64;
-      analogWrite(starboardPin, pulsingIntensity);
-      analogWrite(portPin, pulsingIntensity);
+      double scaledLightIntensity = ((double)lightIntensity) / 2.0;
+      double pulsingIntensity = sin(((long double)millis()) / (blinkDuration / PI)) * scaledLightIntensity + scaledLightIntensity;
+      if (direction == Directions::STARBOARD) analogWrite(starboardPin, pulsingIntensity);
+      else analogWrite(portPin, pulsingIntensity);
       break;
   }
 }

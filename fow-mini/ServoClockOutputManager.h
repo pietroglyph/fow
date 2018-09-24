@@ -35,8 +35,8 @@ class ServoClockOutputManager : public OutputManagerInterface {
   private:
     const int servoMaxPosition = 170;
     const int lightIntensity = 255;
-    const int departingDockLightPin = 2;
-    const int arrivingDockLightPin = 14;
+    const int departingDockLightPin = 14;
+    const int arrivingDockLightPin = 2;
 
     void updateLightMode(FerryHelper::Modes mode);
     void updateOutput(double progress, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);

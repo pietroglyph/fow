@@ -23,27 +23,27 @@ ServoClockOutputManager::ServoClockOutputManager() {
   // These magic numbers are the servo GPIO pins
   primaryServo.attach(13);
   secondaryServo.attach(12);
+  primaryServo.write(servoMaxPosition/2);
+  secondaryServo.write(servoMaxPosition/2);
 
-  // These magic numbers are the pins for the lights (starboard, port, light intensity)
+  // These magic numbers are the pins for the lights (port, starboard, light intensity)
   primaryLights = new FerryHelper(5, 16, lightIntensity);
   secondaryLights = new FerryHelper(0, 4, lightIntensity);
   primaryLights->setupPins();
   secondaryLights->setupPins();
+  
   pinMode(departingDockLightPin, OUTPUT);
   pinMode(arrivingDockLightPin, OUTPUT);
   analogWrite(departingDockLightPin, 0);
   analogWrite(arrivingDockLightPin, 0);
 
-  updateLightMode(FerryHelper::Modes::DISCONNECTED);
+  primaryLights->setDirection(FerryHelper::Directions::STARBOARD);
+  secondaryLights->setDirection(FerryHelper::Directions::PORT);
 
-  primaryLights->setDirection(FerryHelper::Directions::PORT);
-  secondaryLights->setDirection(FerryHelper::Directions::STARBOARD);
+  updateLightMode(FerryHelper::Modes::DISCONNECTED);
 }
 
 void ServoClockOutputManager::calibrate() {
-  primaryServo.write(servoMaxPosition);
-  secondaryServo.write(servoMaxPosition);
-
   primaryLights->update();
   secondaryLights->update();
 
@@ -68,7 +68,7 @@ void ServoClockOutputManager::update(std::function<double (int)> dataSupplier) {
 }
 
 void ServoClockOutputManager::updateOutput(double progress, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
-  servo->write((long)(progress * (double)(servoMaxPosition)));
+  servo->write(servoMaxPosition - (long)(progress * (double)(servoMaxPosition)));
 
   if (progress == 0 || progress == 1) {
     lights->setMode(FerryHelper::Modes::DOCKED);

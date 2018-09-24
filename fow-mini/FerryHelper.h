@@ -45,6 +45,9 @@ class FerryHelper {
     Modes mode;
     Directions direction;
 
+    const double starboardLuminanceScaleFactor = 0.25; // Starboard is assumed to be green, and green LEDs need about 25% of red's PWM value to match luminance
+    const double blinkDuration = 800; // In milleseconds
+
     int lightIntensity;
     int starboardPin;
     int portPin;
