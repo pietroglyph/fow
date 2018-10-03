@@ -19,35 +19,35 @@
 
 #include "FerryHelper.h"
 
-FerryHelper::FerryHelper(int portPin, int starboardPin, int lightIntensity) : portPin(portPin), starboardPin(starboardPin), lightIntensity(lightIntensity) {}
+FerryHelper::FerryHelper(int departingPin, int arrivingPin, int lightIntensity) : departingPin(departingPin), arrivingPin(arrivingPin), lightIntensity(lightIntensity) {}
 
 void FerryHelper::update() {
   switch (mode) {
     case Modes::RUNNING :
-      if (direction == Directions::STARBOARD) {
-        analogWrite(starboardPin, lightIntensity * starboardLuminanceScaleFactor);
-        analogWrite(portPin, 0);
+      if (direction == Directions::ARRIVING) {
+        analogWrite(arrivingPin, lightIntensity * arrivingLuminanceScaleFactor);
+        analogWrite(departingPin, 0);
       } else {
-        analogWrite(starboardPin, 0);
-        analogWrite(portPin, lightIntensity);
+        analogWrite(arrivingPin, 0);
+        analogWrite(departingPin, lightIntensity);
       }
       break;
     case Modes::DOCKED :
-      analogWrite(starboardPin, 0);
-      analogWrite(portPin, 0);
+      analogWrite(arrivingPin, 0);
+      analogWrite(departingPin, 0);
       break;
     case Modes::DISCONNECTED :
-      double scaledLightIntensity = ((double)lightIntensity) / 2.0;
-      double pulsingIntensity = sin(((long double)millis()) / (blinkDuration / PI)) * scaledLightIntensity + scaledLightIntensity;
-      if (direction == Directions::STARBOARD) analogWrite(starboardPin, pulsingIntensity);
-      else analogWrite(portPin, pulsingIntensity);
+      double scaledLightIntensity = (static_cast<double>(lightIntensity)) / 2.0;
+      double pulsingIntensity = sin(static_cast<double>(millis()) / (blinkDuration / PI)) * scaledLightIntensity + scaledLightIntensity;
+      if (direction == Directions::ARRIVING) analogWrite(arrivingPin, pulsingIntensity);
+      else analogWrite(departingPin, pulsingIntensity);
       break;
   }
 }
 
 void FerryHelper::setupPins() {
-  pinMode(starboardPin, OUTPUT);
-  pinMode(portPin, OUTPUT);
+  pinMode(arrivingPin, OUTPUT);
+  pinMode(departingPin, OUTPUT);
 }
 
 void FerryHelper::setMode(Modes mode) {

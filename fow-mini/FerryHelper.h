@@ -26,7 +26,7 @@
 
 class FerryHelper {
   public:
-    FerryHelper(int starboardPin, int portPin, int lightIntensity);
+    FerryHelper(int arrivingPin, int departingPin, int lightIntensity);
 
     enum class Modes {
       RUNNING,
@@ -34,7 +34,7 @@ class FerryHelper {
       DISCONNECTED
     };
     enum class Directions {
-      PORT, STARBOARD
+      DEPARTING, ARRIVING
     };
 
     void update();
@@ -45,12 +45,12 @@ class FerryHelper {
     Modes mode;
     Directions direction;
 
-    const double starboardLuminanceScaleFactor = 0.25; // Starboard is assumed to be green, and green LEDs need about 25% of red's PWM value to match luminance
+    const double arrivingLuminanceScaleFactor = 0.25; // Arriving is assumed to be green, and green LEDs need about 25% of red's PWM value to match luminance
     const double blinkDuration = 800; // In milleseconds
 
     int lightIntensity;
-    int starboardPin;
-    int portPin;
+    int arrivingPin;
+    int departingPin;
 };
 
 #endif

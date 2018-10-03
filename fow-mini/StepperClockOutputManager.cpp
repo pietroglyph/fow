@@ -105,8 +105,8 @@ StepperClockOutputManager::StepperClockOutputManager() {
 
   updateLightMode(FerryHelper::Modes::DISCONNECTED);
 
-  primaryLights->setDirection(FerryHelper::Directions::PORT);
-  secondaryLights->setDirection(FerryHelper::Directions::STARBOARD);
+  primaryLights->setDirection(FerryHelper::Directions::DEPARTING);
+  secondaryLights->setDirection(FerryHelper::Directions::ARRIVING);
 }
 
 void StepperClockOutputManager::calibrate() {
@@ -131,7 +131,7 @@ void StepperClockOutputManager::calibrate() {
   }
 }
 
-void StepperClockOutputManager::update(std::function<double (int)> dataSupplier) {
+void StepperClockOutputManager::update(std::function<DataManager::FerryData (int)> dataSupplier) {
   if (state != OutputManagerInterface::States::RUNNING) {
     calibrate();
     return;
@@ -148,24 +148,25 @@ void StepperClockOutputManager::update(std::function<double (int)> dataSupplier)
   analogWrite(arrivingDockLightPin, arrivingDockLightVal * lightIntensity);
 }
 
-void StepperClockOutputManager::updateOutput(double progress, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal, unsigned long* recalibrationTime) {
+void StepperClockOutputManager::updateOutput(DataManager::FerryData data, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal, unsigned long* recalibrationTime) {
   stepper->run();
 
-  long progressTicks = -1 * (long)(progress * stepperMaxTicks);
+  long progressTicks = -1 * (long)(data.progress * stepperMaxTicks);
   if (stepper->targetPosition() != progressTicks) {
-    if (progress == 0 || progress == 1) {
+    if (data.progress == 0 || data.progress == 1) {
       lights->setMode(FerryHelper::Modes::DOCKED);
-      if (progress == 0) *arrivingDockLightVal = 1;
-      else if (progress == 1) *departingDockLightVal = 1;
+      if (data.progress == 0) *arrivingDockLightVal = 1;
+      else if (data.progress == 1) *departingDockLightVal = 1;
     }
     else lights->setMode(FerryHelper::Modes::RUNNING);
     stepper->moveTo(progressTicks);
   }
   // We totally bypass AccelStepper here because it's much simpler to use the underlying stepper to recalibrate when we dock
-  if (millis() - *recalibrationTime <= recalibrationOverdriveTime && (progress == 0 || progress == 1) && !stepper->isRunning())
-    rawStepper->onestep(progress == 0 ? FORWARD : BACKWARD, steppingMode);
-  else if (stepper->isRunning() && (progress == 0 || progress == 1)) *recalibrationTime = millis();
+  if (millis() - *recalibrationTime <= recalibrationOverdriveTime && (data.progress == 0 || data.progress == 1) && !stepper->isRunning())
+    rawStepper->onestep(data.progress == 0 ? FORWARD : BACKWARD, steppingMode);
+  else if (stepper->isRunning() && (data.progress == 0 || data.progress == 1)) *recalibrationTime = millis();
 
+  lights->setDirection(data.direction);
   lights->update();
 }
 

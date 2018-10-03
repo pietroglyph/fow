@@ -23,26 +23,33 @@
 #include <vector>
 #include <float.h> // for finding the maximum capacity of doubles
 #include <Arduino.h>
+#include "FerryHelper.h"
 
 class DataManager {
   public:
     DataManager();
 
+    typedef struct {
+      double progress = 0;
+      FerryHelper::Directions direction;
+    } FerryData;
+
     const unsigned long refreshRate = 5000; // in milliseconds
 
     void update(String rawDataString);
     bool shouldUpdate();
-    double getProgress(int i);
+    FerryData getProgress(int i);
   private:
     typedef struct {
       unsigned long startTimeOffset = 0;
       double start = 0;
       double end = 0;
+      FerryHelper::Directions direction;
     } Progress;
 
     unsigned long lastUpdated = 0;
     std::vector<Progress> progresses;
-    unsigned long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first
+    unsigned long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first. This is the default value, but it is changed based on server output
 
     std::vector<String> split(const String& text, char sep);
 };

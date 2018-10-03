@@ -45,7 +45,7 @@ class SettingsManager {
     const int pressesForFullReset = 3; // Number of presses to start a full reset
     const int eepromSize = 512; // In bytes
     const int flagByteAddress = 0;
-    
+
     bool hasTurnedOnResetBit = false;
     bool hasTurnedOffResetBit = false;
     byte originalFlagByte;

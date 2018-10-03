@@ -30,7 +30,7 @@ class ServoClockOutputManager : public OutputManagerInterface {
   public:
     ServoClockOutputManager();
 
-    void update(std::function<double (int)> dataSupplier);
+    void update(std::function<DataManager::FerryData (int)> dataSupplier);
     void calibrate();
   private:
     const int servoMaxPosition = 170;
@@ -39,7 +39,7 @@ class ServoClockOutputManager : public OutputManagerInterface {
     const int arrivingDockLightPin = 2;
 
     void updateLightMode(FerryHelper::Modes mode);
-    void updateOutput(double progress, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
+    void updateOutput(DataManager::FerryData data, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
 
     Servo primaryServo;
     Servo secondaryServo;

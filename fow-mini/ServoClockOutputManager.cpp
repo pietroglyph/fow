@@ -23,22 +23,22 @@ ServoClockOutputManager::ServoClockOutputManager() {
   // These magic numbers are the servo GPIO pins
   primaryServo.attach(13);
   secondaryServo.attach(12);
-  primaryServo.write(servoMaxPosition/2);
-  secondaryServo.write(servoMaxPosition/2);
+  primaryServo.write(servoMaxPosition / 2);
+  secondaryServo.write(servoMaxPosition / 2);
 
-  // These magic numbers are the pins for the lights (port, starboard, light intensity)
+  // These magic numbers are the pins for the lights (departing, arriving, light intensity)
   primaryLights = new FerryHelper(5, 16, lightIntensity);
   secondaryLights = new FerryHelper(0, 4, lightIntensity);
   primaryLights->setupPins();
   secondaryLights->setupPins();
-  
+
   pinMode(departingDockLightPin, OUTPUT);
   pinMode(arrivingDockLightPin, OUTPUT);
   analogWrite(departingDockLightPin, 0);
   analogWrite(arrivingDockLightPin, 0);
 
-  primaryLights->setDirection(FerryHelper::Directions::STARBOARD);
-  secondaryLights->setDirection(FerryHelper::Directions::PORT);
+  primaryLights->setDirection(FerryHelper::Directions::ARRIVING);
+  secondaryLights->setDirection(FerryHelper::Directions::DEPARTING);
 
   updateLightMode(FerryHelper::Modes::DISCONNECTED);
 }
@@ -50,7 +50,7 @@ void ServoClockOutputManager::calibrate() {
   state = OutputManagerInterface::States::RUNNING; // We can't track servo progress, so we just go straight to RUNNING
 }
 
-void ServoClockOutputManager::update(std::function<double (int)> dataSupplier) {
+void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)> dataSupplier) {
   if (state != OutputManagerInterface::States::RUNNING) {
     calibrate();
     return;
@@ -67,16 +67,17 @@ void ServoClockOutputManager::update(std::function<double (int)> dataSupplier) {
   analogWrite(arrivingDockLightPin, arrivingDockLightVal * lightIntensity);
 }
 
-void ServoClockOutputManager::updateOutput(double progress, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
-  servo->write(servoMaxPosition - (long)(progress * (double)(servoMaxPosition)));
+void ServoClockOutputManager::updateOutput(DataManager::FerryData data, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
+  servo->write(servoMaxPosition - (long)(data.progress * (double)(servoMaxPosition)));
 
-  if (progress == 0 || progress == 1) {
+  if (data.progress == 0 || data.progress == 1) {
     lights->setMode(FerryHelper::Modes::DOCKED);
-    if (progress == 0) *arrivingDockLightVal = 1;
-    else if (progress == 1) *departingDockLightVal = 1;
+    if (data.progress == 0) *arrivingDockLightVal = 1;
+    else if (data.progress == 1) *departingDockLightVal = 1;
   }
   else lights->setMode(FerryHelper::Modes::RUNNING);
 
+  lights->setDirection(data.direction);
   lights->update();
 }
 

@@ -45,7 +45,7 @@ void DataManager::update(String rawDataString) {
   for (auto const& responseString : compositeResponse) {
     std::vector<String> response;
     response = split(responseString, ',');
-    if (response.size() != 3) {
+    if (response.size() != 4) {
       Serial.printf("Invalid size of %i when splitting non-composite response.\n", response.size());
       return;
     }
@@ -54,6 +54,15 @@ void DataManager::update(String rawDataString) {
 
     progress.start = atof(response.at(0).c_str());
     progress.end = atof(response.at(1).c_str());
+
+    const char* directionString = response.at(2).c_str();
+    if (directionString == "FORWARD") progress.direction = FerryHelper::Directions::DEPARTING;
+    else if (directionString == "BACKWARD") progress.direction = FerryHelper::Directions::ARRIVING;
+    else {
+      Serial.println(String("Unknown direction string of ") + directionString);
+      progress.direction = FerryHelper::Directions::DEPARTING;
+    }
+
     // startTimeOffset is how long ago (in milliseconds) the first number was valid
     progress.startTimeOffset = strtoul(response.at(2).c_str(), &end, 10);
     progresses.push_back(progress);
@@ -61,19 +70,25 @@ void DataManager::update(String rawDataString) {
 }
 
 bool DataManager::shouldUpdate() {
-  if (millis() - lastUpdated < refreshRate) return false;
-  return true;
+  return !(millis() - lastUpdated < refreshRate);
 }
 
-double DataManager::getProgress(int i) {
+DataManager::FerryData DataManager::getProgress(int i) {
+  FerryData result;
+
   if (i >= progresses.size()) {
-    return 0.0;
+    Serial.println(String("Attempt to get progress of nonexistant ferry index ") + i);
+    return result; // Empty struct, see definition for default values
   }
+
   Progress progress = progresses.at(i);
-  if (progress.startTimeOffset == 0)
-    return progress.start; // If the offset is zero, then the ferry is docked
+  if (progress.startTimeOffset == 0) {
+    result.progress = progress.start;
+    return result; // If the offset is zero, then the ferry is docked
+  }
   long double percentPerMsec = (progress.end - progress.start) / endDurationAhead;
-  long double result = ((static_cast<long double>(millis()) - (lastUpdated - progress.startTimeOffset)) * percentPerMsec) + progress.start;
+  result.progress = ((static_cast<long double>(millis()) - (lastUpdated - progress.startTimeOffset)) * percentPerMsec) + progress.start;
+
   return result;
 }
 

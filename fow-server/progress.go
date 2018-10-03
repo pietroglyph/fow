@@ -40,6 +40,8 @@ type processedFerryPath struct {
 	length           float64
 }
 
+type ferryDirection string
+
 var seattleBainbridgePath = &ferryPath{
 	{X: 47.622453, Y: -122.509274},
 	{X: 47.620197, Y: -122.498288},
@@ -67,6 +69,9 @@ var seattleBainbridgePath = &ferryPath{
 var (
 	lastRequested time.Time
 	currentPath   *processedFerryPath // Set depending on the route set by the user
+
+	departing ferryDirection = "DEPARTING"
+	arriving  ferryDirection = "ARRIVING"
 )
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
@@ -74,7 +79,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	if time.Now().Sub(data.lastUpdated).Seconds() > config.idleAfter || data.locations == nil {
 		lastRequested = time.Now()
 
-		fmt.Fprint(w, formatOutput(0, 0, 0), ":", formatOutput(1, 1, 0), ":-1")
+		fmt.Fprint(w, formatOutput(0, 0, 0, departing), ":", formatOutput(1, 1, 0, arriving), ":-1")
 		return
 	}
 	lastRequested = time.Now()
@@ -82,7 +87,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	var ferriesFound int
 
 	data.updateMux.Lock()
-	sort.Sort(byDepartingID(*data.locations))
+	sort.Sort(byVesselID(*data.locations))
 	for _, boat := range *data.locations {
 		if boat.DepartingTerminalID != config.terminal && boat.ArrivingTerminalID != config.terminal {
 			continue
@@ -92,10 +97,12 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 
 		if boat.AtDock || !boat.InService {
 			dockedProgress := 0
+			direction := departing
 			if boat.ArrivingTerminalID == config.terminal {
 				dockedProgress = 1
+				direction = arriving
 			}
-			fmt.Fprint(w, formatOutput(dockedProgress, dockedProgress, 0), ":")
+			fmt.Fprint(w, formatOutput(dockedProgress, dockedProgress, 0, direction), ":")
 		} else {
 			progressNow, err := currentPath.progress(&boat, time.Duration(0)*time.Second)
 			if err != nil {
@@ -106,29 +113,41 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Println(err.Error())
 			}
+
+			var direction ferryDirection
+			if boat.DepartingTerminalID == config.terminal {
+				direction = departing
+			} else {
+				direction = arriving
+			}
+
 			fmt.Fprint(w,
 				formatOutput(
 					progressNow,
 					progressLater,
 					int64(time.Now().Sub(time.Time(boat.TimeStamp))/time.Millisecond),
+					direction,
 				), ":")
 		}
 	}
 	for i := ferriesFound; i < config.minimumFerries; i++ {
 		var progress int
+		var direction ferryDirection
 		if math.Mod(float64(i), 2) == 0 {
 			progress = 0
+			direction = departing
 		} else {
 			progress = 1
+			direction = arriving
 		}
-		fmt.Fprint(w, formatOutput(progress, progress, 0), ":")
+		fmt.Fprint(w, formatOutput(progress, progress, 0, direction), ":")
 	}
 	fmt.Fprint(w, config.updateFrequency*1000) // 1000 converts to milliseconds, we don't use time constants because they are arbitrary
 	data.updateMux.Unlock()
 }
 
-func formatOutput(one interface{}, two interface{}, three interface{}) string {
-	return fmt.Sprint(one, ",", two, ",", three)
+func formatOutput(one interface{}, two interface{}, three interface{}, four ferryDirection) string {
+	return fmt.Sprint(one, ",", two, ",", three, ",", string(four))
 }
 
 func (path *processedFerryPath) progress(vesselLoc *wsf.VesselLocation, durationAhead time.Duration) (float64, error) {
@@ -192,8 +211,8 @@ func convertGeoPoint(pnt *geo.Point) geom.Coord {
 	return geom.Coord{X: pnt.Lat(), Y: pnt.Lng()}
 }
 
-type byDepartingID wsf.VesselLocations
+type byVesselID wsf.VesselLocations
 
-func (a byDepartingID) Len() int           { return len(a) }
-func (a byDepartingID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a byDepartingID) Less(i, j int) bool { return a[i].DepartingTerminalID < a[j].DepartingTerminalID }
+func (a byVesselID) Len() int           { return len(a) }
+func (a byVesselID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byVesselID) Less(i, j int) bool { return a[i].VesselID < a[j].VesselID }

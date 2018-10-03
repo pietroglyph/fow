@@ -21,13 +21,14 @@
 #define OutputManagerInterface_h
 
 #include <functional>
+#include "DataManager.h"
 
 class OutputManagerInterface {
   public:
     // We never delete objects who implement this class, so we don't need a virtual destructor
 
     // Passing functions insulates the implementor of this interface from the details of the structure that stores the data
-    virtual void update(std::function<double (int)> dataSupplier);
+    virtual void update(std::function<DataManager::FerryData (int)> dataSupplier);
     virtual void calibrate();
   protected:
     // Child classes don't need to use these, but they're provided for convinence

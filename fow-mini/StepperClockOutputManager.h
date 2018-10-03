@@ -31,13 +31,13 @@ class StepperClockOutputManager : public OutputManagerInterface {
   public:
     StepperClockOutputManager();
 
-    void update(std::function<double (int)> dataSupplier);
+    void update(std::function<DataManager::FerryData (int)> dataSupplier);
     void calibrate();
   private:
     const int departingDockLightPin = 14;
     const int arrivingDockLightPin = 12;
     const int lightIntensity = 255;
-    
+
     const int stepperMaxTicks = 812;
     const double stepperMaxSpeed = 100.0;
     const double stepperMaxAccel = 100.0;
@@ -45,7 +45,7 @@ class StepperClockOutputManager : public OutputManagerInterface {
     const uint8_t steppingMode = DOUBLE;
 
     void updateLightMode(FerryHelper::Modes mode);
-    void updateOutput(double progress, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal, unsigned long* recalibrationTime);
+    void updateOutput(DataManager::FerryData data, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal, unsigned long* recalibrationTime);
 
     FerryHelper* primaryLights;
     FerryHelper* secondaryLights;
