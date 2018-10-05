@@ -55,16 +55,17 @@ void DataManager::update(String rawDataString) {
     progress.start = atof(response.at(0).c_str());
     progress.end = atof(response.at(1).c_str());
 
-    const char* directionString = response.at(2).c_str();
-    if (directionString == "FORWARD") progress.direction = FerryHelper::Directions::DEPARTING;
-    else if (directionString == "BACKWARD") progress.direction = FerryHelper::Directions::ARRIVING;
+    // startTimeOffset is how long ago (in milliseconds) the first number was valid
+    progress.startTimeOffset = strtoul(response.at(2).c_str(), &end, 10);
+
+    const String directionString = response.at(3);
+    if (directionString == "DEPARTING") progress.direction = FerryHelper::Directions::DEPARTING;
+    else if (directionString == "ARRIVING") progress.direction = FerryHelper::Directions::ARRIVING;
     else {
       Serial.println(String("Unknown direction string of ") + directionString);
       progress.direction = FerryHelper::Directions::DEPARTING;
     }
 
-    // startTimeOffset is how long ago (in milliseconds) the first number was valid
-    progress.startTimeOffset = strtoul(response.at(2).c_str(), &end, 10);
     progresses.push_back(progress);
   }
 }
