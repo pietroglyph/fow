@@ -27,8 +27,8 @@ ServoClockOutputManager::ServoClockOutputManager() {
   secondaryServo.write(servoMaxPosition / 2);
 
   // These magic numbers are the pins for the lights (departing, arriving, light intensity)
-  primaryLights = new FerryHelper(5, 16, lightIntensity);
-  secondaryLights = new FerryHelper(0, 4, lightIntensity);
+  primaryLights = new FerryHelper(16, 5, lightIntensity);
+  secondaryLights = new FerryHelper(4, 0, lightIntensity);
   primaryLights->setupPins();
   secondaryLights->setupPins();
 

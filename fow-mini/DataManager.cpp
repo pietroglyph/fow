@@ -83,6 +83,7 @@ DataManager::FerryData DataManager::getProgress(int i) {
   }
 
   Progress progress = progresses.at(i);
+  result.direction = progress.direction;
   if (progress.startTimeOffset == 0) {
     result.progress = progress.start;
     return result; // If the offset is zero, then the ferry is docked

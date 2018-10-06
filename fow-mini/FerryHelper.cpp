@@ -24,8 +24,8 @@ FerryHelper::FerryHelper(int departingPin, int arrivingPin, int lightIntensity) 
 void FerryHelper::update() {
   switch (mode) {
     case Modes::RUNNING :
-      if (direction == Directions::ARRIVING) {
-        analogWrite(arrivingPin, lightIntensity * arrivingLuminanceScaleFactor);
+      if (this->direction == Directions::ARRIVING) {
+        analogWrite(arrivingPin, lightIntensity);
         analogWrite(departingPin, 0);
       } else {
         analogWrite(arrivingPin, 0);
@@ -39,7 +39,7 @@ void FerryHelper::update() {
     case Modes::DISCONNECTED :
       double scaledLightIntensity = (static_cast<double>(lightIntensity)) / 2.0;
       double pulsingIntensity = sin(static_cast<double>(millis()) / (blinkDuration / PI)) * scaledLightIntensity + scaledLightIntensity;
-      if (direction == Directions::ARRIVING) analogWrite(arrivingPin, pulsingIntensity);
+      if (this->direction == Directions::ARRIVING) analogWrite(arrivingPin, pulsingIntensity);
       else analogWrite(departingPin, pulsingIntensity);
       break;
   }

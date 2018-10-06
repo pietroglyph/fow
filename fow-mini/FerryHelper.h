@@ -44,8 +44,7 @@ class FerryHelper {
   private:
     Modes mode;
     Directions direction;
-
-    const double arrivingLuminanceScaleFactor = 0.25; // Arriving is assumed to be green, and green LEDs need about 25% of red's PWM value to match luminance
+    
     const double blinkDuration = 800; // In milleseconds
 
     int lightIntensity;
