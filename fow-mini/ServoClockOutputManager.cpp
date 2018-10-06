@@ -68,7 +68,7 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
 }
 
 void ServoClockOutputManager::updateOutput(DataManager::FerryData data, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
-  servo->write(servoMaxPosition - (long)(data.progress * (double)(servoMaxPosition)));
+  servo->write(servoMaxPosition - lround(data.progress * static_cast<double>(servoMaxPosition)));
 
   if (data.progress == 0 || data.progress == 1) {
     lights->setMode(FerryHelper::Modes::DOCKED);

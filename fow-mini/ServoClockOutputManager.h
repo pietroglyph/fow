@@ -25,6 +25,7 @@
 #include "OutputManagerInterface.h"
 #include <Wire.h>
 #include <Servo.h>
+#include <math.h>
 
 class ServoClockOutputManager : public OutputManagerInterface {
   public:
