@@ -89,13 +89,15 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	data.updateMux.Lock()
 	sort.Sort(byVesselID(*data.locations))
 	for _, boat := range *data.locations {
-		if boat.DepartingTerminalID != config.terminal && boat.ArrivingTerminalID != config.terminal {
+		if (boat.DepartingTerminalID != config.terminal &&
+			boat.ArrivingTerminalID != config.terminal) ||
+			!boat.InService {
 			continue
 		}
 
 		ferriesFound++
 
-		if boat.AtDock || !boat.InService {
+		if boat.AtDock {
 			dockedProgress := 0
 			direction := departing
 			if boat.ArrivingTerminalID == config.terminal {
