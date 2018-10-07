@@ -103,5 +103,5 @@ func main() {
 		http.HandleFunc("/debug/path/coords", pathCoordInfoHandler)
 	}
 	http.HandleFunc("/progress", progressHandler)
-	http.ListenAndServe(config.bind, nil)
+	log.Panicln(http.ListenAndServe(config.bind, nil))
 }

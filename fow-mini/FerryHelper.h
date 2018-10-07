@@ -44,7 +44,7 @@ class FerryHelper {
   private:
     Modes mode;
     Directions direction;
-    
+
     const double blinkDuration = 800; // In milleseconds
 
     int lightIntensity;
