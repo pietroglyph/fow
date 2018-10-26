@@ -221,12 +221,12 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   Serial.printf("Server local IP is %s.\n", WiFi.softAPIP().toString().c_str());
 
   // Handle requests to the base path by showing a simple config page
-  server.on("/", [&]() {
-    server.send(HTTP_CODE_OK, "text/html", configPage);
+  server->on("/", [&]() {
+    server->send(HTTP_CODE_OK, "text/html", configPage);
 
-    if (server.hasArg("ssid") || server.hasArg("password")) {
-      ssid = server.arg("ssid");
-      password = server.arg("password");
+    if (server->hasArg("ssid") || server->hasArg("password")) {
+      ssid = server->arg("ssid");
+      password = server->arg("password");
       ssid.remove(settingsManager.maximumSettingLength - 1);
       password.remove(settingsManager.maximumSettingLength - 1);
 
@@ -234,7 +234,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     }
   });
 
-  server.on("/status", [&]() {
+  server->on("/status", [&]() {
     String connStatus;
     switch (WiFi.status()) {
       case WL_CONNECTED :
@@ -257,22 +257,22 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
         connStatus = "Other";
         break;
     }
-    server.send(HTTP_CODE_OK, "text/html",
+    server->send(HTTP_CODE_OK, "text/html",
                 String("<html><body style='color: white; font-size: 14px; font-family: monospace;'>Network Name: ") + ssid +
                 "<br>Password: " + password +
                 "<br>Connection Status: " + connStatus +
                 "</body></html>");
   });
 
-  server.on("/promptforexitsetup", [&]() {
+  server->on("/promptforexitsetup", [&]() {
     bool shouldPrompt = isConnectedToWiFi();
-    server.send(shouldPrompt ? HTTP_CODE_OK : HTTP_CODE_INTERNAL_SERVER_ERROR, "text/plain", shouldPrompt ? "true" : "false");
+    server->send(shouldPrompt ? HTTP_CODE_OK : HTTP_CODE_INTERNAL_SERVER_ERROR, "text/plain", shouldPrompt ? "true" : "false");
   });
 
-  server.on("/exitsetup", [&]() {
+  server->on("/exitsetup", [&]() {
     if (!isConnectedToWiFi()) return;
 
-    server.send(HTTP_CODE_OK, "text/plain", "Exiting setup...");
+    server->send(HTTP_CODE_OK, "text/plain", "Exiting setup...");
 
     setupMode = false;
 
@@ -284,7 +284,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   });
 
   // Handle requests to the /config path by changing configuration
-  server.begin();
+  server->begin();
 
   // Add service to MDNS-SD
   MDNS.addService("http", "tcp", port);
@@ -298,7 +298,7 @@ bool ConnectionManager::ready() {
 void ConnectionManager::update() {
   settingsManager.updateFullResetTimer();
 
-  if (setupMode) server.handleClient();
+  if (setupMode) server->handleClient();
   // Periodically attempt to reconnect if we're not in setup mode, and still disconnected.
   else if (!isConnectedToWiFi() && lastPeriodicReconnectAttempt - millis() >= periodicReconnectDelay) connectToWiFiNetwork();
 }

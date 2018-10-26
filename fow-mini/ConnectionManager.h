@@ -22,6 +22,7 @@
 
 #include "SettingsManager.h"
 #include <ESP8266WiFi.h>
+#include <WiFiClient.h>
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <ESP8266HTTPClient.h>
@@ -50,7 +51,7 @@ class ConnectionManager {
     const unsigned long timeout = 8000; // In milleseconds
     const unsigned long periodicReconnectDelay = 60000;
 
-    ESP8266WebServer server = ESP8266WebServer(80);
+    ESP8266WebServer* server = new ESP8266WebServer();
     SettingsManager settingsManager = SettingsManager();
     HTTPClient client;
 
