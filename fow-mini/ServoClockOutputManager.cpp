@@ -23,8 +23,8 @@ ServoClockOutputManager::ServoClockOutputManager() {
   // These magic numbers are the servo GPIO pins
   primaryServo.attach(13);
   secondaryServo.attach(12);
-  primaryServo.write(servoMaxPosition / 2);
-  secondaryServo.write(servoMaxPosition / 2);
+  primaryServo.write(0.5);
+  secondaryServo.write(0.5);
 
   // These magic numbers are the pins for the lights (departing, arriving, light intensity)
   primaryLights = new FerryHelper(16, 5, lightIntensity);
@@ -67,7 +67,7 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
 }
 
 void ServoClockOutputManager::updateOutput(DataManager::FerryData data, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
-  servo->write(servoMaxPosition - lround(data.progress * static_cast<double>(servoMaxPosition)));
+  servo->write(1 - data.progress);
 
   if (data.progress == 0 || data.progress == 1) {
     lights->setMode(FerryHelper::Modes::DOCKED);

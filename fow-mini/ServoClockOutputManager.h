@@ -24,8 +24,7 @@
 #include "FerryHelper.h"
 #include "OutputManagerInterface.h"
 #include <Wire.h>
-#include <Servo.h>
-#include <math.h>
+#include "PercentageServo.h"
 
 class ServoClockOutputManager : public OutputManagerInterface {
   public:
@@ -35,6 +34,7 @@ class ServoClockOutputManager : public OutputManagerInterface {
     void calibrate();
   private:
     const int servoMaxPosition = 170;
+    const int servoMinPosition = 10;
     const int lightIntensity = 255;
     const int departingDockLightPin = 14;
     const int arrivingDockLightPin = 2;
@@ -42,8 +42,8 @@ class ServoClockOutputManager : public OutputManagerInterface {
     void updateLightMode(FerryHelper::Modes mode);
     void updateOutput(DataManager::FerryData data, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
 
-    Servo primaryServo;
-    Servo secondaryServo;
+    PercentageServo primaryServo = PercentageServo(servoMinPosition, servoMaxPosition);
+    PercentageServo secondaryServo = PercentageServo(servoMinPosition, servoMaxPosition);
     FerryHelper* primaryLights;
     FerryHelper* secondaryLights;
     OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
