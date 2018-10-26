@@ -26,15 +26,15 @@ void FerryHelper::update() {
     case Modes::RUNNING :
       if (this->direction == Directions::ARRIVING) {
         analogWrite(arrivingPin, lightIntensity);
-        analogWrite(departingPin, 0);
+        analogWrite(departingPin, LOW);
       } else {
-        analogWrite(arrivingPin, 0);
+        analogWrite(arrivingPin, LOW);
         analogWrite(departingPin, lightIntensity);
       }
       break;
     case Modes::DOCKED :
-      analogWrite(arrivingPin, 0);
-      analogWrite(departingPin, 0);
+      analogWrite(arrivingPin, LOW);
+      analogWrite(departingPin, LOW);
       break;
     case Modes::DISCONNECTED :
       double scaledLightIntensity = (static_cast<double>(lightIntensity)) / 2.0;
@@ -48,6 +48,7 @@ void FerryHelper::update() {
 void FerryHelper::setupPins() {
   pinMode(arrivingPin, OUTPUT);
   pinMode(departingPin, OUTPUT);
+  analogWriteRange(lightIntensity);
 }
 
 void FerryHelper::setMode(Modes mode) {

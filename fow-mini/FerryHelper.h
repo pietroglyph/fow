@@ -23,6 +23,7 @@
 #include <Wire.h>
 #include <vector>
 #include "Arduino.h" // XXX: I have no idea why this needs to be included
+#include <math.h>
 
 class FerryHelper {
   public:

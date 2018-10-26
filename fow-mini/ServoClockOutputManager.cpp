@@ -44,8 +44,7 @@ ServoClockOutputManager::ServoClockOutputManager() {
 }
 
 void ServoClockOutputManager::calibrate() {
-  primaryLights->update();
-  secondaryLights->update();
+  updateLightMode(FerryHelper::Modes::DISCONNECTED);
 
   state = OutputManagerInterface::States::RUNNING; // We can't track servo progress, so we just go straight to RUNNING
 }
