@@ -40,7 +40,7 @@ class ServoClockOutputManager : public OutputManagerInterface {
     const int arrivingDockLightPin = 2;
 
     void updateLightMode(FerryHelper::Modes mode);
-    void updateOutput(DataManager::FerryData data, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
+    void updateOutput(DataManager::FerryData data, PercentageServo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
 
     PercentageServo primaryServo = PercentageServo(servoMinPosition, servoMaxPosition);
     PercentageServo secondaryServo = PercentageServo(servoMinPosition, servoMaxPosition);

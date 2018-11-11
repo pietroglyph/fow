@@ -66,7 +66,7 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
   analogWrite(arrivingDockLightPin, arrivingDockLightVal * lightIntensity);
 }
 
-void ServoClockOutputManager::updateOutput(DataManager::FerryData data, Servo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
+void ServoClockOutputManager::updateOutput(DataManager::FerryData data, PercentageServo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
   servo->write(1 - data.progress);
 
   if (data.progress == 0 || data.progress == 1) {

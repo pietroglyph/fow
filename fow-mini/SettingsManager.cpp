@@ -27,7 +27,7 @@ void SettingsManager::updateFullResetTimer() {
   if (!hasTurnedOnResetBit) {
     hasTurnedOnResetBit = true;
 
-    Serial.println("Checking reset bits...");
+    Serial.println("Checking and setting reset bits...");
 
     byte b = EEPROM.read(flagByteAddress);
     originalFlagByte = b;

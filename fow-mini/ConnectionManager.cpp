@@ -36,10 +36,10 @@ const static char configPage[] PROGMEM = R"(
         color: white;
         background-size: cover;
         background-repeat:no-repeat;
-        background: #44A08D;  /* fallback for old browsers */
+        background: #44A08D;
         background: -webkit-linear-gradient(#093637, #44A08D);
         background: -o-linear-gradient(#093637, #44A08D);
-        background: radial-gradient(#44A08D, #093637);  /* Chrome 10-25, Safari 5.1-6 */ /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+        background: radial-gradient(#44A08D, #093637);
         overflow: hidden;
       }
       h1 {
@@ -187,6 +187,8 @@ const static char configPage[] PROGMEM = R"(
   )";
 
 ConnectionManager::ConnectionManager(const String programName) : name(programName) {
+  WiFi.disconnect();
+  
   // Tell the http client to allow reuse if the server supports it (we make lots of requests to the same server, this should decrease overhead)
   client.setReuse(true);
 
