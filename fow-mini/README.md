@@ -1,7 +1,7 @@
 # Ferries Over Winslow Mini
 This is the code that runs on a microcontroller to power smaller-scale displays (clocks, sliding displays, etc.) The client is written in C++ and runs with the Arduino support libraries, but actually runs on an ESP8266.
 ## Configuring your Mini
-The microcontroller broadcasts a network called `fow-mini`, on which it serves a configuration webpage. Once you connect to that network, you can enter `192.168.4.1` into your web browser. On that page you should enter in the network name and password and press apply. The status box will show your connection status. If you can't connect, check the network name and password, and try positioning your microcontroller closer to the access point you're connecting to. If you're having trouble connecting, feel free to [post an issue on Github](https://github.com/pietroglyph/fow/issues/new).
+The microcontroller broadcasts a network called `fow-mini`, on which it serves a configuration webpage. Once you connect to that network, you can enter [fow-setup.local](http://fow-setup.local) into your web browser (if that doesn't work, try entering [192.168.4.1](http://192.168.4.1)). On that page you should enter in the network name and password and press apply. The status box will show your connection status. If you can't connect, check the network name and password, and try positioning your microcontroller closer to the access point you're connecting to. If you're having trouble connecting, feel free to [post an issue on Github](https://github.com/pietroglyph/fow/issues/new).
 ## Flashing your microcontroller
 The easiest way to get the code onto your ESP8266 (the code requires an ESP8266, but it doesn't really matter what's on the rest of the board, the NodeMCU DEVKIT 1.0 and Adafruit Feather Huzzah are both known to work) is to use the Arduino IDE (based on Processing), and use the IDE's included tools to get the required libraries and tooling to compile your code and flash it to the ESP8266.
 
@@ -13,4 +13,3 @@ You can follow the below steps:
 5. Once you have set your board, set `Tools > lwIP Variant` to "v1.4 Compile from Source". **lwIP v2.0 and 1.4 High Bandwith crash when they try to serve content stored via `PROGMEM`. Do not use them.**
 6. Optionally you can set your upload speed to 921600 baud under `Tools > Upload Speed` if you don't want to wait forever.
 7. Press the `Upload` button (Looks like ->) in the top left hand corner of the Arduino IDE.
-

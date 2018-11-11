@@ -25,11 +25,12 @@
 
 class PercentageServo : public Servo {
   public:
-    PercentageServo(int minimumPosition, int maximumPosition);
+    PercentageServo(int minimumPosition, int maximumPosition, boolean isInverted);
     void write(int value) = delete;
     void write(double percentage);
   private:
     double minimumPosition, maximumPosition, range;
+    boolean isInverted;
 };
 
 #endif

@@ -36,14 +36,14 @@ class ServoClockOutputManager : public OutputManagerInterface {
     const int servoMaxPosition = 170;
     const int servoMinPosition = 10;
     const int lightIntensity = 255;
-    const int departingDockLightPin = 14;
+    const int departingDockLightPin = 13;
     const int arrivingDockLightPin = 2;
 
     void updateLightMode(FerryHelper::Modes mode);
     void updateOutput(DataManager::FerryData data, PercentageServo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
 
-    PercentageServo primaryServo = PercentageServo(servoMinPosition, servoMaxPosition);
-    PercentageServo secondaryServo = PercentageServo(servoMinPosition, servoMaxPosition);
+    PercentageServo primaryServo = PercentageServo(servoMinPosition, servoMaxPosition, false);
+    PercentageServo secondaryServo = PercentageServo(servoMinPosition, servoMaxPosition, true);
     FerryHelper* primaryLights;
     FerryHelper* secondaryLights;
     OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
