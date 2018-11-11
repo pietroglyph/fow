@@ -188,7 +188,7 @@ const static char configPage[] PROGMEM = R"(
 
 ConnectionManager::ConnectionManager(const String programName) : name(programName) {
   WiFi.disconnect();
-  
+
   // Tell the http client to allow reuse if the server supports it (we make lots of requests to the same server, this should decrease overhead)
   client.setReuse(true);
 
@@ -232,7 +232,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
       ssid.remove(settingsManager.maximumSettingLength - 1);
       password.remove(settingsManager.maximumSettingLength - 1);
 
-      connectToWiFiNetwork();
+      connectToWiFiNetwork(server->hasArg("notimeout"));
     }
   });
 
@@ -260,10 +260,10 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
         break;
     }
     server->send(HTTP_CODE_OK, "text/html",
-                String("<html><body style='color: white; font-size: 14px; font-family: monospace;'>Network Name: ") + ssid +
-                "<br>Password: " + password +
-                "<br>Connection Status: " + connStatus +
-                "</body></html>");
+                 String("<html><body style='color: white; font-size: 14px; font-family: monospace;'>Network Name: ") + ssid +
+                 "<br>Password: " + password +
+                 "<br>Connection Status: " + connStatus +
+                 "</body></html>");
   });
 
   server->on("/promptforexitsetup", [&]() {
@@ -321,7 +321,14 @@ String ConnectionManager::get() {
   return client.getString(); // This only returns the response body.
 }
 
-void ConnectionManager::connectToWiFiNetwork() {
+// noTimeout == true will result in an infinite connect loop if the network really
+// doesn't exist. We just provide it so the user has an out if their network takes
+// forever to connect. The user should reset the microcontroller if they wish to
+// escape the loop.
+void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see header*/) {
+  if (noTimeout)
+    Serial.println("We will connect with no timeout. Reset the microcontroller to escape the infinte loop");
+
   lastPeriodicReconnectAttempt = millis();
 
   client.end();
@@ -331,7 +338,7 @@ void ConnectionManager::connectToWiFiNetwork() {
 
   unsigned long startTime = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - startTime > timeout) {
+    if (millis() - startTime > timeout && !noTimeout) {
       Serial.println("\nWiFi connection attempt timed out.");
       connectionTimedOut = true;
       return;

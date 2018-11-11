@@ -43,7 +43,7 @@ class ServoClockOutputManager : public OutputManagerInterface {
     void updateOutput(DataManager::FerryData data, PercentageServo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
 
     PercentageServo primaryServo = PercentageServo(servoMinPosition, servoMaxPosition, false);
-    PercentageServo secondaryServo = PercentageServo(servoMinPosition, servoMaxPosition, true);
+    PercentageServo secondaryServo = PercentageServo(servoMinPosition, servoMaxPosition, false);
     FerryHelper* primaryLights;
     FerryHelper* secondaryLights;
     OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;

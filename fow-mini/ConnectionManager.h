@@ -47,7 +47,7 @@ class ConnectionManager {
     const String host = "fow.0x778.tk";
     const String path = "/progress";
     const int port = 80;
-    const unsigned long timeout = 8000; // In milleseconds
+    const unsigned long timeout = 20000; // In milleseconds
     const unsigned long periodicReconnectDelay = 60000;
 
     ESP8266WebServer* server = new ESP8266WebServer(80);
@@ -60,7 +60,7 @@ class ConnectionManager {
     bool setupMode = true;
     bool connectionTimedOut = false;
 
-    void connectToWiFiNetwork();
+    void connectToWiFiNetwork(bool noTimeout = false);
 };
 
 #endif
