@@ -35,7 +35,7 @@ class ServoClockOutputManager : public OutputManagerInterface {
   private:
     const int servoMaxPosition = 170;
     const int servoMinPosition = 10;
-    const int lightIntensity = 255;
+    const int lightIntensity = 2;
     const int departingDockLightPin = 13;
     const int arrivingDockLightPin = 2;
 

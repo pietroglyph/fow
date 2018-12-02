@@ -29,7 +29,7 @@ void FerryHelper::update() {
         analogWrite(departingPin, LOW);
       } else {
         analogWrite(arrivingPin, LOW);
-        analogWrite(departingPin, lightIntensity);
+        analogWrite(departingPin, max(static_cast<int>(static_cast<double>(lightIntensity) * greenIntensityMultiplier), 1));
       }
       break;
     case Modes::DOCKED :
