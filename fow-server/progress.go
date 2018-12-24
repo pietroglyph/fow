@@ -87,7 +87,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	var ferriesFound int
 
 	data.updateMux.Lock()
-	sort.Sort(bySortSeq(*data.locations))
+	sort.Sort(byVesselID(*data.locations))
 	for _, boat := range *data.locations {
 		if (boat.DepartingTerminalID != config.terminal &&
 			boat.ArrivingTerminalID != config.terminal) ||
@@ -213,8 +213,8 @@ func convertGeoPoint(pnt *geo.Point) geom.Coord {
 	return geom.Coord{X: pnt.Lat(), Y: pnt.Lng()}
 }
 
-type bySortSeq wsf.VesselLocations
+type byVesselID wsf.VesselLocations
 
-func (a bySortSeq) Len() int           { return len(a) }
-func (a bySortSeq) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a bySortSeq) Less(i, j int) bool { return a[i].SortSeq < a[j].SortSeq }
+func (a byVesselID) Len() int           { return len(a) }
+func (a byVesselID) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a byVesselID) Less(i, j int) bool { return a[i].VesselID < a[j].VesselID }
