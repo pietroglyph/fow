@@ -47,7 +47,7 @@ class FerryHelper {
     Directions direction;
 
     const double blinkDuration = 800; // In milleseconds
-    const double greenIntensityMultiplier = 0.1;
+    const int redIntensityMultiplier = 10;
 
     int lightIntensity;
     int arrivingPin;

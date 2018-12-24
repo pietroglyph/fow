@@ -21,14 +21,14 @@
 
 ServoClockOutputManager::ServoClockOutputManager() {
   // These magic numbers are the servo GPIO pins
-  primaryServo.attach(0);
-  secondaryServo.attach(12);
+  primaryServo.attach(13);
+  secondaryServo.attach(0);
   primaryServo.write(0.5);
   secondaryServo.write(0.5);
 
   // These magic numbers are the pins for the lights (departing, arriving, light intensity)
-  primaryLights = new FerryHelper(16, 5, lightIntensity);
-  secondaryLights = new FerryHelper(14, 4, lightIntensity);
+  primaryLights = new FerryHelper(5, 14, lightIntensity);
+  secondaryLights = new FerryHelper(4, 12, lightIntensity);
   primaryLights->setupPins();
   secondaryLights->setupPins();
 
