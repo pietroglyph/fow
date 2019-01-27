@@ -36,7 +36,7 @@ import (
 type ferryData struct {
 	locations   *wsf.VesselLocations
 	lastUpdated time.Time
-	updateMux   sync.Mutex
+	updateMux   sync.RWMutex
 }
 
 type configuration struct {

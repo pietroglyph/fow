@@ -26,6 +26,7 @@ import (
 	"math"
 	"net/http"
 	"sort"
+	"sync"
 	"time"
 
 	geo "github.com/kellydunn/golang-geo"
@@ -67,31 +68,34 @@ var seattleBainbridgePath = &ferryPath{
 }
 
 var (
-	lastRequested time.Time
-	currentPath   *processedFerryPath // Set depending on the route set by the user
+	lastRequestTime    time.Time
+	lastRequestTimeMux sync.Mutex
+	currentPath        *processedFerryPath // Set depending on the route set by the user
 
 	departing ferryDirection = "DEPARTING"
 	arriving  ferryDirection = "ARRIVING"
 )
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
+	data.updateMux.RLock()
+
+	lastRequestTimeMux.Lock()
+	lastRequestTime = time.Now()
+	lastRequestTimeMux.Unlock()
+
 	// Give dummy data until the data is no longer nil or stale
 	if time.Now().Sub(data.lastUpdated).Seconds() > config.idleAfter || data.locations == nil {
-		lastRequested = time.Now()
-
 		fmt.Fprint(w, formatOutput(0, 0, 0, departing), ":", formatOutput(1, 1, 0, arriving), ":-1")
+		data.updateMux.RUnlock()
 		return
 	}
-	lastRequested = time.Now()
 
+	// Add real boat progress info
 	var ferriesFound int
-
-	data.updateMux.Lock()
 	sort.Sort(byVesselID(*data.locations))
 	for _, boat := range *data.locations {
 		if (boat.DepartingTerminalID != config.terminal &&
-			boat.ArrivingTerminalID != config.terminal) ||
-			!boat.InService {
+			boat.ArrivingTerminalID != config.terminal) || !boat.InService {
 			continue
 		}
 
@@ -132,6 +136,9 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 				), ":")
 		}
 	}
+	data.updateMux.RUnlock()
+
+	// Add extra dummy ferries if the route is understaffed
 	for i := ferriesFound; i < config.minimumFerries; i++ {
 		var progress int
 		var direction ferryDirection
@@ -145,7 +152,6 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, formatOutput(progress, progress, 0, direction), ":")
 	}
 	fmt.Fprint(w, config.updateFrequency*1000) // 1000 converts to milliseconds, we don't use time constants because they are arbitrary
-	data.updateMux.Unlock()
 }
 
 func formatOutput(one interface{}, two interface{}, three interface{}, four ferryDirection) string {

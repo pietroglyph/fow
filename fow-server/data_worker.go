@@ -26,24 +26,55 @@ import (
 	"github.com/pietroglyph/go-wsf"
 )
 
+// The below code may wait a maximum of config.updateFrequency seconds before actually making a request!
 func (d *ferryData) keepUpdated(wsfClient *wsf.Client) {
+
+	vesselLocations, err := wsfClient.Vessels.VesselLocations()
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		for _, v := range *vesselLocations {
+			if v.DepartingTerminalID != config.terminal && v.ArrivingTerminalID != config.terminal {
+				continue
+			}
+
+			// We try to sychronize ourselves with the update rate of the WSP API server
+			// We could try to sync exactly, but that has a roughly 50% chance of us
+			// landing on the wrong side of things (e.g. we request just before the
+			// serverside update). So we go in the middle.
+			maxSyncWaitTime := time.Duration(config.updateFrequency/2) * time.Second
+			time.Sleep((maxSyncWaitTime - (time.Now().Sub(time.Time(v.TimeStamp)) % maxSyncWaitTime)))
+			break
+		}
+	}
+
+	// We do a ticker instead of time.Sleep because a ticker will always be on time,
+	// whereas sleepwoud drift by the duration of the remainder of the for loop,
+	// which would be mean drift by however long it takes to make a request to the
+	// WSF API.
+	ticker := time.NewTicker(time.Duration(config.updateFrequency) * time.Second)
 	for {
-		time.Sleep(time.Duration(config.updateFrequency) * time.Second)
-		if time.Now().Sub(d.lastUpdated).Seconds() < float64(config.updateFrequency) {
-			continue
-		} else if time.Now().Sub(lastRequested).Seconds() >= float64(config.idleAfter) {
+		lastRequestTimeMux.Lock()
+		if time.Now().Sub(lastRequestTime).Seconds() >= float64(config.idleAfter) {
+			lastRequestTimeMux.Unlock()
 			continue
 		}
-		d.lastUpdated = time.Now()
+		lastRequestTimeMux.Unlock()
+
 		vesselLocations, err := wsfClient.Vessels.VesselLocations()
+		updatedTime := time.Now()
 		if err != nil {
-			log.Println(err.Error())
+			log.Println(err)
 			continue
 		}
 
 		d.updateMux.Lock()
+		d.lastUpdated = updatedTime
 		d.locations = vesselLocations
 		d.updateMux.Unlock()
-		log.Println("Location data updated.")
+
+		// We do this instead of the for range ticker.C pattern because we want to wait at the _end_
+		<-ticker.C
 	}
 }

@@ -1,8 +1,14 @@
 # Ferries Over Winslow
 This is the code for robotic ferries running on a wire over a street, tracking the progress of the actual boats. There is also code here for miniature Arduino-powered ferries that have the same functionality as the large one.
 ## Communication and Processing
-The code is based upon a client-server model. The client is a small microcontroller that controls actuators and sensors. It communicates over HTTP with a more powerful server running on an internet connected computer.
+The code is based upon a client-server model. The client is a small microcontroller that controls actuators and sensors. It communicates over HTTP with a more powerful computer running the server.
 ## Server
-The server provides data for both the miniature and full-sized ferries because its behavior is the same for both. It communicates with the Washington Department of Transportation REST API, and uses a point on a latitude and longitude coordinate plane to calculate the "progress" along a set of connected line segments that represent the normal route of the boat on the coordinate plane. The server then estimates the ferry's future location based on speed and heading, and calculates a percentage for both. The server then provides the client with these two percentages, and a time that the first percentage was calculated for (the second percentage is assumed to be a constant amount of time ahead). The server is written in Go.
+The server can provide data for both the miniature and full-sized ferries because the server's behavior should be the same for both. The processing steps are as follows:
+ 1. The server periodically makes requests to the Washington Department of Transportation REST API, from which it collects the latitude and longitute of the boats it is tracking.
+ 2. These lat/long value are matched to the closest point on a set of connected line segments (known as the "reference path"). We use this information to determine our progress (as a percentage) along this reference path.
+ 3. We estimate the ferry's future location based current on speed and heading, and calculate a progress percentage for both the current and future location.
+ 4. We serve the client these two percentages, how long ago the first percentage was calculated, and how far ahead the second percentage is from the first. This is enough information for the client interpolate between these two values over time.
+
+The server is written in Go.
 ## Mini-Client
 The client for the miniature ferries communicates with the internet connected server, and is provided with two percentages that it linearly interpolates with to determine the position it should make the stepper motor go to. The mini-client is written in C++. You can read more about it [here](https://github.com/pietroglyph/fow/tree/master/fow-mini).
