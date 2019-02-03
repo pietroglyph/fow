@@ -26,38 +26,20 @@ import (
 	"github.com/pietroglyph/go-wsf"
 )
 
+const likelyRequestDelayMs = 0.3 // Sync fudge factor
+
 // The below code may wait a maximum of config.updateFrequency seconds before actually making an initial request!
 func (d *ferryData) keepUpdated(wsfClient *wsf.Client) {
-
-	vesselLocations, err := wsfClient.Vessels.VesselLocations()
-
-	if err != nil {
-		log.Println(err)
-	} else {
-		for _, v := range *vesselLocations {
-			if v.DepartingTerminalID != config.terminal && v.ArrivingTerminalID != config.terminal {
-				continue
-			}
-
-			// We try to sychronize ourselves with the update rate of the WSP API server
-			// We could try to sync exactly, but that has a roughly 50% chance of us
-			// landing on the wrong side of things (e.g. we request just before the
-			// serverside update). So we go in the middle.
-			maxSyncWaitTime := time.Duration(config.updateFrequency/2) * time.Second
-			time.Sleep((maxSyncWaitTime - (time.Now().Sub(time.Time(v.TimeStamp)) % maxSyncWaitTime)))
-			break
-		}
-	}
-
 	// We do a ticker instead of time.Sleep because a ticker will always be on time,
 	// whereas sleep would drift by the duration of the remainder of the for loop,
 	// which would be mean drift by however long it takes to make a request to the
 	// WSF API.
-	ticker := time.NewTicker(time.Duration(config.updateFrequency) * time.Second)
+	ticker := makeNewTicker()
 	for {
 		lastRequestTimeMux.Lock()
 		if time.Now().Sub(lastRequestTime).Seconds() >= float64(config.idleAfter) {
 			lastRequestTimeMux.Unlock()
+			<-ticker.C
 			continue
 		}
 		lastRequestTimeMux.Unlock()
@@ -74,7 +56,23 @@ func (d *ferryData) keepUpdated(wsfClient *wsf.Client) {
 		d.locations = vesselLocations
 		d.updateMux.Unlock()
 
-		// We do this instead of the for range ticker.C pattern because we want to wait at the _end_
+		// Attempt to keep ourselves relatively synchronized with the WSF server
+		// (they say they update every 15 seconds, which means wost case is 30
+		// seconds off, which isn't really great and makes for a jerky user experience)
+		// XXX: Assumes that the TimeStamp of vessel 0 is the same as that of all others
+		if config.maxDataStaleness > 0 && len(*vesselLocations) >= 1 {
+			requestDurationAgo := time.Now().Sub(time.Time((*vesselLocations)[0].TimeStamp))
+			if requestDurationAgo > time.Duration(config.maxDataStaleness)*time.Second {
+				log.Println("Data is stale by", requestDurationAgo, "seconds, catching up...")
+				time.Sleep(time.Duration(requestDurationAgo.Seconds()+likelyRequestDelayMs) * time.Second)
+				ticker = makeNewTicker()
+				continue
+			}
+		}
 		<-ticker.C
 	}
+}
+
+func makeNewTicker() *time.Ticker {
+	return time.NewTicker(time.Duration(config.updateFrequency) * time.Second)
 }
