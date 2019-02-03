@@ -26,7 +26,7 @@ import (
 	"github.com/pietroglyph/go-wsf"
 )
 
-// The below code may wait a maximum of config.updateFrequency seconds before actually making a request!
+// The below code may wait a maximum of config.updateFrequency seconds before actually making an initial request!
 func (d *ferryData) keepUpdated(wsfClient *wsf.Client) {
 
 	vesselLocations, err := wsfClient.Vessels.VesselLocations()
@@ -50,7 +50,7 @@ func (d *ferryData) keepUpdated(wsfClient *wsf.Client) {
 	}
 
 	// We do a ticker instead of time.Sleep because a ticker will always be on time,
-	// whereas sleepwoud drift by the duration of the remainder of the for loop,
+	// whereas sleep would drift by the duration of the remainder of the for loop,
 	// which would be mean drift by however long it takes to make a request to the
 	// WSF API.
 	ticker := time.NewTicker(time.Duration(config.updateFrequency) * time.Second)
