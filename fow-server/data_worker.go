@@ -1,5 +1,5 @@
 /*
-   Copyright (c) 2017, 2018 Declan Freeman-Gleason.
+   Copyright (c) 2017-2019 Declan Freeman-Gleason.
 
    This file is part of Ferries Over Winslow.
 
