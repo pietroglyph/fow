@@ -212,9 +212,12 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   Serial.println("No saved credentials found. Starting the ferry connection configuration WiFi AP...");
 
+  char apSSID[sizeof(name.c_str()) + sizeof(ESP.getChipId()) + 1] = {0};
+  sprintf(apSSID, (name + "-%06X").c_str(), ESP.getChipId());
+
   // Setup in soft access point mode
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(name.c_str());
+  WiFi.softAP(apSSID);
 
   // Start a mDNS responder so that users can connect easily
   Serial.printf("MDNS responder initalization has %s.\n", MDNS.begin(name.c_str()) ? "been successful" : "failed");
@@ -224,7 +227,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   // Handle requests to the base path by showing a simple config page
   server->on("/", [&]() {
-    server->send(HTTP_CODE_OK, "text/html", configPage);
+    server->send_P(HTTP_CODE_OK, "text/html", configPage);
 
     if (server->hasArg("ssid") || server->hasArg("password")) {
       ssid = server->arg("ssid");
