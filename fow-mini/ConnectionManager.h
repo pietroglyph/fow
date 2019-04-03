@@ -44,14 +44,15 @@ class ConnectionManager {
     */
 
     // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
-    const String host = "fow.0x778.tk";
-    const String path = "/progress";
-    const int port = 80;
-    const unsigned long timeout = 20000; // In milleseconds
+    const String url = "http://fow.0x778.tk/progress";
+    const int port = 80; // Needed for the MDNS resolver
+    const unsigned long connectionTimeout = 20000; // In milleseconds
     const unsigned long periodicReconnectDelay = 60000;
 
     ESP8266WebServer* server = new ESP8266WebServer(80);
     SettingsManager settingsManager = SettingsManager();
+    
+    WiFiClient wifiClient; // You need to have one of these for the HTTPClient to work
     HTTPClient client;
 
     String name;

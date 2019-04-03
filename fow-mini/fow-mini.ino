@@ -22,7 +22,7 @@
 #include "OutputManagerInterface.h"
 #include "ServoClockOutputManager.h"
 
-// null references on the heap (these should never be destroyed)
+// These objects should never be destroyed
 ConnectionManager* conn = NULL;
 DataManager* data = NULL;
 OutputManagerInterface* output = NULL;

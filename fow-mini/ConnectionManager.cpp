@@ -212,8 +212,9 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   Serial.println("No saved credentials found. Starting the ferry connection configuration WiFi AP...");
 
-  char apSSID[sizeof(name.c_str()) + sizeof(ESP.getChipId()) + 1] = {0};
-  sprintf(apSSID, (name + "-%06X").c_str(), ESP.getChipId());
+  const char separator = '-';
+  char apSSID[sizeof(name.c_str()) + sizeof(ESP.getChipId()) + sizeof(separator)] = {0};
+  sprintf(apSSID, (name + separator + "%06X").c_str(), ESP.getChipId());
 
   // Setup in soft access point mode
   WiFi.mode(WIFI_AP_STA);
@@ -341,7 +342,7 @@ void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see heade
 
   unsigned long startTime = millis();
   while (WiFi.status() != WL_CONNECTED) {
-    if (millis() - startTime > timeout && !noTimeout) {
+    if (millis() - startTime > connectionTimeout && !noTimeout) {
       Serial.println("\nWiFi connection attempt timed out.");
       connectionTimedOut = true;
       return;
@@ -356,9 +357,9 @@ void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see heade
   Serial.printf("\nConnected to WiFi with a private IP of %s.\n", WiFi.localIP().toString().c_str());
 
   // Make a connection to the remote server
-  client.begin(host, port, path);
+  connectionTimedOut = !client.begin(wifiClient, url);
 }
 
 bool ConnectionManager::isConnectedToWiFi() {
-  return !(ssid == "" || WiFi.status() != WL_CONNECTED || connectionTimedOut);
+  return ssid != "" && WiFi.status() == WL_CONNECTED && !connectionTimedOut;
 }

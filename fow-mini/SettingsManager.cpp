@@ -74,8 +74,7 @@ void SettingsManager::setSetting(Setting setting, String value) {
 }
 
 bool SettingsManager::isInSetupMode() {
-  if ((EEPROM.read(flagByteAddress) & 0x80) == 0x80) return false; // Mask off everything but the first bit and check if it's 1
-  else return true;
+  return (EEPROM.read(flagByteAddress) & 0x80) != 0x80; // Mask off everything but the first bit and check if it's 1
 }
 
 void SettingsManager::exitSetupMode() {
