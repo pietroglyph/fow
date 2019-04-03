@@ -190,7 +190,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   WiFi.disconnect();
 
   // Tell the http client to allow reuse if the server supports it (we make lots of requests to the same server, this should decrease overhead)
-  client.setReuse(true);
+  http.setReuse(true);
 
   Serial.println("Checking EEPROM for saved WiFi credentials...");
   settingsManager.updateFullResetTimer();
@@ -316,13 +316,16 @@ String ConnectionManager::get() {
     return "";
   }
 
-  int statusCode = client.GET();
+  int statusCode = http.GET();
   if (statusCode != HTTP_CODE_OK) {
     Serial.printf("Remote server returned a non-OK status code of %i.\n", statusCode);
     return "";
   }
+  String payload = http.getString();
+  
+  connectionTimedOut = !http.begin(wifiClient, url);
 
-  return client.getString(); // This only returns the response body.
+  return payload; // This only returns the response body.
 }
 
 // noTimeout == true will result in an infinite connect loop if the network really
@@ -335,7 +338,7 @@ void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see heade
 
   lastPeriodicReconnectAttempt = millis();
 
-  client.end();
+  http.end();
   WiFi.disconnect();
   WiFi.begin(ssid.c_str(), password.c_str());
   connectionTimedOut = false;
@@ -357,7 +360,7 @@ void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see heade
   Serial.printf("\nConnected to WiFi with a private IP of %s.\n", WiFi.localIP().toString().c_str());
 
   // Make a connection to the remote server
-  connectionTimedOut = !client.begin(wifiClient, url);
+  connectionTimedOut = !http.begin(wifiClient, url);
 }
 
 bool ConnectionManager::isConnectedToWiFi() {

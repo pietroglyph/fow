@@ -23,9 +23,9 @@
 #include "ServoClockOutputManager.h"
 
 // These objects should never be destroyed
-ConnectionManager* conn = NULL;
-DataManager* data = NULL;
-OutputManagerInterface* output = NULL;
+ConnectionManager* conn = nullptr;
+DataManager* data = nullptr;
+OutputManagerInterface* output = nullptr;
 
 void setup() {
   Serial.begin(115200);

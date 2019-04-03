@@ -51,9 +51,9 @@ class ConnectionManager {
 
     ESP8266WebServer* server = new ESP8266WebServer(80);
     SettingsManager settingsManager = SettingsManager();
-    
-    WiFiClient wifiClient; // You need to have one of these for the HTTPClient to work
-    HTTPClient client;
+
+    WiFiClient wifiClient; // You need to have one of these for the HTTPClient to work (unless you use the deprecated API)
+    HTTPClient http;
 
     String name;
     String ssid = "";
