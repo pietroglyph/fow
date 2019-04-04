@@ -37,8 +37,8 @@ class ServoClockOutputManager : public OutputManagerInterface {
     const int servoMinPosition = 20;
     const int lightIntensity = 5;
     const int dockLightIntensity = 255;
-    const int departingDockLightPin = 15;
-    const int arrivingDockLightPin = 2;
+    const int departingDockLightPin = 2;
+    const int arrivingDockLightPin = 15;
 
     void updateLightMode(FerryHelper::Modes mode);
     void updateOutput(DataManager::FerryData data, PercentageServo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal);
