@@ -23,7 +23,7 @@
 #include "SettingsManager.h"
 #include <ESP8266WiFi.h>
 #include <ESP8266WebServer.h>
-#include <ESP8266mDNS.h>
+#include <DNSServer.h>
 #include <ESP8266HTTPClient.h>
 
 class ConnectionManager {
@@ -45,12 +45,15 @@ class ConnectionManager {
 
     // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
     const String url = "http://fow.0x778.tk/progress";
-    const int port = 80; // Needed for the MDNS resolver
     const unsigned long connectionTimeout = 20000; // In milleseconds
     const unsigned long periodicReconnectDelay = 60000;
 
     ESP8266WebServer* server = new ESP8266WebServer(80);
     SettingsManager settingsManager = SettingsManager();
+
+    // The esp8266 library provides an mDNS server, but mDNS is flaky as hell so we just go ahead and set up a captive portal
+    DNSServer dnsServer;
+    const unsigned int dnsPort = 53;
 
     WiFiClient wifiClient; // You need to have one of these for the HTTPClient to work (unless you use the deprecated API)
     HTTPClient http;

@@ -219,12 +219,13 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   // Setup in soft access point mode
   WiFi.mode(WIFI_AP_STA);
   WiFi.softAP(apSSID);
+  IPAddress deviceIP = WiFi.softAPIP();
 
-  // Start a mDNS responder so that users can connect easily
-  Serial.printf("MDNS responder initalization has %s.\n", MDNS.begin(name.c_str()) ? "been successful" : "failed");
-
+  dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
+  dnsServer.start(dnsPort, "*", deviceIP);
+  
   // In case the MDNS responder can't start
-  Serial.printf("Server local IP is %s.\n", WiFi.softAPIP().toString().c_str());
+  Serial.printf("Server local IP is %s.\n", deviceIP.toString().c_str());
 
   // Handle requests to the base path by showing a simple config page
   server->on("/", [&]() {
@@ -292,8 +293,6 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   // Handle requests to the /config path by changing configuration
   server->begin();
 
-  // Add service to MDNS-SD
-  MDNS.addService("http", "tcp", port);
   Serial.println("HTTP server has been started.");
 }
 
@@ -304,7 +303,10 @@ bool ConnectionManager::ready() {
 void ConnectionManager::update() {
   settingsManager.updateFullResetTimer();
 
-  if (setupMode) server->handleClient();
+  if (setupMode) {
+    dnsServer.processNextRequest();
+    server->handleClient();
+  }
   // Periodically attempt to reconnect if we're not in setup mode, and still disconnected.
   else if (!isConnectedToWiFi() && lastPeriodicReconnectAttempt - millis() >= periodicReconnectDelay) connectToWiFiNetwork();
 }
