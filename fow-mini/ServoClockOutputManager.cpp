@@ -62,8 +62,8 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
   updateOutput(dataSupplier(0), &primaryServo, primaryLights, &departingDockLightVal, &arrivingDockLightVal);
   updateOutput(dataSupplier(1), &secondaryServo, secondaryLights, &departingDockLightVal, &arrivingDockLightVal);
 
-  analogWrite(departingDockLightPin, departingDockLightVal * lightIntensity);
-  analogWrite(arrivingDockLightPin, arrivingDockLightVal * lightIntensity);
+  analogWrite(departingDockLightPin, departingDockLightVal * dockLightIntensity);
+  analogWrite(arrivingDockLightPin, arrivingDockLightVal * dockLightIntensity);
 }
 
 void ServoClockOutputManager::updateOutput(DataManager::FerryData data, PercentageServo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
