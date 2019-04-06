@@ -19,173 +19,6 @@
 
 #include "ConnectionManager.h"
 
-const static char configPage[] PROGMEM = R"(
-<!DOCTYPE html>
-<html>
-  <head>
-  <meta charset="UTF-8">
-  <title>(Mini) Ferries Over Winslow Configuration</title>
-  </head>
-  <body>
-    <style>
-      html {
-        height: 100%;
-      }
-      body {
-        font-family: Gotham, "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-        color: white;
-        background-size: cover;
-        background-repeat:no-repeat;
-        background: #44A08D;
-        background: -webkit-linear-gradient(#093637, #44A08D);
-        background: -o-linear-gradient(#093637, #44A08D);
-        background: radial-gradient(#44A08D, #093637);
-        overflow: hidden;
-      }
-      h1 {
-        font-size: 200%;
-        text-align: center;
-      }
-      h2 {
-        font-size: 150%;
-        text-align: left;
-      }
-      p {
-        font-size: 100%;
-        text-align: center;
-        opacity: .5;
-      }
-      form {
-        font-size: 100%;
-        text-align: left;
-        display: flex;
-        flex-flow: column wrap;
-        width: 35%;
-      }
-      hr {
-        width:80%;
-      }
-      iframe {
-        border: none;
-        height: 0px; /* Will be set by JavaScript */
-        width: 100%;
-        position: relative;
-      }
-      input {
-        margin-bottom: 10px;
-      }
-      .apply-button {
-        width: 50%;
-        margin-top: 10px;
-        padding: 2%;
-      }
-      .noscript {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1000;
-        width: 100%;
-        height: 100vh;
-        text-align: center;
-        background-color: red;
-        font-weight: bold;
-        font-size: 120%;
-        opacity: 1;
-        padding-top: 45vh;
-        margin: 0;
-      }
-      .loading {
-        filter: blur(10px);
-      }
-      .loading-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-flow: column;
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-      }
-      .loading-indicator {
-        width: 10px;
-        height: auto;
-        font-size: 200%;
-        text-align: center;
-        -webkit-animation-name: spin;
-        -webkit-animation-duration: 2000ms;
-        -webkit-animation-iteration-count: infinite;
-        -webkit-animation-timing-function: linear;
-        -moz-animation-name: spin;
-        -moz-animation-duration: 2000ms;
-        -moz-animation-iteration-count: infinite;
-        -moz-animation-timing-function: linear;
-        -ms-animation-name: spin;
-        -ms-animation-duration: 2000ms;
-        -ms-animation-iteration-count: infinite;
-        -ms-animation-timing-function: linear;
-        animation-name: spin;
-        animation-duration: 2000ms;
-        animation-iteration-count: infinite;
-        animation-timing-function: linear;
-      }
-      @-moz-keyframes spin {
-          from { -moz-transform: rotate(0deg); }
-          to { -moz-transform: rotate(360deg); }
-      }
-      @-webkit-keyframes spin {
-          from { -webkit-transform: rotate(0deg); }
-          to { -webkit-transform: rotate(360deg); }
-      }
-      @keyframes spin {
-          from {transform:rotate(0deg);}
-          to {transform:rotate(360deg);}
-      }
-
-    </style>
-    <noscript><p class="noscript">The Ferries Over Winslow configuration page will not work without JavaScript enabled.</p></noscript>
-    <div class="loading">
-      <h1>FerryClock Setup</h1>
-      <p>Get FerryClock motoring within your local wireless network</p>
-      <hr>
-      <h2>Status</h2>
-      <!-- Single quotes are needed because double quotes would end this text block -->
-      <iframe src="/status" onload='frameLoaded(this)'></iframe>
-      <h2>Network Configuration</h2>
-      <form method="POST" action="/">
-        Network Name: <input type="text" name="ssid">
-        <br>
-        Password: <input type="password" name="password">
-        <br>
-        <input class="apply-button" type="submit" value="Apply">
-      </form>
-    </div>
-    <div class="loading-container">
-      <h1>Loading...</h1>
-      <div class="loading-indicator">.</div>
-    </div>
-    <script>
-      const CONFIRM_TEXT = "Connection successful! Would you like to exit setup mode?\n\nIf you do, the setup WiFi network will dissapear, and you will not be able to change any settings without doing a full reset (pressing the reset button 3 times)."
-      window.onload = function(e) {
-        fetch("/promptforexitsetup").then((response) => {
-          if (response.ok && confirm(CONFIRM_TEXT)) {
-            fetch("/exitsetup").then(() => alert("Successfully exited setup mode."));
-          }
-        });
-      }
-
-      function frameLoaded(frame) {
-        frame.style.height = frame.contentWindow.document.body.scrollHeight + 'px';
-        document.querySelector(".loading-container").style.display = "none";
-        document.querySelector(".loading").classList.remove("loading");
-        document.body.style.overflow = "auto";
-      }
-    </script>
-  </body>
-</html>
-  )";
-
 ConnectionManager::ConnectionManager(const String programName) : name(programName) {
   WiFi.disconnect();
 
@@ -231,9 +64,12 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   // In case the MDNS responder can't start
   Serial.printf("Server local IP is %s.\n", deviceIP.toString().c_str());
 
+  SPIFFS.begin();
+
   // Handle requests to the base path by showing a simple config page
   server->on("/", [&]() {
-    server->send_P(HTTP_CODE_OK, "text/html", configPage);
+    File indexFile = SPIFFS.open("/index.html", "r");
+    server->streamFile(indexFile, "text/html");
 
     if (server->hasArg("ssid") || server->hasArg("password")) {
       ssid = server->arg("ssid");
@@ -243,6 +79,8 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
       connectToWiFiNetwork(server->hasArg("notimeout"));
     }
+
+    indexFile.close();
   });
 
   server->on("/status", [&]() {
@@ -288,6 +126,11 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     setupMode = false;
 
     WiFi.softAPdisconnect(true);
+    dnsServer.stop();
+    server->stop();
+    SPIFFS.end();
+
+    delete server;
 
     settingsManager.setSetting(SettingsManager::Setting::SSID, ssid);
     settingsManager.setSetting(SettingsManager::Setting::PASSWORD, password);
@@ -298,10 +141,40 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     server->send(HTTP_CODE_OK, "text/plain", VERSION + String("\n") + BUILD_INFO);
   });
 
+  server->onNotFound([&]() {
+    if (!handleRequestedFile(server->uri()))
+      server->send(404, "text/plain", "404 Not Found");
+  });
+
   // Handle requests to the /config path by changing configuration
   server->begin();
 
   Serial.println("HTTP server has been started.");
+}
+
+bool ConnectionManager::handleRequestedFile(String path) {
+  if (path.endsWith("/")) path += "index.html";
+  Serial.println(path);
+  String contentType = getContentType(path);
+  if (SPIFFS.exists(path)) {
+    File file = SPIFFS.open(path, "r");
+    server->streamFile(file, contentType);
+    file.close();
+    return true;
+  }
+  return false;
+}
+
+String ConnectionManager::getContentType(String filename){
+  if(filename.endsWith(".htm")) return "text/html";
+  else if(filename.endsWith(".html")) return "text/html";
+  else if(filename.endsWith(".css")) return "text/css";
+  else if(filename.endsWith(".js")) return "application/javascript";
+  else if(filename.endsWith(".png")) return "image/png";
+  else if(filename.endsWith(".gif")) return "image/gif";
+  else if(filename.endsWith(".jpg")) return "image/jpeg";
+  else if(filename.endsWith(".ico")) return "image/x-icon";
+  return "text/plain";
 }
 
 bool ConnectionManager::ready() {

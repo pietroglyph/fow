@@ -25,6 +25,7 @@
 #include <ESP8266WebServer.h>
 #include <DNSServer.h>
 #include <ESP8266HTTPClient.h>
+#include <FS.h>
 
 #if !defined(VERSION) || !defined(BUILD_INFO)
 #define VERSION "unknown"
@@ -69,6 +70,8 @@ class ConnectionManager {
     bool setupMode = true;
     bool connectionTimedOut = false;
 
+    static String getContentType(String filename);
+    bool handleRequestedFile(String path);
     void connectToWiFiNetwork(bool noTimeout = false);
 };
 

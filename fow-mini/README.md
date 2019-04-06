@@ -3,7 +3,7 @@ This is the code that runs on a microcontroller to power smaller-scale displays 
 ## Configuring your Mini
 The microcontroller broadcasts a network called `fow-mini`, on which it serves a configuration webpage. Once you connect to that network, you can enter [fow-setup.local](http://fow-setup.local) into your web browser (if that doesn't work, try entering [192.168.4.1](http://192.168.4.1)). On that page you should enter in the network name and password and press apply. The status box will show your connection status. If you can't connect, check the network name and password, and try positioning your microcontroller closer to the access point you're connecting to. If you're having trouble connecting, feel free to [post an issue on Github](https://github.com/pietroglyph/fow/issues/new).
 ## Flashing your microcontroller
-The easiest way to get the code onto your ESP8266 (the code requires an ESP8266, but it doesn't really matter what's on the rest of the board, the NodeMCU DEVKIT 1.0 and Adafruit Feather Huzzah are both known to work) is to use [PlatformIO](https://platformio.org/). 
+The easiest way to get the code onto your ESP8266 (the code requires an ESP8266, but it doesn't really matter what's on the rest of the board, the NodeMCU DEVKIT 1.0, WeMos D1 Mini and regular, and Adafruit Feather Huzzah are all known to work) is to use [PlatformIO](https://platformio.org/). 
 
 You should follow the below steps to deploy code using PlatformIO:
 1. Download and install PlatformIO, either [through VSCode/Atom](https://platformio.org/platformio-ide), or [through your command line interface](https://docs.platformio.org/en/latest/installation.html#installation-methods).
