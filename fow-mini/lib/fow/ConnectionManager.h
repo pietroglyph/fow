@@ -26,6 +26,11 @@
 #include <DNSServer.h>
 #include <ESP8266HTTPClient.h>
 
+#if !defined(VERSION) || !defined(BUILD_INFO)
+#define VERSION "unknown"
+#define BUILD_INFO "Build info unknown"
+#endif
+
 class ConnectionManager {
   public:
     ConnectionManager(String programName);

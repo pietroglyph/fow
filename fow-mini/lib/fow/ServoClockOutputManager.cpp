@@ -17,6 +17,8 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef IS_SERVO_CLOCK
+
 #include "ServoClockOutputManager.h"
 
 ServoClockOutputManager::ServoClockOutputManager() {
@@ -86,3 +88,5 @@ void ServoClockOutputManager::updateLightMode(FerryHelper::Modes mode) {
   primaryLights->update();
   secondaryLights->update();
 }
+
+#endif

@@ -212,15 +212,19 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   Serial.println("No saved credentials found. Starting the ferry connection configuration WiFi AP...");
 
-  const char separator = '-';
-  char apSSID[sizeof(name.c_str()) + sizeof(ESP.getChipId()) + sizeof(separator)] = {0};
-  sprintf(apSSID, (name + separator + "%06X").c_str(), ESP.getChipId());
+  const uint32_t chipIdUint = ESP.getChipId();
+  char chipId[sizeof(chipIdUint)] = {0};
+  sprintf(chipId, "%06X", chipIdUint);
+
+  // Set a user agent so we can get some device info on the serverside if we ever want to
+  http.setUserAgent(name + "/" + VERSION + "/" + chipId);
 
   // Setup in soft access point mode
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(apSSID);
+  WiFi.softAP(name + "-" + chipId);
   IPAddress deviceIP = WiFi.softAPIP();
 
+  // Set up a captive portal
   dnsServer.setErrorReplyCode(DNSReplyCode::NoError);
   dnsServer.start(dnsPort, "*", deviceIP);
   
@@ -288,6 +292,10 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     settingsManager.setSetting(SettingsManager::Setting::SSID, ssid);
     settingsManager.setSetting(SettingsManager::Setting::PASSWORD, password);
     settingsManager.exitSetupMode();
+  });
+
+  server->on("/info", [&]() {
+    server->send(HTTP_CODE_OK, "text/plain", VERSION + String("\n") + BUILD_INFO);
   });
 
   // Handle requests to the /config path by changing configuration

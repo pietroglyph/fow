@@ -17,6 +17,8 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef IS_STEPPER_CLOCK
+
 #include "StepperClockOutputManager.h"
 
 /*
@@ -176,3 +178,5 @@ void StepperClockOutputManager::updateLightMode(FerryHelper::Modes mode) {
   primaryLights->update();
   secondaryLights->update();
 }
+
+#endif

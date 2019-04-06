@@ -17,6 +17,8 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef IS_SERVO_CLOCK
+
 #ifndef ServoClockOutputManager_h
 #define ServoClockOutputManager_h
 
@@ -49,5 +51,7 @@ class ServoClockOutputManager : public OutputManagerInterface {
     FerryHelper* secondaryLights;
     OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
 };
+
+#endif
 
 #endif

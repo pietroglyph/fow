@@ -17,10 +17,22 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// This keeps things compatible with the Arduino IDE
+#ifndef OUTPUT_MANAGER_CONSTRUCTOR
+#define OUTPUT_MANAGER_CONSTRUCTOR ServoClockOutputManager
+#endif
+
 #include "ConnectionManager.h"
 #include "DataManager.h"
 #include "OutputManagerInterface.h"
+
+#ifdef IS_STEPPER_CLOCK
+#include "StepperClockOutputManager.h"
+#define OUTPUT_MANAGER_CONSTRUCTOR StepperClockOutputManager
+#else
 #include "ServoClockOutputManager.h"
+#define OUTPUT_MANAGER_CONSTRUCTOR ServoClockOutputManager
+#endif
 
 // These objects should never be destroyed
 ConnectionManager* conn = nullptr;
@@ -31,7 +43,7 @@ void setup() {
   Serial.begin(115200);
   conn = new ConnectionManager("fow-setup");
   data = new DataManager();
-  output = new ServoClockOutputManager();
+  output = new OUTPUT_MANAGER_CONSTRUCTOR();
 }
 
 void loop() {

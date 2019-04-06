@@ -17,6 +17,8 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef IS_STEPPER_CLOCK
+
 #ifndef StepperClockOutputManager_h
 #define StepperClockOutputManager_h
 
@@ -58,5 +60,7 @@ class StepperClockOutputManager : public OutputManagerInterface {
     unsigned long primaryRecalibratedTime;
     unsigned long secondaryRecalibratedTime;
 };
+
+#endif
 
 #endif
