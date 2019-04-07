@@ -1,164 +1,741 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
   <meta charset="UTF-8">
-  <title>(Mini) Ferries Over Winslow Configuration</title>
-  </head>
-  <body>
-    <style>
-      html {
-        height: 100%;
-      }
-      body {
-        font-family: Gotham, "Helvetica Neue", "Helvetica", "Arial", sans-serif;
-        color: white;
-        background-size: cover;
-        background-repeat:no-repeat;
-        background: #44A08D;
-        background: -webkit-linear-gradient(#093637, #44A08D);
-        background: -o-linear-gradient(#093637, #44A08D);
-        background: radial-gradient(#44A08D, #093637);
-        overflow: hidden;
-      }
-      h1 {
-        font-size: 200%;
-        text-align: center;
-      }
-      h2 {
-        font-size: 150%;
-        text-align: left;
-      }
-      p {
-        font-size: 100%;
-        text-align: center;
-        opacity: .5;
-      }
-      form {
-        font-size: 100%;
-        text-align: left;
-        display: flex;
-        flex-flow: column wrap;
-        width: 35%;
-      }
-      hr {
-        width:80%;
-      }
-      iframe {
-        border: none;
-        height: 0px; /* Will be set by JavaScript */
-        width: 100%;
-        position: relative;
-      }
-      input {
-        margin-bottom: 10px;
-      }
-      .apply-button {
-        width: 50%;
-        margin-top: 10px;
-        padding: 2%;
-      }
-      .noscript {
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 1000;
-        width: 100%;
-        height: 100vh;
-        text-align: center;
-        background-color: red;
-        font-weight: bold;
-        font-size: 120%;
+  <title>Ferry Tempo Setup</title>
+
+  <style>
+    html {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Helvetica Neue", Helvetica, Arial, "sans-serif";
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      background-color: rgb(0, 104, 56);
+      animation: BGfade 1s 1s both;
+      display: flex;
+      flex-direction: column;
+      min-height: 450px;
+    }
+
+    #header {
+      width: 100%;
+      height: 175px;
+      margin: 0;
+      background-color: ivory;
+      text-align: center;
+      position: relative;
+    }
+
+    #title {
+      width: auto;
+      height: 40px;
+      margin: 0;
+      padding: 5px 0 0 5%;
+      color: ivory;
+      background-color: rgb(255, 104, 0);
+      animation: OpacityFadeIn 1s 1s both;
+    }
+
+    .Footer {
+      position: absolute;
+      bottom: 20px;
+      left: 0;
+      width: 100%;
+      height: auto;
+      text-align: center;
+      animation: OpacityFadeIn 7s 7s both;
+    }
+
+    .FT {
+      height: 80%;
+      position: absolute;
+      margin: auto;
+      left: 0;
+      right: 0;
+      top: 0;
+      bottom: 0;
+      fill: rgb(0, 104, 56);
+    }
+
+    #FERRY {
+      animation: SplashAnimR 2s;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+    }
+
+    #TEMPO {
+      animation: SplashAnimL 2.5s 0s both;
+    }
+
+
+    #FOW {
+      bottom: 0;
+      width: 90%;
+    }
+
+    h1 {
+      font-size: 200%;
+      margin: 0;
+      letter-spacing: normal;
+    }
+
+    .kernIn {
+      animation: KernIn 1s 1s both;
+    }
+
+    h2 {
+      font-size: 150%;
+      text-align: left;
+    }
+
+    form {
+      font-size: 100%;
+      text-align: left;
+    }
+
+    button {
+      background-color: #1668fb;
+      border-style: solid;
+      border-color: #3b81ff;
+      border-radius: 4px;
+      border-width: 3px;
+      padding: 10px 15px 10px 15px;
+      color: white;
+      transition: background-color 0.1s linear;
+      font-size: 18px;
+      /* Must remain synced with border and padding */
+      width: 100%;
+      cursor: default;
+      margin: 0px;
+      margin-top: 5px;
+    }
+
+    button:hover {
+      background-color: #3b81ff;
+      transition: background-color 0.2s linear;
+    }
+
+    button:active {
+      background-color: #095dfa;
+    }
+
+    button:focus {
+      outline: none;
+      /* border: lightblue; */
+    }
+
+    button:disabled {
+      background-color: #c2c2c2;
+      border-color: #c2c2c2;
+      cursor: not-allowed;
+      color: #f0f0f0;
+      transition: border-color 0.1s linear;
+    }
+
+    .splitButtonContainer {
+      display: flex;
+      flex-direction: row;
+      width: 100%;
+    }
+
+    .splitButtonContainer>button {
+      margin-left: 3px;
+      margin-right: 3px;
+    }
+
+    .splitButtonContainer>button:first-child {
+      margin-left: 0px;
+    }
+
+    .splitButtonContainer>button:last-child {
+      margin-right: 0px;
+    }
+
+    #exitSetup {
+      border-color: lightcoral;
+      background-color: #ff5353;
+    }
+
+    #exitSetup:hover {
+      background-color: #ff1919;
+      border-color: lightcoral;
+    }
+
+    #exitSetup:active {
+      background-color: rgb(211, 0, 0);
+    }
+
+    #back {
+      width: 10%;
+    }
+
+    #exitStep>#back {
+      width: 100%;
+    }
+
+    #infoButton {
+      cursor: pointer;
+      transition: all 400ms linear;
+
+      transform: rotateY(0deg) rotateX(0deg);
+      transform-box: fill-box;
+      transform-origin: center;
+    }
+
+    #infoButton:hover {
+      /* transition: all 300ms linear; */
+
+      transform: rotateY(30deg) rotateX(-10deg);
+      fill: blue;
+    }
+
+    #infoButton:active {
+      fill: darkblue;
+    }
+
+    .step {
+      /* For parent */
+      align-self: flex-start;
+      padding-top: 10vh;
+      width: 50%;
+
+      /* For children */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+
+      animation: OpacityFadeIn 0.3s 0s both;
+    }
+
+    .step>h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      margin-top: 3px;
+      margin-bottom: 3px;
+    }
+
+    .fadeAway {
+      animation: OpacityFadeOut 0.4s 0s both;
+    }
+
+    .slideUpFade {
+      font-size: 0px;
+      opacity: 0;
+      overflow: hidden;
+      transition: all 400ms linear;
+    }
+
+    #infoBox {
+      transition: all 400ms linear;
+      width: 35%;
+      color: black;
+      font-family: monospace;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .loadingSpinner {
+      font-size: 200%;
+      animation-name: Spin;
+      animation-duration: 2000ms;
+      animation-iteration-count: infinite;
+      animation-timing-function: linear;
+    }
+
+    #stepsArea {
+      text-align: center;
+      color: ivory;
+      animation: OpacityFadeIn 2s 3s both;
+
+      display: flex;
+      width: 100%;
+      height: 100%;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #networks {
+      width: 100%;
+    }
+
+    .step>input {
+      width: calc(100% - 24px);
+      text-align: center;
+      background-color: white;
+      border-style: solid;
+      border-color: lightgray;
+      border-radius: 4px;
+      border-width: 3px;
+      padding-left: 8px;
+      padding-right: 8px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+
+    .step>input:focus {
+      border-color: #3b81ff;
+    }
+
+    @keyframes Spin {
+      from {
+        transform: rotate(0deg);
         opacity: 1;
-        padding-top: 45vh;
-        margin: 0;
-      }
-      .loading {
-        filter: blur(10px);
-      }
-      .loading-container {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          flex-flow: column;
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-      }
-      .loading-indicator {
-        width: 10px;
-        height: auto;
-        font-size: 200%;
-        text-align: center;
-        -webkit-animation-name: spin;
-        -webkit-animation-duration: 2000ms;
-        -webkit-animation-iteration-count: infinite;
-        -webkit-animation-timing-function: linear;
-        -moz-animation-name: spin;
-        -moz-animation-duration: 2000ms;
-        -moz-animation-iteration-count: infinite;
-        -moz-animation-timing-function: linear;
-        -ms-animation-name: spin;
-        -ms-animation-duration: 2000ms;
-        -ms-animation-iteration-count: infinite;
-        -ms-animation-timing-function: linear;
-        animation-name: spin;
-        animation-duration: 2000ms;
-        animation-iteration-count: infinite;
-        animation-timing-function: linear;
-      }
-      @-moz-keyframes spin {
-          from { -moz-transform: rotate(0deg); }
-          to { -moz-transform: rotate(360deg); }
-      }
-      @-webkit-keyframes spin {
-          from { -webkit-transform: rotate(0deg); }
-          to { -webkit-transform: rotate(360deg); }
-      }
-      @keyframes spin {
-          from {transform:rotate(0deg);}
-          to {transform:rotate(360deg);}
+        margin-top: 0px;
       }
 
-    </style>
-    <noscript><p class="noscript">The Ferries Over Winslow configuration page will not work without JavaScript enabled.</p></noscript>
-    <div class="loading">
-      <h1>FerryClock Setup</h1>
-      <p>Get FerryClock motoring within your local wireless network</p>
-      <hr>
-      <h2>Status</h2>
-      <!-- Single quotes are needed because double quotes would end this text block -->
-      <iframe src="/status" onload='frameLoaded(this)'></iframe>
-      <h2>Network Configuration</h2>
-      <form method="POST" action="/">
-        Network Name: <input type="text" name="ssid">
-        <br>
-        Password: <input type="password" name="password">
-        <br>
-        <input class="apply-button" type="submit" value="Apply">
-      </form>
+      50% {
+        opacity: 0;
+        margin-top: 10px;
+      }
+
+      to {
+        transform: rotate(360deg);
+        opacity: 1;
+        margin-top: 0px;
+      }
+    }
+
+    @keyframes OpacityFadeIn {
+      0% {
+        opacity: 0;
+      }
+
+      100% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes OpacityFadeOut {
+      0% {
+        opacity: 1;
+      }
+
+      100% {
+        opacity: 0;
+      }
+    }
+
+    @keyframes BGfade {
+      0% {
+        background-color: ivory;
+      }
+
+      100% {
+        background-color: rgb(0, 104, 56);
+      }
+    }
+
+    @keyframes KernIn {
+      0% {
+        letter-spacing: 20px;
+      }
+
+      100% {
+        letter-spacing: normal;
+      }
+    }
+
+    @keyframes SplashAnimL {
+      0% {
+        filter: opacity(0%);
+        transform: translateX(100%);
+        fill: orange;
+      }
+
+      50% {
+        fill: orange;
+      }
+
+      100% {
+        filter: opacity(100%);
+      }
+    }
+
+    @keyframes SplashAnimR {
+      0% {
+        filter: opacity(0%);
+        transform: translateX(-100%);
+        fill: orange;
+      }
+
+      50% {
+        fill: orange;
+      }
+
+      100% {
+        filter: opacity(100%);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="header">
+    <svg id="FERRY" class="FT" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 93.87">
+      <defs>
+        <style>
+          .a {
+            fill: none;
+          }
+        </style>
+      </defs>
+      <title>Ferry</title>
+      <rect class="a" width="288" height="93.87"></rect>
+      <path
+        d="M33.67,3.74A22.19,22.19,0,1,0,55.85,25.93,22.19,22.19,0,0,0,33.67,3.74ZM47,19.83H26V24.9H44.48v4.82H26v7.63H20.34V15H47Z">
+      </path>
+      <path
+        d="M82.71,3.74a22.19,22.19,0,1,0,22.18,22.19A22.19,22.19,0,0,0,82.71,3.74ZM96.58,37.35H68.84V15H95.75v4.82H74.45v4H93.19v4.34H74.45v4.34H96.58Z">
+      </path>
+      <path
+        d="M138.83,20.29a2.75,2.75,0,0,0-.85-.37,3.53,3.53,0,0,0-.68-.09H123.66V24.9H137.3a2.32,2.32,0,0,0,.6-.11,2.83,2.83,0,0,0,.85-.4,2.55,2.55,0,0,0,.75-.78,2.31,2.31,0,0,0,.32-1.26,2.57,2.57,0,0,0-.29-1.29A2.28,2.28,0,0,0,138.83,20.29Z">
+      </path>
+      <path
+        d="M131.74,3.74a22.19,22.19,0,1,0,22.18,22.19A22.19,22.19,0,0,0,131.74,3.74Zm13.31,21.2a6.9,6.9,0,0,1-1,1.93,6.41,6.41,0,0,1-1.41,1.35,8,8,0,0,1-1.58.87l3.9,8.26h-6l-3.58-7.63H123.66v7.63h-5.61V15h20.08a8.66,8.66,0,0,1,2.15.32,7.25,7.25,0,0,1,2.41,1.13,6.66,6.66,0,0,1,1.95,2.23,7.46,7.46,0,0,1,.8,3.66A7.88,7.88,0,0,1,145.05,24.94Z">
+      </path>
+      <path
+        d="M187.86,20.29a2.7,2.7,0,0,0-.84-.37,3.61,3.61,0,0,0-.69-.09H172.7V24.9h13.63a2.37,2.37,0,0,0,.61-.11,2.79,2.79,0,0,0,.84-.4,2.55,2.55,0,0,0,.75-.78,2.23,2.23,0,0,0,.32-1.26,2.57,2.57,0,0,0-.28-1.29A2.3,2.3,0,0,0,187.86,20.29Z">
+      </path>
+      <path
+        d="M180.78,3.74A22.19,22.19,0,1,0,203,25.93,22.2,22.2,0,0,0,180.78,3.74Zm13.31,21.2a6.92,6.92,0,0,1-1,1.93,6.16,6.16,0,0,1-1.4,1.35,8,8,0,0,1-1.58.87L194,37.35h-6l-3.57-7.63H172.7v7.63h-5.62V15h20.08a8.67,8.67,0,0,1,2.16.32,7.25,7.25,0,0,1,2.41,1.13,6.75,6.75,0,0,1,1.94,2.23,7.35,7.35,0,0,1,.8,3.66A8.16,8.16,0,0,1,194.09,24.94Z">
+      </path>
+      <path
+        d="M229.81,3.74A22.19,22.19,0,1,0,252,25.93,22.19,22.19,0,0,0,229.81,3.74Zm2.79,26.08v7.53H227V30.08L214.63,15h6.71l8.42,10.09L238.06,15H245Z">
+      </path>
+    </svg>
+
+    <svg id="TEMPO" class="FT" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 93.87">
+      <defs>
+        <style>
+          .a {
+            fill: none;
+          }
+        </style>
+      </defs>
+      <title>Tempo</title>
+      <rect class="a" width="288" height="93.87"></rect>
+      <path
+        d="M58.19,45.76A22.18,22.18,0,1,0,80.37,67.94,22.19,22.19,0,0,0,58.19,45.76ZM71,61.59H61V79.11H55.39V61.59h-10V56.77H71Z">
+      </path>
+      <path
+        d="M107.22,45.76a22.18,22.18,0,1,0,22.19,22.18A22.18,22.18,0,0,0,107.22,45.76Zm13.87,33.35H93.35V56.77h26.91v4.82H99v4h18.74V70H99v4.34h22.12Z">
+      </path>
+      <path
+        d="M156.26,45.76a22.18,22.18,0,1,0,22.18,22.18A22.18,22.18,0,0,0,156.26,45.76Zm11.16,33.35V61.2L159,79.11h-5.46l-8.4-17.94V79.11h-5.61V56.77h9.32l7.43,16.44,7.44-16.44H173V79.11Z">
+      </path>
+      <path
+        d="M212.38,62.05a2.8,2.8,0,0,0-.84-.37,3.61,3.61,0,0,0-.69-.09H197.22v5.07h13.63a2.37,2.37,0,0,0,.61-.11,2.9,2.9,0,0,0,.84-.4,2.55,2.55,0,0,0,.75-.78,2.31,2.31,0,0,0,.32-1.26,2.47,2.47,0,0,0-.29-1.29A2.18,2.18,0,0,0,212.38,62.05Z">
+      </path>
+      <path
+        d="M205.29,45.76a22.18,22.18,0,1,0,22.19,22.18A22.18,22.18,0,0,0,205.29,45.76Zm12.87,22a6.91,6.91,0,0,1-2,2.26,7,7,0,0,1-2.41,1.15,8.3,8.3,0,0,1-2.07.32H197.22v7.63H191.6V56.77h20.08a8.66,8.66,0,0,1,2.15.32,7.16,7.16,0,0,1,2.41,1.13,6.66,6.66,0,0,1,1.95,2.23,7.46,7.46,0,0,1,.8,3.66A7.23,7.23,0,0,1,218.16,67.75Z">
+      </path>
+      <g id="infoButton">
+        <path
+          d="M261.15,62.93a8.47,8.47,0,0,0-2.85-1.57,14.11,14.11,0,0,0-7.94,0,8.47,8.47,0,0,0-2.85,1.57,6.4,6.4,0,0,0-1.69,2.28,6.93,6.93,0,0,0,0,5.46A6.4,6.4,0,0,0,247.51,73a8.47,8.47,0,0,0,2.85,1.57,14.11,14.11,0,0,0,7.94,0A8.47,8.47,0,0,0,261.15,73a6.53,6.53,0,0,0,1.69-2.28,6.93,6.93,0,0,0,0-5.46A6.53,6.53,0,0,0,261.15,62.93Z">
+        </path>
+        <path
+          d="M254.33,45.76a22.18,22.18,0,1,0,22.18,22.18A22.18,22.18,0,0,0,254.33,45.76Zm13.95,26.76a11,11,0,0,1-2.95,3.78,14.6,14.6,0,0,1-4.71,2.59,21.09,21.09,0,0,1-12.58,0,14.6,14.6,0,0,1-4.71-2.59,11.16,11.16,0,0,1-3-3.78,10.79,10.79,0,0,1,0-9.16,11.16,11.16,0,0,1,3-3.78A14.6,14.6,0,0,1,248,57a21.09,21.09,0,0,1,12.58,0,14.6,14.6,0,0,1,4.71,2.59,11,11,0,0,1,2.95,3.78,10.79,10.79,0,0,1,0,9.16Z">
+        </path>
+      </g>
+    </svg>
+    <p id="infoBox" class="slideUpFade"></p>
+  </div>
+
+  <div id="title">
+    <h1 class="kernIn">FerryClock Guided Set Up</h1>
+  </div>
+
+  <div id="stepsArea">
+    <div class="step" id="welcomeStep">
+      <h1>Welcome</h1>
+      <h3>We need some help connecting FerryClock so that we can get <i>sailing</i> in your local wireless network.</h3>
+      <button id="next" tabindex="1">Next&nbsp;&raquo;</button>
     </div>
-    <div class="loading-container">
-      <h1>Loading...</h1>
-      <div class="loading-indicator">.</div>
+    <div class="step hidden">
+      <h1>Select a WiFi Network</h1>
+      <select id="networks" class="focusMe" size="8" disabled tabindex="2">
+        <option>Loading...</option>
+        <!-- More networks added here by js -->
+      </select>
+      <div class="splitButtonContainer">
+        <button id="back">&lsaquo;</button>
+        <button id="next" disabled tabindex="3">Next&nbsp;&raquo;</button>
+      </div>
     </div>
-    <script>
-      const CONFIRM_TEXT = "Connection successful! Would you like to exit setup mode?\n\nIf you do, the setup WiFi network will dissapear, and you will not be able to change any settings without doing a full reset (pressing the reset button 3 times)."
-      window.onload = function(e) {
-        fetch("/promptforexitsetup").then((response) => {
-          if (response.ok && confirm(CONFIRM_TEXT)) {
-            fetch("/exitsetup").then(() => alert("Successfully exited setup mode."));
+    <div class="step hidden" id="passwordStep">
+      <h1>Enter a Password</h1>
+      <input id="pass" class="focusMe" type="password" placeholder="Enter a password..." tabindex="4">
+      <div class="splitButtonContainer">
+        <button id="back">&lsaquo;</button>
+        <button id="next" disabled tabindex="5">Next&nbsp;&raquo;</button>
+      </div>
+    </div>
+    <div class="step hidden" id="reviewStep">
+      <h1>Confirm Your Information</h1>
+      <h3>SSID:</h3>
+      <input id="ssidConfirm" placeholder="None" disabled tabindex="6">
+      <h3>Password:</h3>
+      <input id="passwordConfirm" placeholder="None" disabled tabindex="7">
+      <div class="splitButtonContainer">
+        <button id="back">&lsaquo;</button>
+        <button id="next" tabindex="8">Next&nbsp;&raquo;</button>
+      </div>
+    </div>
+    <div class="step hidden" id="connectStep">
+      <h1>Connecting...</h1>
+      <div class="loadingSpinner">.</div>
+    </div>
+    <div class="step hidden" id="failedStep">
+      <h1>Whoah there! Connection failed!</h1>
+      <p>You can review your connection information and retry, or restart the entire process.</p>
+      <button class="split" id="redo" tabindex="9">Review info and retry</button>
+    </div>
+    <div class="step hidden" id="successStep">
+      <h1>Success! Would you like to exit setup mode?</h1>
+      <p>If you exit setup mode, the setup WiFi network will dissapear, and you will not be able to change any settings
+        without doing a full reset (pressing the reset button 3 times).</p>
+      <div class="splitButtonContainer">
+        <button class="split" id="redo" tabindex="11">Redo Setup</button>
+        <button class="split" id="exitSetup" tabindex="12">Exit setup mode</button>
+      </div>
+    </div>
+    <div class="step hidden" id="exitStep">
+      <h1>Exiting Setup Mode...</h1>
+      <div class="loadingSpinner">.</div>
+      <div id="exitStatus" class="hidden"></div>
+      <button id="back" class="hidden" tabindex="13">Go back</button>
+    </div>
+  </div>
+
+  <script>
+    var setupInfo = {
+      ssid: null,
+      password: null,
+      networkRequiresPassword: true,
+      resetInfo: function() {
+        this.ssid = this.password = null;
+        this.networkRequiresPassword = true;
+      },
+      attemptConnection: function() {
+        let url = `/connect?ssid=${this.ssid}&password=${this.password || ""}`;
+
+        console.log(url);
+
+        return fetch(url).then(r => r.ok);
+      },
+    };
+
+    window.onload = () => {
+      let ssidSelector = document.querySelector("#networks");
+      let passwordInput = document.querySelector("#pass");
+
+      let ssidNextButton = ssidSelector.parentNode.querySelector("#next");
+      let passwordNextButton = passwordInput.parentNode.querySelector("#next");
+
+      let successStep = document.querySelector("#successStep");
+      let failedStep = document.querySelector("#failedStep");
+      let welcomeStep = document.querySelector("#welcomeStep");
+
+      let dispNoNetworksFound = () => {
+        ssidSelector.innerhtml = "<option>No networks found!</option>";
+      }
+
+      let unhideAndFocus = (step) => {
+        if (step) {
+          step.classList.remove("fadeAway");
+          step.classList.remove("hidden");
+        }
+        let focusMe = step.querySelector(".focusMe");
+        if (focusMe) focusMe.focus();
+      };
+
+      fetch("/networks").then(r => r.text().then(body => {
+        if (!body) {
+          dispNoNetworksFound();
+          return;
+        }
+
+        let lines = body.split("\n");
+        if (lines.length <= 1) {
+          dispNoNetworksFound();
+          return;
+        }
+
+        ssidSelector.innerHTML = "";
+        ssidSelector.disabled = false;
+        ssidSelector.onchange = (s) => {
+          setupInfo.ssid = s.explicitOriginalTarget.dataset.ssid;
+          setupInfo.networkRequiresPassword = s.explicitOriginalTarget.dataset.passwordRequired || true;
+          
+          setupInfo.password = "";
+          passwordInput.value = "";
+
+          if (setupInfo.ssid) {
+            ssidNextButton.disabled = false;
+          }
+        };
+
+        let openNetworksList = lines[0].split(",");
+        for (let i = 1; i < lines.length; i++) {
+          if (lines[i] == "") continue;
+
+          let passwordRequired = true;
+          for (const openIdx of openNetworksList)
+            if (new String(i - 1) == openIdx) passwordRequired = false;
+
+          ssidSelector.innerHTML += `<option data-password-required="${passwordRequired}" data-ssid="${lines[i]}">${lines[i]} ${passwordRequired ? "🔒" : ""}</option>`;
+        }
+      }));
+
+      let infoBox = document.querySelector("#infoBox");
+      fetch("/info").then(r => {
+        infoBox.innerText = "(c) Declan Freeman-Gleason and other contributors. This software is licensed under the GNU GPL v3 or above. See /LICENSE.\n\n"
+        if (r.ok) r.text().then(text => infoBox.innerText += text);
+        else infoBox.innerText += "Couldn't get info from /info. Are you connected?";
+      });
+
+      document.querySelector("#infoButton").onclick = () => {
+        infoBox.classList.toggle("slideUpFade");
+      };
+
+      passwordInput.oninput = (e) => {
+        passwordNextButton.disabled = passwordInput.value == "";
+        setupInfo.password = passwordInput.value;
+      };
+
+      successStep.querySelector("#redo").onclick = () => {
+        successStep.classList.add("hidden");
+        unhideAndFocus(welcomeStep);
+      };
+
+      successStep.querySelector("#exitSetup").onclick = () => {
+        successStep.classList.add("fadeAway");
+        fetch("/exitsetup").then((r) => {
+          document.querySelector("#exitStep > .loadingSpinner").classList.add("hidden");
+
+          let exitStatus = document.querySelector("#exitStatus");
+          exitStatus.classList.remove("hidden");
+          if (r.ok) exitStatus.textContent = "Successfully exited setup mode! You can safely close this page.";
+          else {
+            exitStatus.textContent = "Couldn't exit setup mode. You can go back and retry if you want.";
+            document.querySelector("#exitStep > #back").classList.remove("hidden");
           }
         });
-      }
+      };
 
-      function frameLoaded(frame) {
-        frame.style.height = frame.contentWindow.document.body.scrollHeight + 'px';
-        document.querySelector(".loading-container").style.display = "none";
-        document.querySelector(".loading").classList.remove("loading");
-        document.body.style.overflow = "auto";
+      failedStep.querySelector("#redo").onclick = () => {
+        failedStep.classList.add("hidden");
+        unhideAndFocus(document.querySelector("#reviewStep"));
+      };
+
+      let steps = document.querySelectorAll(".step");
+      for (let i = 0; i < steps.length; i++) {
+        let backButton = steps[i].querySelector("#back");
+        if (backButton) backButton.onclick = () => {
+          steps[i].classList.add("hidden");
+
+          let idx = i - 1;
+          if (steps[i].id === "reviewStep" && setupInfo.networkRequiresPassword == "false") idx--;
+          console.log(steps[i].id)
+          unhideAndFocus(steps[idx]);
+        };
+
+        let nextButton = steps[i].querySelector("#next");
+        if (nextButton) nextButton.onclick = () => {
+          if (nextButton.disabled) return false;
+
+          steps[i].classList.add("fadeAway");
+        };
+
+        steps[i].addEventListener("animationend", (e) => {
+          if (e.animationName !== "OpacityFadeOut") return;
+
+          // We only want to set display none on the current element once it has faded fully
+          steps[i].classList.add("hidden");
+
+          let nextIdx = i + 1;
+
+          if (steps[nextIdx].id === "passwordStep" && setupInfo.networkRequiresPassword == "false")
+            nextIdx++;
+
+          let ssidConfirm = steps[nextIdx].querySelector("#ssidConfirm");
+          let passwordConfirm = steps[nextIdx].querySelector("#passwordConfirm");
+          if (ssidConfirm && passwordConfirm) {
+            ssidConfirm.value = setupInfo.ssid;
+            passwordConfirm.value = setupInfo.password;
+          }
+
+          if (steps[nextIdx].id === "connectStep") {
+            setupInfo.attemptConnection().then(ok => {
+              steps[nextIdx].classList.add("hidden");
+              unhideAndFocus(ok ? successStep : failedStep);
+            });
+          }
+
+          // Now that current element is hidden we can show the next one
+          unhideAndFocus(steps[nextIdx]);
+        });
       }
-    </script>
-  </body>
+    };
+  </script>
+  <!-- <div class="Footer">
+		<svg id="FOW" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 550.52 21.19">
+			<title>FoW</title>
+			<path d="M5,4.92v4.5H21.39v4.27H5v6.77H0V.65H23.62V4.92Z" style="fill:#ff6800"></path>
+			<path d="M29.28,20.46V.65H53.14V4.92H34.26V8.49H50.87v3.85H34.26v3.84H53.87v4.28Z" style="fill:#ff6800">
+			</path>
+			<path
+				d="M83.66,7.16a6.94,6.94,0,0,1-.34,2.29,5.76,5.76,0,0,1-.89,1.71,5.41,5.41,0,0,1-1.24,1.2,6.69,6.69,0,0,1-1.4.77l3.45,7.33H77.92l-3.17-6.77H64.37v6.77h-5V.65H77.18a7.85,7.85,0,0,1,1.91.28,6.44,6.44,0,0,1,2.14,1,6,6,0,0,1,1.73,2A6.59,6.59,0,0,1,83.66,7.16Zm-5,0A2.31,2.31,0,0,0,78.43,6a2,2,0,0,0-.62-.68A2.21,2.21,0,0,0,77.06,5a2.88,2.88,0,0,0-.61-.09H64.37v4.5H76.45a2.23,2.23,0,0,0,.54-.1A2.51,2.51,0,0,0,77.74,9a2.43,2.43,0,0,0,.66-.69A2,2,0,0,0,78.68,7.16Z"
+				style="fill:#ff6800"></path>
+			<path
+				d="M113.6,7.16a7.21,7.21,0,0,1-.34,2.29,6.27,6.27,0,0,1-.89,1.71,5.66,5.66,0,0,1-1.25,1.2,6.69,6.69,0,0,1-1.4.77l3.45,7.33h-5.32l-3.16-6.77H94.3v6.77h-5V.65h17.8A7.92,7.92,0,0,1,109,.93a6.4,6.4,0,0,1,2.13,1,5.9,5.9,0,0,1,1.73,2A6.59,6.59,0,0,1,113.6,7.16Zm-5,0A2.3,2.3,0,0,0,108.36,6a2,2,0,0,0-.62-.68A2.05,2.05,0,0,0,107,5a2.79,2.79,0,0,0-.61-.09H94.3v4.5h12.08a2.15,2.15,0,0,0,.54-.1,2.31,2.31,0,0,0,.75-.35,2.18,2.18,0,0,0,.66-.69A2,2,0,0,0,108.62,7.16Z"
+				style="fill:#ff6800"></path>
+			<path d="M119.26,20.46V.65h5V20.46Z" style="fill:#ff6800"></path>
+			<path d="M130.46,20.46V.65h23.85V4.92H135.44V8.49h16.61v3.85H135.44v3.84h19.61v4.28Z" style="fill:#ff6800">
+			</path>
+			<path
+				d="M183.6,14.06a5.27,5.27,0,0,1-.8,2.78,6.87,6.87,0,0,1-2.43,2.27,14.06,14.06,0,0,1-4.1,1.53,26.85,26.85,0,0,1-5.83.55,22.79,22.79,0,0,1-3.54-.28,32.8,32.8,0,0,1-3.42-.71,17.51,17.51,0,0,1-3.62-1.38l1.72-4a16.64,16.64,0,0,0,3.13,1.23,23.12,23.12,0,0,0,2.84.64,23,23,0,0,0,2.89.26,19.44,19.44,0,0,0,6.32-.77c1.39-.51,2.08-1.18,2.08-2a1.23,1.23,0,0,0-.65-1.16,4.72,4.72,0,0,0-2-.42L175,12.55l-2.11-.1c-.83,0-1.75-.08-2.77-.11L167,12.19a13.78,13.78,0,0,1-3-.45,7.52,7.52,0,0,1-2.38-1.06A5.09,5.09,0,0,1,160,9a4.69,4.69,0,0,1-.57-2.36,4.18,4.18,0,0,1,.9-2.56A7.48,7.48,0,0,1,162.87,2a15,15,0,0,1,4-1.4,25,25,0,0,1,5.28-.51,24.54,24.54,0,0,1,3.5.25c1,.15,2.16.37,3.41.65a18.07,18.07,0,0,1,3.67,1.25l-1.5,3.9c-.59-.24-1.25-.48-2-.71S177.76,5,177,4.81s-1.61-.3-2.43-.4a21.74,21.74,0,0,0-2.36-.14,28.15,28.15,0,0,0-3.16.16,15.36,15.36,0,0,0-2.53.46,5.28,5.28,0,0,0-1.68.77,1.26,1.26,0,0,0-.61,1,1.18,1.18,0,0,0,.62,1.1,3.9,3.9,0,0,0,1.84.42l3.82.17q2.46.12,5.83.26a14.87,14.87,0,0,1,3,.45,7.33,7.33,0,0,1,2.29,1.05,4.67,4.67,0,0,1,1.46,1.67A4.85,4.85,0,0,1,183.6,14.06Z"
+				style="fill:#ff6800"></path>
+			<path
+				d="M233,10.64a9.41,9.41,0,0,1-.9,4.06,10,10,0,0,1-2.62,3.35,12.85,12.85,0,0,1-4.17,2.29,18.71,18.71,0,0,1-11.15,0A12.85,12.85,0,0,1,210,18.05a9.9,9.9,0,0,1-2.62-3.35,9.51,9.51,0,0,1,0-8.12A9.9,9.9,0,0,1,210,3.23a12.87,12.87,0,0,1,4.17-2.3,18.92,18.92,0,0,1,11.15,0,12.87,12.87,0,0,1,4.17,2.3,10,10,0,0,1,2.62,3.35A9.38,9.38,0,0,1,233,10.64Zm-5.23,0a6,6,0,0,0-.5-2.42,5.62,5.62,0,0,0-1.5-2,7.12,7.12,0,0,0-2.51-1.39,12.44,12.44,0,0,0-7.05,0,7.26,7.26,0,0,0-2.52,1.39,5.62,5.62,0,0,0-1.5,2,6.22,6.22,0,0,0,0,4.84,5.62,5.62,0,0,0,1.5,2,7.26,7.26,0,0,0,2.52,1.39,11,11,0,0,0,3.52.51,11.09,11.09,0,0,0,3.53-.51,7.12,7.12,0,0,0,2.51-1.39,5.62,5.62,0,0,0,1.5-2A6.06,6.06,0,0,0,227.76,10.64Z"
+				style="fill:#ff6800"></path>
+			<path d="M251.77,20.54h-6.34L235.1.74h5.52l8,15.61,8-15.61h5.52Z" style="fill:#ff6800"></path>
+			<path d="M266.48,20.54V.74h23.85V5H271.46V8.57h16.61v3.85H271.46v3.85h19.61v4.27Z" style="fill:#ff6800">
+			</path>
+			<path
+				d="M320.86,7.24a6.9,6.9,0,0,1-.34,2.29,5.7,5.7,0,0,1-.89,1.72,5.62,5.62,0,0,1-1.24,1.2,7.42,7.42,0,0,1-1.4.76l3.45,7.33h-5.32L312,13.78H301.57v6.76h-5V.74h17.79a7.85,7.85,0,0,1,1.91.28,6.41,6.41,0,0,1,2.14,1,5.88,5.88,0,0,1,1.72,2A6.48,6.48,0,0,1,320.86,7.24Zm-5,0a2.24,2.24,0,0,0-.25-1.14,2,2,0,0,0-.62-.68,2.46,2.46,0,0,0-.75-.33,3.51,3.51,0,0,0-.61-.08H301.57v4.5h12.08a2.88,2.88,0,0,0,.54-.1,2.65,2.65,0,0,0,.74-.36,2.33,2.33,0,0,0,.67-.69A2,2,0,0,0,315.88,7.24Z"
+				style="fill:#ff6800"></path>
+			<path
+				d="M375,20.46h-7.07l-5.41-14.6-5.4,14.6H350L342.72.65h5.4l5.69,15.62L359.47.65h6.11l5.66,15.62L376.9.65h5.43Z"
+				style="fill:#ff6800"></path>
+			<path d="M387,20.46V.65h5V20.46Z" style="fill:#ff6800"></path>
+			<path d="M417.5,20.46,403.18,6.62V20.46h-5V.65h5L417.5,14.49V.65h5V20.46Z" style="fill:#ff6800"></path>
+			<path
+				d="M451.73,14.06a5.26,5.26,0,0,1-.79,2.78,7,7,0,0,1-2.43,2.27,14.24,14.24,0,0,1-4.11,1.53,26.79,26.79,0,0,1-5.83.55,22.57,22.57,0,0,1-3.53-.28,32.27,32.27,0,0,1-3.42-.71A17.38,17.38,0,0,1,428,18.82l1.73-4a16.64,16.64,0,0,0,3.13,1.23,22.72,22.72,0,0,0,2.84.64,22.8,22.8,0,0,0,2.88.26,19.55,19.55,0,0,0,6.33-.77c1.38-.51,2.08-1.18,2.08-2a1.25,1.25,0,0,0-.65-1.16,4.8,4.8,0,0,0-2-.42l-1.18-.07-2.1-.1c-.83,0-1.76-.08-2.78-.11l-3.17-.15a13.88,13.88,0,0,1-3-.45,7.46,7.46,0,0,1-2.37-1.06A5,5,0,0,1,428.13,9a4.79,4.79,0,0,1-.56-2.36,4.24,4.24,0,0,1,.89-2.56A7.43,7.43,0,0,1,431,2a15,15,0,0,1,4-1.4A25.16,25.16,0,0,1,440.3.06a24.78,24.78,0,0,1,3.51.25c1,.15,2.15.37,3.41.65a18.19,18.19,0,0,1,3.66,1.25l-1.5,3.9c-.58-.24-1.24-.48-2-.71s-1.5-.42-2.3-.59-1.62-.3-2.44-.4a21.6,21.6,0,0,0-2.36-.14,28.09,28.09,0,0,0-3.15.16,15.3,15.3,0,0,0-2.54.46,5.49,5.49,0,0,0-1.68.77,1.26,1.26,0,0,0-.61,1,1.2,1.2,0,0,0,.62,1.1,3.93,3.93,0,0,0,1.84.42l3.82.17,5.83.26a14.77,14.77,0,0,1,3,.45,7.39,7.39,0,0,1,2.3,1.05,4.64,4.64,0,0,1,1.45,1.67A4.85,4.85,0,0,1,451.73,14.06Z"
+				style="fill:#ff6800"></path>
+			<path d="M456.82,20.46V.65h5V16.18h17.57v4.28Z" style="fill:#ff6800"></path>
+			<path
+				d="M508.51,10.55a9.38,9.38,0,0,1-.9,4.06A10.06,10.06,0,0,1,505,18a13,13,0,0,1-4.17,2.29,18.71,18.71,0,0,1-11.15,0A13,13,0,0,1,485.5,18a9.81,9.81,0,0,1-2.62-3.36,9.24,9.24,0,0,1-.91-4.06,9.31,9.31,0,0,1,.91-4.06,9.77,9.77,0,0,1,2.62-3.35A13,13,0,0,1,489.67.85a18.71,18.71,0,0,1,11.15,0A13,13,0,0,1,505,3.14a10,10,0,0,1,2.62,3.35A9.44,9.44,0,0,1,508.51,10.55Zm-5.23,0a6.06,6.06,0,0,0-.5-2.42,5.71,5.71,0,0,0-1.5-2,7.25,7.25,0,0,0-2.52-1.38,12.4,12.4,0,0,0-7,0,7.25,7.25,0,0,0-2.52,1.38,5.71,5.71,0,0,0-1.5,2,6.22,6.22,0,0,0,0,4.84,5.65,5.65,0,0,0,1.5,2,7.41,7.41,0,0,0,2.52,1.38,12.4,12.4,0,0,0,7,0A7.41,7.41,0,0,0,501.28,15a5.65,5.65,0,0,0,1.5-2A6,6,0,0,0,503.28,10.55Z"
+				style="fill:#ff6800"></path>
+			<path
+				d="M543.19,20.46h-7.08l-5.4-14.6-5.4,14.6h-7.08L510.9.65h5.41L522,16.27,527.65.65h6.12l5.65,15.62L545.08.65h5.44Z"
+				style="fill:#ff6800"></path>
+		</svg>
+	</div> -->
+</body>
+
 </html>

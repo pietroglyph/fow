@@ -66,32 +66,27 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   SPIFFS.begin();
 
-  // Handle requests to the base path by showing a simple config page
-  server->on("/", [&]() {
-    File indexFile = SPIFFS.open("/index.html", "r");
-    server->streamFile(indexFile, "text/html");
-
-    if (server->hasArg("ssid") || server->hasArg("password")) {
+  server->on("/connect", [&]() {
+    if (server->hasArg("ssid")) {
       ssid = server->arg("ssid");
       password = server->arg("password");
       ssid.remove(settingsManager.maximumSettingLength - 1);
       password.remove(settingsManager.maximumSettingLength - 1);
 
       connectToWiFiNetwork(server->hasArg("notimeout"));
+    } else {
+      server->send(HTTP_CODE_BAD_REQUEST, "text/plain", "Invalid URL query parameters. password parameter is missing.");
+      return;
     }
 
-    indexFile.close();
-  });
-
-  server->on("/status", [&]() {
     String connStatus;
     switch (WiFi.status()) {
       case WL_CONNECTED :
-        if (ssid == "" || password == "") {
-          connStatus = "Disconnected"; // We get WL_CONNECTED only with an AP connection, so this kind of deals with that
+        if (ssid == "") {
+          connStatus = "No connection has been made"; // We get WL_CONNECTED only with an AP connection, so this kind of deals with that
           break;
         }
-        connStatus = "Connected";
+        connStatus = "Connected succsessfully";
         break;
       case WL_CONNECT_FAILED :
         connStatus = "Connection attempt failed";
@@ -100,28 +95,24 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
         connStatus = "Connection lost";
         break;
       case WL_DISCONNECTED :
-        connStatus = "Disconnected";
+        connStatus = "No connection has been made";
         break;
       default :
-        connStatus = "Other";
+        connStatus = String("Other (") + WiFi.status() + ")";
         break;
     }
-    server->send(HTTP_CODE_OK, "text/html",
-                 String("<html><body style='color: white; font-size: 14px; font-family: monospace;'>Network Name: ") + ssid +
-                 "<br>Password: " + password +
-                 "<br>Connection Status: " + connStatus +
-                 "</body></html>");
-  });
-
-  server->on("/promptforexitsetup", [&]() {
-    bool shouldPrompt = isConnectedToWiFi();
-    server->send(shouldPrompt ? HTTP_CODE_OK : HTTP_CODE_INTERNAL_SERVER_ERROR, "text/plain", shouldPrompt ? "true" : "false");
+    server->send(isConnectedToWiFi() ? HTTP_CODE_OK : HTTP_CODE_BAD_REQUEST, "text/plain", connStatus);
   });
 
   server->on("/exitsetup", [&]() {
-    if (!isConnectedToWiFi()) return;
+    if (!isConnectedToWiFi()) {
+      server->send(HTTP_CODE_BAD_REQUEST, "text/plain", "Can't exit setup because you're not connected to WiFi.");
+      return;
+    }
 
-    server->send(HTTP_CODE_OK, "text/plain", "Exiting setup...");
+    server->send(HTTP_CODE_OK, "text/plain", "Successfully exited setup.");
+
+    delay(100);
 
     setupMode = false;
 
@@ -130,20 +121,37 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     server->stop();
     SPIFFS.end();
 
-    delete server;
-
     settingsManager.setSetting(SettingsManager::Setting::SSID, ssid);
     settingsManager.setSetting(SettingsManager::Setting::PASSWORD, password);
     settingsManager.exitSetupMode();
   });
 
+  server->on("/networks", [&]() {
+    int numNetworks = WiFi.scanNetworks();
+
+    if (numNetworks <= 0) {
+      server->send(HTTP_CODE_INTERNAL_SERVER_ERROR, "text/plain", "");
+      return;
+    }
+
+    String openNetworks;
+    String networksList;
+    for (int i = 0; i < numNetworks; i++) {
+      if (WiFi.encryptionType(i) == ENC_TYPE_NONE) openNetworks += (i) + ",";
+      networksList += WiFi.SSID(i);
+      networksList += "\n";
+      delay(10);
+    }
+    server->send(HTTP_CODE_OK, "text/plain", openNetworks + "\n" + networksList);
+  });
+
   server->on("/info", [&]() {
-    server->send(HTTP_CODE_OK, "text/plain", VERSION + String("\n") + BUILD_INFO);
+    server->send(HTTP_CODE_OK, "text/plain", String("Chip ID: ") + chipId + "\nFOW Software Version: " + VERSION + "\nBuild Info: " + BUILD_INFO);
   });
 
   server->onNotFound([&]() {
     if (!handleRequestedFile(server->uri()))
-      server->send(404, "text/plain", "404 Not Found");
+      server->send(HTTP_CODE_NOT_FOUND, "text/plain", "404 Not Found");
   });
 
   // Handle requests to the /config path by changing configuration
@@ -154,7 +162,6 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
 bool ConnectionManager::handleRequestedFile(String path) {
   if (path.endsWith("/")) path += "index.html";
-  Serial.println(path);
   String contentType = getContentType(path);
   if (SPIFFS.exists(path)) {
     File file = SPIFFS.open(path, "r");
