@@ -1,0 +1,430 @@
+html {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: "Helvetica Neue", Helvetica, Arial, "sans-serif";
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: rgb(0, 104, 56);
+    animation: BGfade 1s 1s both;
+    display: flex;
+    flex-direction: column;
+    min-height: 450px;
+    min-width: 350px;
+  }
+
+  #header {
+    width: 100%;
+    height: 175px;
+    margin: 0;
+    background-color: ivory;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  #title {
+    width: auto;
+    height: 40px;
+    margin: 0;
+    padding: 5px 0 0 5%;
+    color: ivory;
+    background-color: rgb(255, 104, 0);
+    animation: OpacityFadeIn 1s 1s both;
+  }
+
+  .Footer {
+    position: absolute;
+    bottom: 20px;
+    left: 0;
+    width: 100%;
+    height: auto;
+    text-align: center;
+    animation: OpacityFadeIn 7s 7s both;
+  }
+
+  .FT {
+    height: 70%;
+    position: absolute;
+    margin: auto;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    fill: rgb(0, 104, 56);
+    transition: all 200ms linear;
+  }
+
+  .FT.centerLarge {
+    height: 80%;
+    left: 0;
+  }
+
+  #FERRY {
+    animation: SplashAnimR 2s;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  #TEMPO {
+    animation: SplashAnimL 2.5s 0s both;
+  }
+
+
+  #FOW {
+    bottom: 0;
+    width: 90%;
+  }
+
+  h1 {
+    font-size: 200%;
+    margin: 0;
+    letter-spacing: normal;
+  }
+
+  .kernIn {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+    animation: KernIn 1s 1s both;
+  }
+
+  h2 {
+    font-size: 150%;
+    text-align: left;
+  }
+
+  form {
+    font-size: 100%;
+    text-align: left;
+  }
+
+  button {
+    background-color: #1668fb;
+    border-style: solid;
+    border-color: #3b81ff;
+    border-radius: 4px;
+    border-width: 3px;
+    padding: 10px 15px 10px 15px;
+    color: white;
+    transition: background-color 0.1s linear;
+    font-size: 18px;
+    /* Must remain synced with border and padding */
+    width: 100%;
+    cursor: default;
+    margin: 0px;
+    margin-top: 5px;
+  }
+
+  button:hover {
+    background-color: #3b81ff;
+    transition: background-color 0.2s linear;
+  }
+
+  button:active {
+    background-color: #095dfa;
+  }
+
+  button:focus {
+    outline: none;
+    /* border: lightblue; */
+  }
+
+  button:disabled {
+    background-color: #c2c2c2;
+    border-color: #c2c2c2;
+    cursor: not-allowed;
+    color: #f0f0f0;
+    transition: border-color 0.1s linear;
+  }
+
+  .splitButtonContainer {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+  }
+
+  .splitButtonContainer>button {
+    margin-left: 3px;
+    margin-right: 3px;
+  }
+
+  .splitButtonContainer>button:first-child {
+    margin-left: 0px;
+  }
+
+  .splitButtonContainer>button:last-child {
+    margin-right: 0px;
+  }
+
+  #exitSetup {
+    border-color: lightcoral;
+    background-color: #ff5353;
+  }
+
+  #exitSetup:hover {
+    background-color: #ff1919;
+    border-color: lightcoral;
+  }
+
+  #exitSetup:active {
+    background-color: rgb(211, 0, 0);
+  }
+
+  #back {
+    width: 10%;
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  #exitStep>#back {
+    width: 100%;
+  }
+
+  #infoButton {
+    cursor: pointer;
+    transition: all 400ms linear;
+
+    transform: rotateY(0deg) rotateX(0deg);
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  #infoButton:hover {
+    /* transition: all 300ms linear; */
+
+    transform: rotateY(30deg) rotateX(-10deg);
+    fill: blue;
+  }
+
+  #infoButton:active {
+    fill: darkblue;
+  }
+
+  .step {
+    /* For parent */
+    align-self: flex-start;
+    padding-top: 10vh;
+    width: 50%;
+    position: absolute;
+
+    /* For children */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+
+    animation: OpacityFadeIn 0.3s 0s both;
+  }
+
+  .step>h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 3px;
+    margin-bottom: 3px;
+  }
+
+  .fadeAway {
+    animation: OpacityFadeOut 0.4s 0s both;
+  }
+
+  .slideUpFade {
+    font-size: 0px;
+    opacity: 0;
+    overflow: hidden;
+    transition: all 400ms linear;
+  }
+
+  #infoBox {
+    transition: all 400ms linear;
+    width: 35%;
+    color: black;
+    font-family: monospace;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  .loadingSpinner {
+    font-size: 200%;
+    animation-name: Spin;
+    animation-duration: 2000ms;
+    animation-iteration-count: infinite;
+    animation-timing-function: linear;
+  }
+
+  #stepsArea {
+    text-align: center;
+    color: ivory;
+    animation: OpacityFadeIn 2s 3s both;
+
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #networks {
+    width: 100%;
+  }
+
+  .step>input {
+    width: calc(100% - 24px);
+    text-align: center;
+    background-color: white;
+    border-style: solid;
+    border-color: lightgray;
+    border-radius: 4px;
+    border-width: 3px;
+    padding-left: 8px;
+    padding-right: 8px;
+    padding-top: 6px;
+    padding-bottom: 6px;
+    box-shadow: none;
+  }
+
+  .step>input:focus {
+    border-color: #3b81ff;
+  }
+
+  .step>input:disabled {
+      opacity: 1;
+  }
+
+  @keyframes Spin {
+    from {
+      transform: rotate(0deg);
+      opacity: 1;
+      margin-top: 0px;
+    }
+
+    50% {
+      opacity: 0;
+      margin-top: 10px;
+    }
+
+    to {
+      transform: rotate(360deg);
+      opacity: 1;
+      margin-top: 0px;
+    }
+  }
+
+  @keyframes OpacityFadeIn {
+    0% {
+      opacity: 0;
+    }
+
+    100% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes OpacityFadeOut {
+    0% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  @keyframes BGfade {
+    0% {
+      background-color: ivory;
+    }
+
+    100% {
+      background-color: rgb(0, 104, 56);
+    }
+  }
+
+  @keyframes KernIn {
+    0% {
+      letter-spacing: 20px;
+    }
+
+    100% {
+      letter-spacing: normal;
+    }
+  }
+
+  @keyframes SplashAnimL {
+    0% {
+      filter: opacity(0%);
+      transform: translateX(100%);
+      fill: orange;
+    }
+
+    50% {
+      fill: orange;
+    }
+
+    100% {
+      filter: opacity(100%);
+    }
+  }
+
+  @keyframes SplashAnimR {
+    0% {
+      filter: opacity(0%);
+      transform: translateX(-100%);
+      fill: orange;
+    }
+
+    50% {
+      fill: orange;
+    }
+
+    100% {
+      filter: opacity(100%);
+    }
+  }
+
+  @media only screen and (max-width: 1000px) {
+    .step {
+        width: 85%;
+    }
+
+    #title {
+        height: 30px;
+    }
+
+    #back {
+        width: 20%;
+    }
+  }
+
+  @media only screen and (max-width: 430px) {
+    h1.kernIn {
+        font-size: 140%;
+    }
+  }
+
+  @media only screen and (max-width: 520px) {
+      .FT {
+          height: 40%;
+      }
+  }
+
+  @media only screen and (min-width: 1040px) {
+      .FT {
+          height: 80%;
+          left: 0;
+      }
+  }
+
+  @media only screen and (min-width: 1440px) and (min-height: 660px) {
+      #header {
+          height: 200px;
+      }
+  }
