@@ -69,6 +69,7 @@ class ConnectionManager {
     String password = "";
     bool setupMode = true;
     bool connectionTimedOut = false;
+    bool isConnecting = false;
 
     static String getContentType(String filename);
     bool handleRequestedFile(String path);

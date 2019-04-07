@@ -73,35 +73,43 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
       ssid.remove(settingsManager.maximumSettingLength - 1);
       password.remove(settingsManager.maximumSettingLength - 1);
 
+      server->send(HTTP_CODE_OK, "text/plain", "Connecting...");
+
       connectToWiFiNetwork(server->hasArg("notimeout"));
     } else {
-      server->send(HTTP_CODE_BAD_REQUEST, "text/plain", "Invalid URL query parameters. password parameter is missing.");
-      return;
+      server->send(HTTP_CODE_BAD_REQUEST, "text/plain", "Invalid URL query parameters. \"ssid\" parameter is missing.");
     }
+  });
 
-    String connStatus;
-    switch (WiFi.status()) {
-      case WL_CONNECTED :
-        if (ssid == "") {
-          connStatus = "No connection has been made"; // We get WL_CONNECTED only with an AP connection, so this kind of deals with that
+  server->on("/status", [&]() {
+      if (isConnecting) {
+        server->send(HTTP_CODE_BAD_REQUEST, "text/plain", "Still connecting");
+        return;
+      }
+
+      String connStatus;
+      switch (WiFi.status()) {
+        case WL_CONNECTED :
+          if (ssid == "") {
+            connStatus = "No connection has been made"; // We get WL_CONNECTED only with an AP connection, so this kind of deals with that
+            break;
+          }
+          connStatus = "Connected succsessfully";
           break;
-        }
-        connStatus = "Connected succsessfully";
-        break;
-      case WL_CONNECT_FAILED :
-        connStatus = "Connection attempt failed";
-        break;
-      case WL_CONNECTION_LOST :
-        connStatus = "Connection lost";
-        break;
-      case WL_DISCONNECTED :
-        connStatus = "No connection has been made";
-        break;
-      default :
-        connStatus = String("Other (") + WiFi.status() + ")";
-        break;
-    }
-    server->send(isConnectedToWiFi() ? HTTP_CODE_OK : HTTP_CODE_BAD_REQUEST, "text/plain", connStatus);
+        case WL_CONNECT_FAILED :
+          connStatus = "Connection attempt failed";
+          break;
+        case WL_CONNECTION_LOST :
+          connStatus = "Connection lost";
+          break;
+        case WL_DISCONNECTED :
+          connStatus = "No connection has been made";
+          break;
+        default :
+          connStatus = String("Other (") + WiFi.status() + ")";
+          break;
+      }
+      server->send(HTTP_CODE_OK, "text/plain", connStatus);
   });
 
   server->on("/exitsetup", [&]() {
@@ -223,14 +231,17 @@ String ConnectionManager::get() {
 // forever to connect. The user should reset the microcontroller if they wish to
 // escape the loop.
 void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see header*/) {
+  if (isConnecting) return;
+  isConnecting = true;
+
   if (noTimeout)
     Serial.println("We will connect with no timeout. Reset the microcontroller to escape the infinte loop");
 
   lastPeriodicReconnectAttempt = millis();
 
   http.end();
-  WiFi.disconnect();
-  WiFi.begin(ssid.c_str(), password.c_str());
+  WiFi.disconnect(false);
+  wl_status_t s = WiFi.begin(ssid.c_str(), password.c_str());
   connectionTimedOut = false;
 
   unsigned long startTime = millis();
@@ -238,12 +249,14 @@ void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see heade
     if (millis() - startTime > connectionTimeout && !noTimeout) {
       Serial.println("\nWiFi connection attempt timed out.");
       connectionTimedOut = true;
+
+      isConnecting = false;
       return;
     }
     for (int i = 0; i < 500; i++) {
       delay(1);
       // This is a bit of a janky way to delay 500ms, but we really need to update the reset flag bits on time
-      settingsManager.updateFullResetTimer();
+      update();
     }
     Serial.print(".");
   }
@@ -251,8 +264,10 @@ void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see heade
 
   // Make a connection to the remote server
   connectionTimedOut = !http.begin(wifiClient, url);
+
+  isConnecting = false;
 }
 
 bool ConnectionManager::isConnectedToWiFi() {
-  return ssid != "" && WiFi.status() == WL_CONNECTED && !connectionTimedOut;
+  return ssid != "" && !isConnecting && WiFi.status() == WL_CONNECTED && !connectionTimedOut;
 }

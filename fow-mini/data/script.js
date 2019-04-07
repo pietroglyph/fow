@@ -1,5 +1,7 @@
 'use strict';
 
+const checkIsConnectedInterval = 1000; // ms
+
 var setupInfo = {
     ssid: null,
     password: null,
@@ -8,10 +10,20 @@ var setupInfo = {
         this.ssid = this.password = null;
         this.networkRequiresPassword = true;
     },
-    attemptConnection: function () {
+    attemptConnection: function (onsuccess, onfailure) {
         let url = `/connect?ssid=${this.ssid}&password=${this.password || ""}`;
 
-        return fetch(url).then(r => r.ok);
+        fetch(url).catch(onfailure);
+        let checkIsConnected = () => {
+            fetch("/status").then(r => {
+                r.text().then(body => {
+                    if (r.ok && body === "Connected succsessfully") onsuccess(body);
+                    else if (r.ok) onfailure(body);
+                    else setTimeout(checkIsConnected, checkIsConnectedInterval);
+                }).catch(onfailure);
+            }).catch(onfailure);
+        };
+        setTimeout(checkIsConnected, checkIsConnectedInterval);
     },
 };
 
@@ -25,6 +37,7 @@ window.onload = () => {
     let successStep = document.querySelector("#successStep");
     let failedStep = document.querySelector("#failedStep");
     let welcomeStep = document.querySelector("#welcomeStep");
+    let exitButton = successStep.querySelector("#successStep #next");
 
     let dispNoNetworksFound = () => {
         ssidSelector.innerhtml = "<option>No networks found!</option>";
@@ -54,38 +67,47 @@ window.onload = () => {
         if (focusMe != null) setTimeout(focusMe.focus(), 0);
     };
 
-    fetch("/networks").then(r => r.text().then(body => {
-        if (!body) {
-            dispNoNetworksFound();
-            return;
-        }
+    let rescan = () => {
+        ssidSelector.innerHTML = "<option>Scanning...</option>";
+        ssidSelector.disabled = true;
+        ssidNextButton.disabled = true;
 
-        let lines = body.split("\n");
-        if (lines.length <= 1) {
-            dispNoNetworksFound();
-            return;
-        }
+        fetch("/networks").then(r => r.text().then(body => {
+            if (!body) {
+                dispNoNetworksFound();
+                return;
+            }
 
-        ssidSelector.innerHTML = "";
-        ssidSelector.disabled = false;
-        ssidSelector.onchange = (s) => {
-            window.ssidSelectorOnChange(s.explicitOriginalTarget);
-        };
-        ssidSelector.onclick = () => {
-            window.ssidSelectorOnChange(ssidSelector.options[ssidSelector.selectedIndex]);
-        };
+            let lines = body.split("\n");
+            if (lines.length <= 1) {
+                dispNoNetworksFound();
+                return;
+            }
 
-        let openNetworksList = lines[0].split(",");
-        for (let i = 1; i < lines.length; i++) {
-            if (lines[i] == "") continue;
+            ssidSelector.innerHTML = "";
+            ssidSelector.disabled = false;
+            ssidSelector.onchange = (s) => {
+                window.ssidSelectorOnChange(s.explicitOriginalTarget);
+            };
+            ssidSelector.onclick = () => {
+                window.ssidSelectorOnChange(ssidSelector.options[ssidSelector.selectedIndex]);
+            };
 
-            let passwordRequired = true;
-            for (const openIdx of openNetworksList)
-                if (new String(i - 1) == openIdx) passwordRequired = false;
+            let openNetworksList = lines[0].split(",");
+            for (let i = 1; i < lines.length; i++) {
+                if (lines[i] == "") continue;
 
-            ssidSelector.innerHTML += `<option data-password-required="${passwordRequired}" data-ssid="${lines[i]}">${lines[i]} ${passwordRequired ? "🔒" : ""}</option>`;
-        }
-    }));
+                let passwordRequired = true;
+                for (const openIdx of openNetworksList)
+                    if (new String(i - 1) == openIdx) passwordRequired = false;
+
+                ssidSelector.innerHTML += `<option data-password-required="${passwordRequired}" data-ssid="${lines[i]}">${lines[i]} ${passwordRequired ? "🔒" : ""}</option>`;
+            }
+        })).catch(error => {
+            ssidSelector.innerHTML = `<option style="color: red;">Scanning failed (${error})... Are you still connected to the setup access point?</option>`;
+        });
+    };
+    rescan();
 
     let infoBox = document.querySelector("#infoBox");
     fetch("/info").then(r => {
@@ -102,6 +124,8 @@ window.onload = () => {
             e.classList.toggle("centerLarge");
     };
 
+    document.querySelector("#rescan").onclick = () => rescan();
+
     passwordInput.oninput = (e) => {
         passwordNextButton.disabled = passwordInput.value == "";
         setupInfo.password = passwordInput.value;
@@ -112,15 +136,16 @@ window.onload = () => {
         unhideAndFocus(welcomeStep);
     };
 
-    successStep.querySelector("#exitSetup").onclick = () => {
-        successStep.classList.add("fadeAway");
+    exitButton.onclick = () => {
         fetch("/exitsetup").then((r) => {
             document.querySelector("#exitStep > .loadingSpinner").classList.add("hidden");
 
             let exitStatus = document.querySelector("#exitStatus");
             exitStatus.classList.remove("hidden");
-            if (r.ok) exitStatus.textContent = "Successfully exited setup mode! You can safely close this page.";
-            else {
+            if (r.ok) {
+                exitStatus.textContent = "Successfully exited setup mode! You can safely close this page.";
+                document.querySelector("#exitStep > #back").classList.add("hidden");
+            } else {
                 exitStatus.textContent = "Couldn't exit setup mode. You can go back and retry if you want.";
                 document.querySelector("#exitStep > #back").classList.remove("hidden");
             }
@@ -145,39 +170,48 @@ window.onload = () => {
         };
 
         let nextButton = steps[i].querySelector("#next");
-        if (nextButton) nextButton.onclick = () => {
-            if (nextButton.disabled) return false;
+        if (nextButton) {
+            let oldOnclick = nextButton.onclick;
+            nextButton.onclick = () => {
+                if (nextButton.disabled) return false;
 
-            steps[i].classList.add("fadeAway");
+                if (oldOnclick) oldOnclick();
 
-            let nextIdx = i + 1;
+                steps[i].classList.add("fadeAway");
 
-            if (steps[nextIdx].id === "passwordStep" && setupInfo.networkRequiresPassword == "false")
-                nextIdx++;
+                let nextIdx = i + 1;
 
-            let ssidConfirm = steps[nextIdx].querySelector("#ssidConfirm");
-            let passwordConfirm = steps[nextIdx].querySelector("#passwordConfirm");
-            if (ssidConfirm && passwordConfirm) {
-                ssidConfirm.value = setupInfo.ssid;
-                passwordConfirm.value = setupInfo.password;
-            }
+                if (steps[nextIdx].id === "passwordStep" && setupInfo.networkRequiresPassword == "false")
+                    nextIdx++;
 
-            if (steps[nextIdx].id === "connectStep") {
-                setupInfo.attemptConnection().then(ok => {
-                    steps[nextIdx].classList.add("hidden");
-                    unhideAndFocus(ok ? successStep : failedStep);
-                });
-            }
+                let ssidConfirm = steps[nextIdx].querySelector("#ssidConfirm");
+                let passwordConfirm = steps[nextIdx].querySelector("#passwordConfirm");
+                if (ssidConfirm && passwordConfirm) {
+                    ssidConfirm.value = setupInfo.ssid;
+                    passwordConfirm.value = setupInfo.password;
+                }
 
-            // Now that current element is hidden we can show the next one
-            unhideAndFocus(steps[nextIdx]);
-        };
+                if (steps[nextIdx].id === "connectStep") {
+                    setupInfo.attemptConnection(() => {
+                        steps[nextIdx].classList.add("hidden");
+                        unhideAndFocus(successStep);
+                    },
+                        (failReason) => {
+                            steps[nextIdx].classList.add("hidden");
+                            unhideAndFocus(failedStep);
+                        })
+                }
+
+                // Now that current element is hidden we can show the next one
+                unhideAndFocus(steps[nextIdx]);
+            };
+        }
 
         steps[i].addEventListener("animationend", (e) => {
             if (e.animationName !== "OpacityFadeOut") return;
 
             // We only want to set display none on the current element once it has faded fully
-            steps[i].classList.add("hidden");        
+            steps[i].classList.add("hidden");
         });
     }
 };

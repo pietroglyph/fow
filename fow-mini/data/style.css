@@ -160,20 +160,20 @@ html {
     margin-right: 0px;
   }
 
-  #exitSetup {
+  button.danger {
     border-color: lightcoral;
     background-color: #ff5353;
   }
 
-  #exitSetup:hover {
+  button.danger:hover {
     background-color: #ff1919;
     border-color: lightcoral;
   }
 
-  #exitSetup:active {
+  button.danger:active {
     background-color: rgb(211, 0, 0);
   }
-
+  
   #back {
     width: 10%;
     padding-left: 10px;
