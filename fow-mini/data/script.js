@@ -197,6 +197,7 @@ window.onload = () => {
                         unhideAndFocus(successStep);
                     },
                         (failReason) => {
+                            document.querySelector("#errorMessage").textContent = failReason;
                             steps[nextIdx].classList.add("hidden");
                             unhideAndFocus(failedStep);
                         })

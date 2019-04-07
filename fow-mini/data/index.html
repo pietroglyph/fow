@@ -89,7 +89,15 @@
   <div id="stepsArea">
     <div class="step" id="welcomeStep">
       <h1>Welcome</h1>
-      <h3>We need some help connecting FerryClock so that we can get <i>sailing</i> in your local wireless network.</h3>
+      <h3 id="firstHeading">We need some help connecting FerryClock so that we can get <i>sailing</i> in your local wireless network.</h3>
+      <noscript>
+        <h3 id="noscriptWarning">This page won't work with JavaScript disabled.</h3>
+        <style>
+          #next,#firstHeading {
+            display: none;
+          }
+        </style>
+      </noscript>
       <button id="next" tabindex="1">Next&nbsp;&raquo;</button>
     </div>
     <div class="step hidden">
@@ -129,6 +137,7 @@
     </div>
     <div class="step hidden" id="failedStep">
       <h1>Whoah there! Connection failed!</h1>
+      <p>Error message was: <code id="errorMessage"></code></p>
       <p>You can review your connection information and try again.</p>
       <button class="split" id="redo" tabindex="9">Review info and retry</button>
     </div>

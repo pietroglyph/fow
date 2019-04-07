@@ -103,7 +103,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
           connStatus = "Connection lost";
           break;
         case WL_DISCONNECTED :
-          connStatus = "No connection has been made";
+          connStatus = "Currently disconnected (check that SSID and password are correct)";
           break;
         default :
           connStatus = String("Other (") + WiFi.status() + ")";
