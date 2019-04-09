@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
   <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -79,7 +79,7 @@
         </path>
       </g>
     </svg>
-    <p id="infoBox" class="slideUpFade"></p>
+    <p id="infoBox" class="slideUpFade" aria-hidden="true"></p>
   </div>
 
   <div id="title">
@@ -98,63 +98,63 @@
           }
         </style>
       </noscript>
-      <button id="next" tabindex="1">Next&nbsp;&raquo;</button>
+      <button id="next" aria-label="Go to the next step">Next&nbsp;&raquo;</button>
     </div>
     <div class="step hidden">
-      <h1>Select a WiFi Network</h1>
-      <select id="networks" class="focusMe" size="8" onblur="window.ssidSelectorOnChange(this.options[this.selectedIndex])" disabled tabindex="2">
+      <h1><label for="networks">Select a WiFi Network</label></h1>
+      <select id="networks" class="focusMe" size="8" onblur="window.ssidSelectorOnChange(this.options[this.selectedIndex])" disabled>
         <option>Loading...</option>
         <!-- More networks added here by js -->
       </select>
       <div class="splitButtonContainer">
-        <button id="back">&lsaquo;</button>
-        <button id="rescan">↻&nbsp;Rescan</button>
-        <button id="next" disabled tabindex="3">Next&nbsp;&raquo;</button>
+        <button id="back" aria-label="Go back one step">&lsaquo;</button>
+        <button id="rescan" aria-label="Rescan WiFi networks">↻&nbsp;Rescan</button>
+        <button id="next" aria-label="Go to the next step" disabled>Next&nbsp;&raquo;</button>
       </div>
     </div>
     <div class="step hidden" id="passwordStep">
-      <h1>Enter a Password</h1>
-      <input id="pass" class="focusMe" type="password" placeholder="Enter a password..." tabindex="4">
+      <h1><label for="pass">Enter a Password</label></h1>
+      <input id="pass" class="focusMe" type="password" placeholder="Enter a password...">
       <div class="splitButtonContainer">
-        <button id="back">&lsaquo;</button>
-        <button id="next" disabled tabindex="5">Next&nbsp;&raquo;</button>
+        <button id="back" aria-label="Go back one step">&lsaquo;</button>
+        <button id="next" aria-label="Go to the next step" disabled>Next&nbsp;&raquo;</button>
       </div>
     </div>
     <div class="step hidden" id="reviewStep">
       <h1>Confirm Your Information</h1>
-      <h3>SSID:</h3>
-      <input id="ssidConfirm" placeholder="None" disabled tabindex="6">
-      <h3>Password:</h3>
-      <input id="passwordConfirm" placeholder="None" disabled tabindex="7">
+      <h3><label for="ssidConfirm">SSID:</label></h3>
+      <input id="ssidConfirm" placeholder="None" disabled>
+      <h3><label for="passwordConfirm">Password:</label></h3>
+      <input id="passwordConfirm" placeholder="None" disabled>
       <div class="splitButtonContainer">
-        <button id="back">&lsaquo;</button>
-        <button id="next" tabindex="8">Connect&nbsp;&raquo;</button>
+        <button id="back" aria-label="Go back one step">&lsaquo;</button>
+        <button id="next" aria-label="Connect with these settings">Connect&nbsp;&raquo;</button>
       </div>
     </div>
     <div class="step hidden" id="connectStep">
       <h1>Connecting...</h1>
-      <div class="loadingSpinner">.</div>
+      <div class="loadingSpinner" aria-hidden="true">.</div>
     </div>
     <div class="step hidden" id="failedStep">
       <h1>Whoah there! Connection failed!</h1>
       <p>Error message was: <code id="errorMessage"></code></p>
       <p>You can review your connection information and try again.</p>
-      <button class="split" id="redo" tabindex="9">Review info and retry</button>
+      <button id="redo">Review info and retry</button>
     </div>
     <div class="step hidden" id="successStep">
       <h1>Success! Would you like to exit setup mode?</h1>
-      <p>If you exit setup mode, the setup WiFi network will dissapear, and you will not be able to change any settings
+      <p>If you exit setup mode, the setup WiFi network will disappear, and you will not be able to change any settings
         without doing a full reset (pressing the reset button 3 times).</p>
       <div class="splitButtonContainer">
-        <button class="split" id="redo" tabindex="11">Redo Setup</button>
-        <button class="split danger" id="next" tabindex="12">Exit setup mode</button>
+        <button class="split" id="redo">Redo Setup</button>
+        <button class="split danger" id="next">Exit setup mode</button>
       </div>
     </div>
     <div class="step hidden" id="exitStep">
       <h1>Exiting Setup Mode...</h1>
-      <div class="loadingSpinner">.</div>
+      <div class="loadingSpinner" aria-hidden="true">.</div>
       <div id="exitStatus" class="hidden"></div>
-      <button id="back" class="hidden" tabindex="13">Go back</button>
+      <button id="back" class="hidden">Go back</button>
     </div>
   </div>
 

@@ -6,7 +6,7 @@ The microcontroller broadcasts a network called `fow-mini`, on which it serves a
 The easiest way to get the code onto your ESP8266 (the code requires an ESP8266, but it doesn't really matter what's on the rest of the board, the NodeMCU DEVKIT 1.0, WeMos D1 Mini and regular, and Adafruit Feather Huzzah are all known to work) is to use [PlatformIO](https://platformio.org/). 
 
 You should follow the below steps to deploy code using PlatformIO:
-1. Download and install PlatformIO, either [through VSCode/Atom](https://platformio.org/platformio-ide), or [through your command line interface](https://docs.platformio.org/en/latest/installation.html#installation-methods).
+1. Download and install PlatformIO, either [through VSCode/Atom](https://platformio.org/platformio-ide), or [through your command line interface](https://docs.platformio.org/en/latest/installation.html#super-quick-mac-linux).
 2. Open a terminal in your editor with the working directory in the same folder as this README (just do Ctrl+Shift+\` in VSCode). 
 3. Type in `./deploy.sh` (you should add ` -e stepperclock` at the end of that if you want to deploy to the stepper clock). If it says something like "bash: platformio: command not found...", then type in `export PATH=$PATH:~/.platformio/penv/bin`, press enter, and run the script again.
 
