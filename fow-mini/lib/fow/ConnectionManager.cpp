@@ -170,14 +170,15 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
 bool ConnectionManager::handleRequestedFile(String path) {
   if (path.endsWith("/")) path += "index.html";
-  String contentType = getContentType(path);
-  if (SPIFFS.exists(path)) {
-    File file = SPIFFS.open(path, "r");
-    server->streamFile(file, contentType);
-    file.close();
-    return true;
+  if (!SPIFFS.exists(path)) {
+    path = "/index.html";
   }
-  return false;
+
+  String contentType = getContentType(path);
+  File file = SPIFFS.open(path, "r");
+  server->streamFile(file, contentType);
+  file.close();
+  return true; // You can't return a 404 if you want the captive portal popup to show
 }
 
 String ConnectionManager::getContentType(String filename){
@@ -241,7 +242,7 @@ void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see heade
 
   http.end();
   WiFi.disconnect(false);
-  wl_status_t s = WiFi.begin(ssid.c_str(), password.c_str());
+  WiFi.begin(ssid.c_str(), password.c_str());
   connectionTimedOut = false;
 
   unsigned long startTime = millis();
