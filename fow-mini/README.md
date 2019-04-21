@@ -8,7 +8,7 @@ The easiest way to get the code onto your ESP8266 (the code requires an ESP8266,
 You should follow the below steps to deploy code using PlatformIO:
 1. Download and install PlatformIO, either [through VSCode/Atom](https://platformio.org/platformio-ide), or [through your command line interface](https://docs.platformio.org/en/latest/installation.html#super-quick-mac-linux).
 2. Open a terminal in your editor with the working directory in the same folder as this README (just do Ctrl+Shift+\` in VSCode). 
-3. Type in `./deploy.sh` (you should add ` -e stepperclock` at the end of that if you want to deploy to the stepper clock). If it says something like "bash: platformio: command not found...", then type in `export PATH=$PATH:~/.platformio/penv/bin`, press enter, and run the script again.
+3. Type in `./deploy.sh` (you should add ` -e dial-stepperclock` at the end of that if you want to deploy to the kit stepper clock with dials). If it says something like "bash: platformio: command not found...", then type in `export PATH=$PATH:~/.platformio/penv/bin`, press enter, and run the script again.
 
 You can follow the below steps if you're using the Arduino IDE (not reccomended, will only deploy for the servo clock unless you modify code):
 1. Download and install the Arduino IDE for your operating system from [here](https://www.arduino.cc/en/Main/Software) (the web editor wont work; if you have a package manager of some sort, you can also install using that).

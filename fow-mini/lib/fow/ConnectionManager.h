@@ -50,7 +50,7 @@ class ConnectionManager {
     */
 
     // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
-    const String url = "http://fow.0x778.tk/progress";
+    const String url = "http://192.168.1.158:8000/progress";
     const unsigned long connectionTimeout = 20000; // In milleseconds
     const unsigned long periodicReconnectDelay = 60000;
 

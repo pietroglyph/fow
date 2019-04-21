@@ -17,11 +17,11 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef IS_SERVO_CLOCK
+#if defined(IS_SERVO_CLOCK) || !defined(IS_STEPPER_CLOCK)
 
 #include "ServoClockOutputManager.h"
 
-ServoClockOutputManager::ServoClockOutputManager() {
+ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition) : servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition) {
   // These magic numbers are the servo GPIO pins
   primaryServo.attach(13);
   secondaryServo.attach(0);

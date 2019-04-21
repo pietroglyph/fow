@@ -17,7 +17,7 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef IS_SERVO_CLOCK
+#if defined(IS_SERVO_CLOCK) || !defined(IS_STEPPER_CLOCK)
 
 #ifndef ServoClockOutputManager_h
 #define ServoClockOutputManager_h
@@ -30,13 +30,13 @@
 
 class ServoClockOutputManager : public OutputManagerInterface {
   public:
-    ServoClockOutputManager();
+    ServoClockOutputManager(int servMaxPosition, int servMinPosition);
 
     void update(std::function<DataManager::FerryData (int)> dataSupplier);
     void calibrate();
   private:
-    const int servoMaxPosition = 170;
-    const int servoMinPosition = 10;
+    const int servoMaxPosition;
+    const int servoMinPosition;
     const int lightIntensity = 5;
     const int dockLightIntensity = 255;
     const int departingDockLightPin = 2;

@@ -43,7 +43,7 @@ void setup() {
   Serial.begin(115200);
   conn = new ConnectionManager("fow-setup");
   data = new DataManager();
-  output = new OUTPUT_MANAGER_CONSTRUCTOR();
+  output = new OUTPUT_MANAGER_CONSTRUCTOR(HARDWARE_CONSTRUCTOR);
 }
 
 void loop() {
