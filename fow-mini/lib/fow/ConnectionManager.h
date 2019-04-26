@@ -26,17 +26,21 @@
 #include <DNSServer.h>
 #include <ESP8266HTTPClient.h>
 #include <FS.h>
+#include <ESP8266httpUpdate.h>
 
-#if !defined(VERSION) || !defined(BUILD_INFO)
+#if !defined(VERSION) || !defined(BUILD_INFO) || !defined(HARDWARE_REVISION)
 #define VERSION "unknown"
 #define BUILD_INFO "Build info unknown"
+#define HARDWARE_REVISION "unknown"
+#endif
+
+#ifndef UPDATE_CHANNEL
+#define UPDATE_CHANNEL "production"
 #endif
 
 class ConnectionManager {
   public:
     ConnectionManager(String programName);
-
-    unsigned long lastPeriodicReconnectAttempt;
 
     bool ready();
     void update();
@@ -49,10 +53,19 @@ class ConnectionManager {
         the body for you).
     */
 
-    // TODO: Make ip/host/port configurable so we don't brick the ferries when/if these change
-    const String url = "http://bridge.ferries-over-winslow.org/progress";
-    const unsigned long connectionTimeout = 20000; // In milleseconds
+    const String baseURL = "http://bridge.ferries-over-winslow.org";
+    const String progressPath = "/progress";
+    const String updateFlashPath = "/update?type=flash";
+    const String updateSPIFFSPath = "/update?type=spiffs";
+    const String updateVersionHeader = VERSION + String("@") + UPDATE_CHANNEL + String(":") + HARDWARE_REVISION;
+
+    // Below are all in milleseconds
+    const unsigned long connectionTimeout = 20000;
     const unsigned long periodicReconnectDelay = 60000;
+    const unsigned long updateCheckDelay = 60000 * 30;
+
+    unsigned long lastUpdateAttempt;
+    unsigned long lastPeriodicReconnectAttempt;
 
     ESP8266WebServer* server = new ESP8266WebServer(80);
     SettingsManager settingsManager = SettingsManager();

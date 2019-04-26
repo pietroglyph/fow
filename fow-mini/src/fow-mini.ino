@@ -17,11 +17,6 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// This keeps things compatible with the Arduino IDE
-#ifndef OUTPUT_MANAGER_CONSTRUCTOR
-#define OUTPUT_MANAGER_CONSTRUCTOR ServoClockOutputManager
-#endif
-
 #include "ConnectionManager.h"
 #include "DataManager.h"
 #include "OutputManagerInterface.h"
@@ -30,6 +25,7 @@
 #include "StepperClockOutputManager.h"
 #define OUTPUT_MANAGER_CONSTRUCTOR StepperClockOutputManager
 #else
+// This is just an else (not an else if) as a fallback to ensure Arduino IDE compatibility
 #include "ServoClockOutputManager.h"
 #define OUTPUT_MANAGER_CONSTRUCTOR ServoClockOutputManager
 #endif

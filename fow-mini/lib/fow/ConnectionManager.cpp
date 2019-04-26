@@ -203,9 +203,30 @@ void ConnectionManager::update() {
   if (setupMode) {
     dnsServer.processNextRequest();
     server->handleClient();
+  } else if (isConnectedToWiFi() && millis() - lastUpdateAttempt >= updateCheckDelay) {
+    lastUpdateAttempt = millis();
+
+    ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW);
+
+    Serial.println("Checking for SPIFFS update...");
+    t_httpUpdate_return ret = ESPhttpUpdate.updateSpiffs(wifiClient, baseURL + updateSPIFFSPath, updateVersionHeader);
+    if (ret != HTTP_UPDATE_FAILED) {
+      if (ret == HTTP_UPDATE_OK) Serial.println("SPIFFS update was successful.")
+      else Serial.println("No new SPIFFS update found.")
+
+      Serial.println("Checking for flash update...");
+      ret = ESPhttpUpdate.update(wifiClient, baseURL + updateFlashPath, updateVersionHeader);
+
+      if (ret == HTTP_UPDATE_FAILED) Serial.printf("Flash update failed: (%d) %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+      else if (ret == HTTP_UPDATE_NO_UPDATES) Serial.println("No new flash update found.");
+    } {
+      Serial.printf("SPIFFS update failed: (%d) %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+    }
   }
   // Periodically attempt to reconnect if we're not in setup mode, and still disconnected.
-  else if (!isConnectedToWiFi() && lastPeriodicReconnectAttempt - millis() >= periodicReconnectDelay) connectToWiFiNetwork();
+  else if (!isConnectedToWiFi() && millis() - lastPeriodicReconnectAttempt >= periodicReconnectDelay) {
+    connectToWiFiNetwork();
+  }
 }
 
 String ConnectionManager::get() {
@@ -222,7 +243,7 @@ String ConnectionManager::get() {
   }
   String payload = http.getString();
   
-  connectionTimedOut = !http.begin(wifiClient, url);
+  connectionTimedOut = !http.begin(wifiClient, baseURL + progressPath);
 
   return payload; // This only returns the response body.
 }
@@ -264,7 +285,7 @@ void ConnectionManager::connectToWiFiNetwork(bool noTimeout /*= false, see heade
   Serial.printf("\nConnected to WiFi with a private IP of %s.\n", WiFi.localIP().toString().c_str());
 
   // Make a connection to the remote server
-  connectionTimedOut = !http.begin(wifiClient, url);
+  connectionTimedOut = !http.begin(wifiClient, baseURL + progressPath);
 
   isConnecting = false;
 }

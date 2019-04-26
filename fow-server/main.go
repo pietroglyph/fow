@@ -21,10 +21,13 @@ package main
 
 import (
 	"bufio"
+	"crypto/md5"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -50,10 +53,23 @@ type configuration struct {
 	debugMode                bool
 	debugPagePath            string
 	maxDataStaleness         float64
+	updatesDirectory         string
 }
 
-var data *ferryData
-var config configuration
+type updateInfo struct {
+	version          string
+	channel          string
+	hardwareRevision string
+	contentType      string // Usually "spiffs" or "flash"
+	file             *os.File
+	md5String        string // Hex encoded
+}
+
+var (
+	data        *ferryData
+	config      configuration
+	updateFiles = make(map[string]updateInfo)
+)
 
 func main() {
 	config = configuration{}
@@ -67,6 +83,7 @@ func main() {
 	flag.BoolVar(&config.debugMode, "debug", false, "Serve a debugging page on /debug.")
 	flag.StringVar(&config.debugPagePath, "debug-path", "./debug.html", "Path to the debug.html file.")
 	flag.Float64VarP(&config.maxDataStaleness, "max-staleness", "S", 18, "Maximum staleness of WSF data, in seconds (setting this to nonnegative values will enable staleness compensation, which may increase update frequency)")
+	flag.StringVarP(&config.updatesDirectory, "updates-dir", "U", "", "Specify a directory where updates are kept. Their names should be in the format \"<VERSION>@<UPDATE CHANNEL>:<HARDWARE REVISION>:<TYPE>.bin\"")
 	flag.Parse()
 
 	// accesscode flag is required
@@ -89,7 +106,7 @@ func main() {
 
 	client := wsf.NewClient(nil)
 	client.AccessCode = config.accessCode
-	client.UserAgent = "fow-server/0.1.0 (https://github.com/pietroglyph/fow)"
+	client.UserAgent = "fow-server (https://github.com/pietroglyph/fow)"
 
 	data = &ferryData{}
 	go data.keepUpdated(client)
@@ -103,6 +120,56 @@ func main() {
 		})
 		http.HandleFunc("/debug/get/", debugHandler)
 		http.HandleFunc("/debug/path/coords", pathCoordInfoHandler)
+	}
+	if config.updatesDirectory != "" {
+		http.HandleFunc("/update", updateHandler)
+		paths, err := filepath.Glob(filepath.Clean(config.updatesDirectory) + "/*.bin")
+		if err != nil {
+			log.Fatal(err)
+		}
+		for _, path := range paths {
+			filename := filepath.Base(path)
+			filename = strings.TrimSuffix(filename, filepath.Ext(filename))
+
+			var split []string
+			var info updateInfo
+			var key string
+
+			split = strings.Split(filename, "@")
+			if len(split) < 2 {
+				log.Println("Update name", filename, "is invalid.")
+				continue
+			}
+			info.version = split[0]
+			key = split[1]
+
+			split = strings.Split(split[1], ":")
+			if len(split) < 2 {
+				log.Println("Update channel and hardware revision part \"", split[1], "\" is invalid")
+				continue
+			}
+
+			info.channel = split[0]
+			info.hardwareRevision = split[1]
+			info.file, err = os.Open(path)
+			if err != nil {
+				log.Println("Couldn't open update file at", path+":", err)
+				continue
+			}
+
+			fileContents, err := ioutil.ReadAll(info.file)
+			if err != nil {
+				log.Println("Couldn't read update file ("+path+") to compute md5 sum:", err)
+				continue
+			}
+			info.md5String = fmt.Sprintf("%x", md5.Sum(fileContents))
+			_, err = info.file.Seek(0, 0)
+			if err != nil {
+				log.Println("Couldn't seek to beginning of file at", path)
+			}
+
+			updateFiles[key] = info
+		}
 	}
 	http.HandleFunc("/progress", progressHandler)
 	log.Panicln(http.ListenAndServe(config.bind, nil))
