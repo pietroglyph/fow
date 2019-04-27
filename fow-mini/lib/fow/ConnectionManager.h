@@ -56,7 +56,7 @@ class ConnectionManager {
     // Below are all in milleseconds
     const unsigned long connectionTimeout = 20000;
     const unsigned long periodicReconnectDelay = 60000;
-    const unsigned long updateCheckDelay = 60000 * 30;
+    const unsigned long updateCheckDelay = 60000 * 15;
 
     unsigned long lastUpdateAttempt = 0;
     unsigned long lastPeriodicReconnectAttempt = 0;
