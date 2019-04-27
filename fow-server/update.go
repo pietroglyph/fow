@@ -3,6 +3,7 @@ package main
 import (
 	"io"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -12,6 +13,15 @@ const (
 	versionHeader = "X-ESP8266-Version"
 	typeQueryKey  = "type"
 )
+
+type updateInfo struct {
+	version          string
+	channel          string
+	hardwareRevision string
+	contentType      string // Usually "spiffs" or "flash"
+	file             *os.File
+	md5String        string // Hex encoded
+}
 
 func updateHandler(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Query().Get(typeQueryKey) == "" {

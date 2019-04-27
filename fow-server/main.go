@@ -56,15 +56,6 @@ type configuration struct {
 	updatesDirectory         string
 }
 
-type updateInfo struct {
-	version          string
-	channel          string
-	hardwareRevision string
-	contentType      string // Usually "spiffs" or "flash"
-	file             *os.File
-	md5String        string // Hex encoded
-}
-
 var (
 	data        *ferryData
 	config      configuration
@@ -102,7 +93,7 @@ func main() {
 	}
 	currentPath = seattleBainbridgePath.getProcessedPath() // This is the only available path, but we could switch based on a flag if we wanted to later
 
-	log.Println("Flags parsed.")
+	log.Println("Flags parsed")
 
 	client := wsf.NewClient(nil)
 	client.AccessCode = config.accessCode
@@ -114,7 +105,7 @@ func main() {
 	log.Println("Trying to bind to", config.bind+"...")
 
 	if config.debugMode {
-		log.Println("Serving debug information under /debug.")
+		log.Println("Serving debug information under /debug")
 		http.HandleFunc("/debug", func(w http.ResponseWriter, r *http.Request) {
 			http.ServeFile(w, r, config.debugPagePath)
 		})
@@ -122,7 +113,6 @@ func main() {
 		http.HandleFunc("/debug/path/coords", pathCoordInfoHandler)
 	}
 	if config.updatesDirectory != "" {
-		http.HandleFunc("/update", updateHandler)
 		paths, err := filepath.Glob(filepath.Clean(config.updatesDirectory) + "/*.bin")
 		if err != nil {
 			log.Fatal(err)
@@ -137,15 +127,19 @@ func main() {
 
 			split = strings.Split(filename, "@")
 			if len(split) < 2 {
-				log.Println("Update name", filename, "is invalid.")
+				log.Println("Update name \"" + filename + "\" is invalid")
 				continue
 			}
 			info.version = split[0]
 			key = split[1]
 
+			if _, keyAlreadySet := updateFiles[key]; keyAlreadySet {
+				log.Fatal("Duplicate update files for key \"" + key + "\". Cannot continue!")
+			}
+
 			split = strings.Split(split[1], ":")
 			if len(split) < 2 {
-				log.Println("Update channel and hardware revision part \"", split[1], "\" is invalid")
+				log.Println("Update channel and hardware revision part \"" + split[1] + "\" is invalid")
 				continue
 			}
 
@@ -170,6 +164,7 @@ func main() {
 
 			updateFiles[key] = info
 		}
+		http.HandleFunc("/update", updateHandler)
 	}
 	http.HandleFunc("/progress", progressHandler)
 	log.Panicln(http.ListenAndServe(config.bind, nil))
