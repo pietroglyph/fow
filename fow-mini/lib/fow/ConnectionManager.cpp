@@ -211,8 +211,8 @@ void ConnectionManager::update() {
     Serial.println("Checking for SPIFFS update...");
     t_httpUpdate_return ret = ESPhttpUpdate.updateSpiffs(wifiClient, baseURL + updateSPIFFSPath, updateVersionHeader);
     if (ret != HTTP_UPDATE_FAILED) {
-      if (ret == HTTP_UPDATE_OK) Serial.println("SPIFFS update was successful.")
-      else Serial.println("No new SPIFFS update found.")
+      if (ret == HTTP_UPDATE_OK) Serial.println("SPIFFS update was successful.");
+      else Serial.println("No new SPIFFS update found.");
 
       Serial.println("Checking for flash update...");
       ret = ESPhttpUpdate.update(wifiClient, baseURL + updateFlashPath, updateVersionHeader);

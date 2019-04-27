@@ -47,12 +47,6 @@ class ConnectionManager {
     String get();
     bool isConnectedToWiFi();
   private:
-    /*
-        DNS doesn't work with WiFi client in this code. This bug took me two weeks to fix. I ended up using HTTPClient though
-        because of its TCP connection reuse, and convinient request processing (you can manipulate headers and it separates
-        the body for you).
-    */
-
     const String baseURL = "http://bridge.ferries-over-winslow.org";
     const String progressPath = "/progress";
     const String updateFlashPath = "/update?type=flash";
@@ -64,8 +58,8 @@ class ConnectionManager {
     const unsigned long periodicReconnectDelay = 60000;
     const unsigned long updateCheckDelay = 60000 * 30;
 
-    unsigned long lastUpdateAttempt;
-    unsigned long lastPeriodicReconnectAttempt;
+    unsigned long lastUpdateAttempt = 0;
+    unsigned long lastPeriodicReconnectAttempt = 0;
 
     ESP8266WebServer* server = new ESP8266WebServer(80);
     SettingsManager settingsManager = SettingsManager();

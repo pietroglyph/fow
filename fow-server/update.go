@@ -4,12 +4,12 @@ import (
 	"io"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
 const (
-	versionHeader = "HTTP_X_ESP8266_VERSION"
-	espUserAgent  = "ESP8266-http-Update"
+	versionHeader = "X-ESP8266-Version"
 	typeQueryKey  = "type"
 )
 
@@ -27,7 +27,7 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 
 	selectedUpdateInfo, ok := updateFiles[updateInfo[1]+":"+r.URL.Query().Get(typeQueryKey)]
 	if !ok {
-		http.Error(w, "Update of that channel, hardware revision, and type not found", http.StatusBadRequest)
+		http.Error(w, "Update of that channel, hardware revision, or type not found", http.StatusBadRequest)
 		return
 	}
 
@@ -42,8 +42,15 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	fileInfo, err := selectedUpdateInfo.file.Stat()
+	if err != nil {
+		http.Error(w, "Coudln't get file status for selected update file", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Disposition", "attachment; filename="+filepath.Base(selectedUpdateInfo.file.Name()))
+	w.Header().Set("Content-Length", strconv.FormatInt(fileInfo.Size(), 10))
 	w.Header().Set("X-MD5", selectedUpdateInfo.md5String)
 	io.Copy(w, selectedUpdateInfo.file)
 }
