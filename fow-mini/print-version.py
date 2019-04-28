@@ -4,7 +4,7 @@ import distutils.spawn
 import subprocess
 import os
 
-if not distutils.spawn.find_executable("git.exe"):
+if not distutils.spawn.find_executable("git.exe") and not distutils.spawn.find_executable("git"):
     print("-DVERSION='\"unknown-nogit\"'")
     exit(0)
 elif not os.name == "posix":
