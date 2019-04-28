@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 # git tag and git rev-parse are sadly not porcelain...
 # We'll have to live with the possiblity of breakage.

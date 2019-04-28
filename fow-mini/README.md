@@ -6,9 +6,11 @@ The microcontroller broadcasts a network called `fow-mini`, on which it serves a
 The easiest way to get the code onto your ESP8266 (the code requires an ESP8266, but it doesn't really matter what's on the rest of the board, the NodeMCU DEVKIT 1.0, WeMos D1 Mini and regular, and Adafruit Feather Huzzah are all known to work) is to use [PlatformIO](https://platformio.org/). 
 
 You should follow the below steps to deploy code using PlatformIO:
-1. Download and install PlatformIO, either [through VSCode/Atom](https://platformio.org/platformio-ide), or [through your command line interface](https://docs.platformio.org/en/latest/installation.html#super-quick-mac-linux).
-2. Open a terminal in your editor with the working directory in the same folder as this README (just do Ctrl+Shift+\` in VSCode). 
-3. Type in `./deploy.sh` (you should add ` -e dial-stepperclock` at the end of that if you want to deploy to the kit stepper clock with dials). If it says something like "bash: platformio: command not found...", then type in `export PATH=$PATH:~/.platformio/penv/bin`, press enter, and run the script again.
+1. Download and install PlatformIO, either [through VSCode](https://platformio.org/platformio-ide), or [through your command line interface](https://docs.platformio.org/en/latest/installation.html#super-quick-mac-linux). Installing through Atom is not supported.
+2. **IMPORTANT** If you're installing through VSCode, this will not work until a window pops up at the bottom of VSCode that says "Installing PlatformIO..." and _then_ says "Finished installing PlatformIO". You may have to restart VSCode to get this popup.
+3. Open a terminal in your editor with the working directory in the same folder as this README (just do Ctrl+Shift+\` in VSCode). 
+4. (If on a POSIX compliant system like macOS or Linux) Type in `./deploy.sh` (you should add ` -e dial-stepperclock` at the end of that if you want to deploy to the kit stepper clock with dials). If it says something like "bash: platformio: command not found...", then type in `export PATH=$PATH:~/.platformio/penv/bin`, press enter, and run the script again.
+4. (If on Windows) Type in `.\deploy.bat` (you should add ` -e dial-stepperclock` at the end of that if you want to deploy to the kit stepper clock with dials). If you have installed PlatformIO Core (the command line part) to a non-standard location then this command may fail. Deploying from Windows will bake in an "unknown" version number, so your device will probably contact the OTA server and update itself pretty quickly.
 
 You can follow the below steps if you're using the Arduino IDE (not reccomended, will only deploy for the servo clock unless you modify code):
 1. Download and install the Arduino IDE for your operating system from [here](https://www.arduino.cc/en/Main/Software) (the web editor wont work; if you have a package manager of some sort, you can also install using that).
