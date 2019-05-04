@@ -42,10 +42,20 @@ type ferryData struct {
 	updateMux   sync.RWMutex
 }
 
+// Why do we have a primary and secondary terminal? Won't one suffice?
+// Well, sometimes a boat (while in dock) will only display a departing
+// or arriving terminal ID, but not both. This causes problems.
+//
+// Because of this we must either check both arriving and departing
+// terminals (like we do here), or we must keep track of the boat's
+// last position and the way the output was sorted last. I chose the
+// former solution because it was simpler.
 type configuration struct {
 	accessCode               string
 	bind                     string
-	terminal                 int
+	routeName                string
+	primaryTerminal          int
+	secondaryTerminal        int
 	updateFrequency          float64
 	idleAfter                float64
 	subdividedSegmentMaxSize float64
@@ -66,7 +76,9 @@ func main() {
 	config = configuration{}
 	flag.StringVarP(&config.accessCode, "accesscode", "c", "", "WSDOT Traveller Information API key (provisioned at https://wsdot.wa.gov/traffic/api/)") // Required
 	flag.StringVarP(&config.bind, "bind", "b", "localhost:8000", "Host IP and port for the webserver to run on.")
-	flag.IntVarP(&config.terminal, "terminal", "t", 3, "Terminal to track ferries to and from.") // 3 is Bainbridge Island
+	flag.StringVarP(&config.routeName, "route", "r", "sea-bi", "Route to track ferries on.")
+	flag.IntVar(&config.primaryTerminal, "primary-terminal", 3, "Terminal that boats will be arriving or departing from. Must match with the route.") // 3 is Bainbridge Island
+	flag.IntVar(&config.secondaryTerminal, "secondary-terminal", 7, "The other terminal on the route. Must match with the route.")                    // 7 is Seattle
 	flag.Float64VarP(&config.updateFrequency, "update", "u", 15, "Frequency in seconds to update data from the REST API.")
 	flag.Float64VarP(&config.idleAfter, "idle", "i", 60, "Time in seconds after an update to stop updating.")
 	flag.Float64VarP(&config.subdividedSegmentMaxSize, "segment-size", "s", 10e-6, "The minimum size of a segment on the subdivided reference ferry path. The smaller the smoother and more accurate the estimates.")
@@ -83,8 +95,9 @@ func main() {
 	}
 
 	// We only have the ferryPathPoints for the Seattle-Bainbridge route
-	if config.terminal != 3 {
-		fmt.Print("Processing location data is only implemented for Terminal ID 3, continue (y/N)? ")
+	if (config.primaryTerminal != 3 && config.primaryTerminal != 7) || (config.secondaryTerminal != 7 && config.secondaryTerminal != 3) ||
+		config.routeName != "sea-bi" {
+		fmt.Print("Processing location data is only implemented for route \"sea-bi\" and terminals 3 and 7, continue (y/N)? ")
 		stdin := bufio.NewScanner(os.Stdin)
 		stdin.Scan()
 		if strings.ToLower(stdin.Text()) != "y" {

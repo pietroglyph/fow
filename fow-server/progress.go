@@ -74,12 +74,6 @@ var (
 
 	departing ferryDirection = "DEPARTING"
 	arriving  ferryDirection = "ARRIVING"
-
-	// The ferries often dissapear from the route for ~1 minute while they're docked.
-	// Then they reappear departing from a different terminal
-	// We try to keep them in the same place as they were when they were on the route
-	// to avoid disconcertingly fast movements from 0-100% (or vice versa)
-	closestDummyValue = map[int]float64{0: 0.0, 1: 0.0}
 )
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
@@ -100,8 +94,11 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 	var ferriesFound int
 	sort.Sort(byVesselID(*data.locations))
 	for _, boat := range *data.locations {
-		if (boat.DepartingTerminalID != config.terminal &&
-			boat.ArrivingTerminalID != config.terminal) || !boat.InService {
+		onRoute := false
+		for _, routeName := range boat.OpRouteAbbrev {
+			onRoute = onRoute || routeName == config.routeName
+		}
+		if !onRoute || !boat.InService {
 			continue
 		}
 
@@ -110,11 +107,10 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		if boat.AtDock {
 			dockedProgress := 0.0
 			direction := departing
-			if boat.ArrivingTerminalID == config.terminal {
+			if boat.ArrivingTerminalID == config.primaryTerminal || boat.DepartingTerminalID == config.secondaryTerminal {
 				dockedProgress = 1.0
 				direction = arriving
 			}
-			closestDummyValue[ferriesFound-1] = dockedProgress
 
 			fmt.Fprint(w, formatOutput(dockedProgress, dockedProgress, 0.0, direction), ":")
 		} else {
@@ -128,16 +124,8 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 				log.Println(err.Error())
 			}
 
-			// Assumes progress will be on [0, 1]
-			// Dummy values set from this codepath are hopefully never needed
-			if progressNow > 0.5 {
-				closestDummyValue[ferriesFound-1] = 1.0
-			} else {
-				closestDummyValue[ferriesFound-1] = 0.0
-			}
-
 			var direction ferryDirection
-			if boat.DepartingTerminalID == config.terminal {
+			if boat.DepartingTerminalID == config.primaryTerminal || boat.ArrivingTerminalID == config.secondaryTerminal {
 				direction = departing
 			} else {
 				direction = arriving
@@ -159,11 +147,7 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		var progress float64
 		var direction ferryDirection
 
-		dummyVal, ok := closestDummyValue[i]
-		if ok {
-			progress = dummyVal
-			direction = departing // Direction doesn't really matter here
-		} else if math.Mod(float64(i), 2) == 0 {
+		if math.Mod(float64(i), 2) == 0 {
 			progress = 0.0
 			direction = departing
 		} else {
