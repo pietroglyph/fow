@@ -162,6 +162,8 @@ func main() {
 				log.Println("Couldn't seek to beginning of file at", path)
 			}
 
+			log.Println("Adding update file for key \"" + key + "\"")
+
 			updateFiles[key] = info
 		}
 		http.HandleFunc("/update", updateHandler)

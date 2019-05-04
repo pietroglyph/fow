@@ -74,6 +74,12 @@ var (
 
 	departing ferryDirection = "DEPARTING"
 	arriving  ferryDirection = "ARRIVING"
+
+	// The ferries often dissapear from the route for ~1 minute while they're docked.
+	// Then they reappear departing from a different terminal
+	// We try to keep them in the same place as they were when they were on the route
+	// to avoid disconcertingly fast movements from 0-100% (or vice versa)
+	closestDummyValue = map[int]float64{0: 0.0, 1: 0.0}
 )
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
@@ -102,13 +108,15 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 		ferriesFound++
 
 		if boat.AtDock {
-			dockedProgress := 0
+			dockedProgress := 0.0
 			direction := departing
 			if boat.ArrivingTerminalID == config.terminal {
-				dockedProgress = 1
+				dockedProgress = 1.0
 				direction = arriving
 			}
-			fmt.Fprint(w, formatOutput(dockedProgress, dockedProgress, 0, direction), ":")
+			closestDummyValue[ferriesFound-1] = dockedProgress
+
+			fmt.Fprint(w, formatOutput(dockedProgress, dockedProgress, 0.0, direction), ":")
 		} else {
 			progressNow, err := currentPath.progress(&boat, time.Duration(0)*time.Second)
 			if err != nil {
@@ -118,6 +126,14 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 			progressLater, err := currentPath.progress(&boat, time.Duration(config.updateFrequency)*time.Second)
 			if err != nil {
 				log.Println(err.Error())
+			}
+
+			// Assumes progress will be on [0, 1]
+			// Dummy values set from this codepath are hopefully never needed
+			if progressNow > 0.5 {
+				closestDummyValue[ferriesFound-1] = 1.0
+			} else {
+				closestDummyValue[ferriesFound-1] = 0.0
 			}
 
 			var direction ferryDirection
@@ -140,16 +156,21 @@ func progressHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Add extra dummy ferries if the route is understaffed
 	for i := ferriesFound; i < config.minimumFerries; i++ {
-		var progress int
+		var progress float64
 		var direction ferryDirection
-		if math.Mod(float64(i), 2) == 0 {
-			progress = 0
+
+		dummyVal, ok := closestDummyValue[i]
+		if ok {
+			progress = dummyVal
+			direction = departing // Direction doesn't really matter here
+		} else if math.Mod(float64(i), 2) == 0 {
+			progress = 0.0
 			direction = departing
 		} else {
-			progress = 1
+			progress = 1.0
 			direction = arriving
 		}
-		fmt.Fprint(w, formatOutput(progress, progress, 0, direction), ":")
+		fmt.Fprint(w, formatOutput(progress, progress, 0.0, direction), ":")
 	}
 	fmt.Fprint(w, config.updateFrequency*1000) // 1000 converts to milliseconds, we don't use time constants because they are arbitrary
 }
