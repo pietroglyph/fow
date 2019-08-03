@@ -1,7 +1,7 @@
 # Ferries Over Winslow Mini
 This is the code that runs on a microcontroller to power smaller-scale displays (clocks, sliding displays, etc.) The client is written in C++ and runs with the Arduino support libraries, but actually runs on an ESP8266.
 ## Configuring your Mini
-The microcontroller broadcasts a network called `fow-mini`, on which it serves a configuration webpage. Once you connect to that network, you can enter [setup.ferries-over-winslow.org](http://setup.ferries-over-winslow.org) into your web browser (if that doesn't work, try entering [192.168.4.1](http://192.168.4.1)). On that page you should enter in the network name and password and press apply. The status box will show your connection status. If you can't connect, check the network name and password, and try positioning your microcontroller closer to the access point you're connecting to. If you're having trouble connecting, feel free to [post an issue on Github](https://github.com/pietroglyph/fow/issues/new).
+The microcontroller broadcasts a network called `fow-DEVICE SERIAL NUMBER` (where the device serial number looks something like "0BCDEF"), on which it serves a configuration webpage. Once you connect to that network, you can enter [setup.ferries-over-winslow.org](http://setup.ferries-over-winslow.org) into your web browser (if that doesn't work, try entering [192.168.4.1](http://192.168.4.1)). The page with walk you through the setup process. If the Mini can't connect to the provided network, check the network name and password, and try positioning your microcontroller closer to the access point you're connecting to. If you're still having trouble connecting, feel free to [post an issue on Github](https://github.com/pietroglyph/fow/issues/new).
 ## Flashing your microcontroller
 The easiest way to get the code onto your ESP8266 (the code requires an ESP8266, but it doesn't really matter what's on the rest of the board, the NodeMCU DEVKIT 1.0, WeMos D1 Mini and regular, and Adafruit Feather Huzzah are all known to work) is to use [PlatformIO](https://platformio.org/). 
 
@@ -20,3 +20,43 @@ You can follow the below steps if you're using the Arduino IDE (not reccomended,
 5. Once you have set your board, set `Tools > lwIP Variant` to "v2 Higher Bandwidth". Other options will likely work, but are unsupported.
 6. Optionally you can set your upload speed to 921600 baud under `Tools > Upload Speed` if you don't want to wait forever.
 7. Press the `Upload` button (Looks like ->) in the top left hand corner of the Arduino IDE.
+## Troubleshooting
+### Device LED info
+| Meaning                                                                                           | Left Dock Light | Right Dock Light | Ferry 1 Directional Lights | Ferry 2 Directional Lights |
+|---------------------------------------------------------------------------------------------------|-----------------|------------------|----------------------------|----------------------------|
+| Not connected to any network, no credentials are saved, currently in setup mode                   | Off             | Off              | Pulsing red                | Pulsing green              |
+| Not connected to any network, but credentials are saved and the device is attempting to reconnect | Off             | Off              | Blinking green             | Blinking green             |
+| Starting up and attempting to connect to a saved network                                          | Off             | Off              | Off                        | Off                        |
+| Applying over-the-air update (**DO NOT TURN OFF YOUR DEVICE**)                                    | Off             | Blinking         | Off                        | Off                        |
+### My device doesn't broadcast a setup WiFi network
+If you cannot connect to the setup WiFi network, first ensure that you aren't already connected by pressing the reset button 3 times in quick succession (this will clear any saved credentials; refer to the device LED info table for details on non-destructive ways to check if your device has any credentials saved).
+
+If you still cannot connect to the setup network (the name should look something like "fow-0BCDEF"), try finding the network from a different device (e.g. if your phone doesn't show the network, try connecting with a laptop).
+
+If you still cannot find the network, please [create a new issue](https://github.com/pietroglyph/fow/issues/new) with a description of your problem. (Note: if you are more technically inclined then you might try looking at the serial output before you open an issue).
+### The setup page doesn't open
+If the setup page doesn't open automatically on your device, and you've tried conecting to both [setup.ferries-over-winslow.org](http://setup.ferries-over-winslow.org) and [192.168.4.1](http://192.168.4.1), then you should make sure that you're connected to setup WiFi network and within range. Also make sure that no other devices are connected to the setup WiFi network (more than a few connected devices can overload the microcontroller).
+
+If none of the above work then you should try connecting to the setup WiFi network from a different device and a different web browser. If that doesn't work then you should [create a new issue](https://github.com/pietroglyph/fow/issues/new) with a description of your problem.
+### I can't connect my device to my home WiFi network
+If your device can't see your home WiFi network, or it can see the network but can't connect to it then you should try moving your device closer to your WiFi access point or router (the WeMos D1 Mini microcontroller can have anywhere from 30 to ~125 feet of range depending on the power of your router and the obstacles surrounding it).
+
+If none of the above options work then you can try connecting without a timeout:
+ 1. Connect to the setup WiFi network.
+ 2. Navigate to `http://192.168.1.4/connect?ssid=MY SSID&password=MY PASSWORD&notimeout=true` in your browser, replacing MY SSID and MY PASSWORD with your actual SSID (network name) and password, respectively. This request will *never* time out, so if your device really can't connect then you will need to reboot your Mini. (Note that this will save your WiFi credentials in your browser history, so you may want to clear your browser history.)
+ 3. Periodically try opening `http://192.168.1.4/status` in your browser. If it doesn't load, then you are still trying to connect.
+ 4. If the status page says "Connected successfully", then open `http://192.168.1.4/exitsetup` in your browser to save your credentials and exit setup mode.
+
+If you can't connect with the above procedure, then try connecting to a different WiFi network.
+
+If you don't have a different WiFi network that you can use, then [create a new issue](https://github.com/pietroglyph/fow/issues/new) with a description of your problem.
+### Other Issues/Reading Serial Output
+If you open a GitHub issue, the first thing you will probably be asked to do is capture the device's serial output. If you are a more technically inclined user you might want to try this *before* posting an issue, as the output may provide some helpful troubleshooting tips (regardless of the type of issue). If that sounds like your situation, or if you're just curious about what your Mini is doing, then this is the section for you!
+
+After you have connected your Mini to your computer over USB, try one of the following:
+ * If you have the Arduino IDE, open the serial monitor (looks like a magnifying glass at the top right hand corner of the screen), and set the baud rate to `115200`.
+ * If you have PlatformIO installed, run `platformio device monitor -b 115200` in the terminal (you may need to run `export PATH=$PATH:~/.platformio/penv/bin` to make this command work).
+
+If you have none of the above installed, the easiest path is probably installing the Arduino IDE and using that.
+
+If the above doesn't work, try a different USB cable (some cables are power only).
