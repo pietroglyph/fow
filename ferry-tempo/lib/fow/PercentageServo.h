@@ -28,7 +28,10 @@ class PercentageServo : public Servo {
     PercentageServo(int minimumPosition, int maximumPosition, boolean isInverted);
     void write(int value) = delete;
     void write(double percentage);
+    int getPin();
+    uint8_t attach(int pin);
   private:
+    int pin;
     double minimumPosition, maximumPosition, range;
     boolean isInverted;
 };

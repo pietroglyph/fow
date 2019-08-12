@@ -30,3 +30,12 @@ void PercentageServo::write(double percentage) {
   if (isInverted) output = maximumPosition - output;
   Servo::write(output);
 }
+
+uint8_t PercentageServo::attach(int pin) {  
+  this->pin = pin;
+  return Servo::attach(pin);
+}
+
+int PercentageServo::getPin() {
+  return this->pin;
+}

@@ -75,6 +75,8 @@ void ServoClockOutputManager::updateOutput(DataManager::FerryData data, Percenta
     lights->setMode(FerryHelper::Modes::DOCKED);
     if (data.progress == 0) *arrivingDockLightVal = 1;
     else if (data.progress == 1) *departingDockLightVal = 1;
+    
+    digitalWrite(servo->getPin(), LOW);
   }
   else lights->setMode(FerryHelper::Modes::RUNNING);
 
