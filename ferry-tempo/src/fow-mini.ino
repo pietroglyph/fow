@@ -37,7 +37,7 @@ OutputManagerInterface* output = nullptr;
 
 void setup() {
   Serial.begin(115200);
-  conn = new ConnectionManager("fow-setup");
+  conn = new ConnectionManager("FERRY TEMPO Setup");
   data = new DataManager();
   output = new OUTPUT_MANAGER_CONSTRUCTOR(HARDWARE_CONSTRUCTOR);
 }

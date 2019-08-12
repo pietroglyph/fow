@@ -154,7 +154,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   });
 
   server->on("/info", [&]() {
-    server->send(HTTP_CODE_OK, "text/plain", String("Chip ID: ") + chipId + "\nFOW Software Version: " + VERSION + "\nBuild Info: " + BUILD_INFO);
+    server->send(HTTP_CODE_OK, "text/plain", String("Chip ID: ") + chipId + "\nFERRY TEMPO Software Version: " + VERSION + "\nBuild Info: " + BUILD_INFO);
   });
 
   server->onNotFound([&]() {

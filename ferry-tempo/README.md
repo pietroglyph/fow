@@ -1,7 +1,7 @@
-# Ferries Over Winslow Mini
+# FERRY TEMPO
 This is the code that runs on a microcontroller to power smaller-scale displays (clocks, sliding displays, etc.) The client is written in C++ and runs with the Arduino support libraries, but actually runs on an ESP8266.
-## Configuring your Mini
-The microcontroller broadcasts a network called `fow-DEVICE SERIAL NUMBER` (where the device serial number looks something like "0BCDEF"), on which it serves a configuration webpage. Once you connect to that network, you can enter [setup.ferries-over-winslow.org](http://setup.ferries-over-winslow.org) into your web browser (if that doesn't work, try entering [192.168.4.1](http://192.168.4.1)). The page with walk you through the setup process. If the Mini can't connect to the provided network, check the network name and password, and try positioning your microcontroller closer to the access point you're connecting to. If you're still having trouble connecting, feel free to [post an issue on Github](https://github.com/pietroglyph/fow/issues/new).
+## Configuring your FERRY TEMPO
+The microcontroller broadcasts a network called `FERRY TEMPO Setup DEVICE SERIAL NUMBER` (where the device serial number looks something like "0BCDEF"), on which it serves a configuration webpage. Once you connect to that network, you can enter [setup.ferries-over-winslow.org](http://setup.ferries-over-winslow.org) into your web browser (if that doesn't work, try entering [192.168.4.1](http://192.168.4.1)). The page with walk you through the setup process. If the FERRY TEMPO can't connect to the provided network, check the network name and password, and try positioning your microcontroller closer to the access point you're connecting to. If you're still having trouble connecting, feel free to [post an issue on Github](https://github.com/pietroglyph/fow/issues/new).
 ## Flashing your microcontroller
 The easiest way to get the code onto your ESP8266 (the code requires an ESP8266, but it doesn't really matter what's on the rest of the board, the NodeMCU DEVKIT 1.0, WeMos D1 Mini and regular, and Adafruit Feather Huzzah are all known to work) is to use [PlatformIO](https://platformio.org/). 
 
@@ -31,7 +31,7 @@ You can follow the below steps if you're using the Arduino IDE (not reccomended,
 ### My device doesn't broadcast a setup WiFi network
 If you cannot connect to the setup WiFi network, first ensure that you aren't already connected by pressing the reset button 3 times in quick succession (this will clear any saved credentials; refer to the device LED info table for details on non-destructive ways to check if your device has any credentials saved).
 
-If you still cannot connect to the setup network (the name should look something like "fow-0BCDEF"), try finding the network from a different device (e.g. if your phone doesn't show the network, try connecting with a laptop).
+If you still cannot connect to the setup network (the name should look something like "FERRY TEMPO Setup OBCDEF"), try finding the network from a different device (e.g. if your phone doesn't show the network, try connecting with a laptop).
 
 If you still cannot find the network, please [create a new issue](https://github.com/pietroglyph/fow/issues/new) with a description of your problem. (Note: if you are more technically inclined then you might try looking at the serial output before you open an issue).
 ### The setup page doesn't open
@@ -43,7 +43,7 @@ If your device can't see your home WiFi network, or it can see the network but c
 
 If none of the above options work then you can try connecting without a timeout:
  1. Connect to the setup WiFi network.
- 2. Navigate to `http://192.168.1.4/connect?ssid=MY SSID&password=MY PASSWORD&notimeout=true` in your browser, replacing MY SSID and MY PASSWORD with your actual SSID (network name) and password, respectively. This request will *never* time out, so if your device really can't connect then you will need to reboot your Mini. (Note that this will save your WiFi credentials in your browser history, so you may want to clear your browser history.)
+ 2. Navigate to `http://192.168.1.4/connect?ssid=MY SSID&password=MY PASSWORD&notimeout=true` in your browser, replacing MY SSID and MY PASSWORD with your actual SSID (network name) and password, respectively. This request will *never* time out, so if your device really can't connect then you will need to reboot your FERRY TEMPO device. (Note that this will save your WiFi credentials in your browser history, so you may want to clear your browser history.)
  3. Periodically try opening `http://192.168.1.4/status` in your browser. If it doesn't load, then you are still trying to connect.
  4. If the status page says "Connected successfully", then open `http://192.168.1.4/exitsetup` in your browser to save your credentials and exit setup mode.
 
@@ -51,9 +51,9 @@ If you can't connect with the above procedure, then try connecting to a differen
 
 If you don't have a different WiFi network that you can use, then [create a new issue](https://github.com/pietroglyph/fow/issues/new) with a description of your problem.
 ### Other Issues/Reading Serial Output
-If you open a GitHub issue, the first thing you will probably be asked to do is capture the device's serial output. If you are a more technically inclined user you might want to try this *before* posting an issue, as the output may provide some helpful troubleshooting tips (regardless of the type of issue). If that sounds like your situation, or if you're just curious about what your Mini is doing, then this is the section for you!
+If you open a GitHub issue, the first thing you will probably be asked to do is capture the device's serial output. If you are a more technically inclined user you might want to try this *before* posting an issue, as the output may provide some helpful troubleshooting tips (regardless of the type of issue). If that sounds like your situation, or if you're just curious about what your FERRY TEMPO is doing, then this is the section for you!
 
-After you have connected your Mini to your computer over USB, try one of the following:
+After you have connected your FERRY TEMPO to your computer over USB, try one of the following:
  * If you have the Arduino IDE, open the serial monitor (looks like a magnifying glass at the top right hand corner of the screen), and set the baud rate to `115200`.
  * If you have PlatformIO installed, run `platformio device monitor -b 115200` in the terminal (you may need to run `export PATH=$PATH:~/.platformio/penv/bin` to make this command work).
 
