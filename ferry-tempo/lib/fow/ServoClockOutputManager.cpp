@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2017, 2018 Declan Freeman-Gleason.
+    Copyright (c) 2017-2019 Declan Freeman-Gleason.
 
     This file is part of Ferries Over Winslow.
 
@@ -21,7 +21,7 @@
 
 #include "ServoClockOutputManager.h"
 
-ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition) : servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition) {
+ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity) : servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition) {
   // These magic numbers are the servo GPIO pins
   primaryServo.attach(13);
   secondaryServo.attach(0);
@@ -29,8 +29,8 @@ ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMi
   secondaryServo.write(0.5);
 
   // These magic numbers are the pins for the lights (departing, arriving, light intensity)
-  primaryLights = new FerryHelper(5, 14, lightIntensity);
-  secondaryLights = new FerryHelper(4, 12, lightIntensity);
+  primaryLights = new FerryHelper(5, 14, redIntensity, greenIntensity);
+  secondaryLights = new FerryHelper(4, 12, redIntensity, greenIntensity);
   primaryLights->setupPins();
   secondaryLights->setupPins();
 

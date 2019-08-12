@@ -27,7 +27,7 @@
 
 class FerryHelper {
   public:
-    FerryHelper(int arrivingPin, int departingPin, int lightIntensity);
+    FerryHelper(int arrivingPin, int departingPin, int redIntensity, int greenIntensity);
 
     enum class Modes {
       RUNNING,
@@ -47,9 +47,9 @@ class FerryHelper {
     Directions direction;
 
     const double blinkDuration = 800; // In milleseconds
-    const int redIntensityMultiplier = 10;
 
-    int lightIntensity;
+    int redIntensity;
+    int greenIntensity;
     int arrivingPin;
     int departingPin;
 };

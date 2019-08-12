@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2017, 2018 Declan Freeman-Gleason.
+    Copyright (c) 2017-2019 Declan Freeman-Gleason.
 
     This file is part of Ferries Over Winslow.
 
@@ -66,7 +66,7 @@ StepperClockOutputManager::StepperClockOutputManager() {
   /*
      Using onestep instead of step here is very important, because step blocks,
      while onestep doesn't. step will sometimes block for a very long time,
-     because of other seemingly random timing minutae, causes a soft watchdog
+     because of other seemingly random timing minutae, causing a soft watchdog
      timer reset.
   */
   std::function<void(void)> l_forwardPrimary = [&] {
@@ -95,8 +95,8 @@ StepperClockOutputManager::StepperClockOutputManager() {
   secondaryStepper->setAcceleration(stepperMaxAccel);
 
   // These magic numbers are the pins for the lights
-  primaryLights = new FerryHelper(13, 15, lightIntensity);
-  secondaryLights = new FerryHelper(0, 16, lightIntensity);
+  primaryLights = new FerryHelper(13, 15, lightIntensity, lightIntensity);
+  secondaryLights = new FerryHelper(0, 16, lightIntensity, lightIntensity);
 
   primaryLights->setupPins();
   secondaryLights->setupPins();

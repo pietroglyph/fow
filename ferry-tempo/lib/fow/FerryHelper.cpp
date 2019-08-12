@@ -1,5 +1,5 @@
 /*
-    Copyright (c) 2017, 2018 Declan Freeman-Gleason.
+    Copyright (c) 2017-2019 Declan Freeman-Gleason.
 
     This file is part of Ferries Over Winslow.
 
@@ -19,17 +19,18 @@
 
 #include "FerryHelper.h"
 
-FerryHelper::FerryHelper(int departingPin, int arrivingPin, int lightIntensity) : departingPin(departingPin), arrivingPin(arrivingPin), lightIntensity(lightIntensity) {}
+FerryHelper::FerryHelper(int departingPin, int arrivingPin, int redIntensity, int greenIntensity) : departingPin(departingPin), arrivingPin(arrivingPin), redIntensity(redIntensity), greenIntensity(greenIntensity) {}
 
 void FerryHelper::update() {
   switch (mode) {
     case Modes::RUNNING :
+      // Assumes that ARRIVING == red light
       if (this->direction == Directions::ARRIVING) {
-        analogWrite(arrivingPin, lightIntensity * redIntensityMultiplier);
+        analogWrite(arrivingPin, redIntensity);
         analogWrite(departingPin, LOW);
       } else {
         analogWrite(arrivingPin, LOW);
-        analogWrite(departingPin, lightIntensity);
+        analogWrite(departingPin, greenIntensity);
       }
       break;
     case Modes::DOCKED :
@@ -37,7 +38,12 @@ void FerryHelper::update() {
       analogWrite(departingPin, LOW);
       break;
     case Modes::DISCONNECTED :
-      double scaledLightIntensity = (static_cast<double>(lightIntensity)) / 2.0;
+      double maxIntensity = greenIntensity;
+      if (this->direction == Directions::ARRIVING) {
+        maxIntensity = redIntensity;
+      }
+      
+      double scaledLightIntensity = (static_cast<double>(maxIntensity)) / 2.0;
       double pulsingIntensity = sin(static_cast<double>(millis()) / (blinkDuration / PI)) * scaledLightIntensity + scaledLightIntensity;
       if (this->direction == Directions::ARRIVING) analogWrite(arrivingPin, pulsingIntensity);
       else analogWrite(departingPin, pulsingIntensity);

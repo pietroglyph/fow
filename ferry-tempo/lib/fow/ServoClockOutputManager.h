@@ -30,14 +30,13 @@
 
 class ServoClockOutputManager : public OutputManagerInterface {
   public:
-    ServoClockOutputManager(int servMaxPosition, int servMinPosition);
+    ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity);
 
     void update(std::function<DataManager::FerryData (int)> dataSupplier);
     void calibrate();
   private:
     const int servoMaxPosition;
     const int servoMinPosition;
-    const int lightIntensity = 5;
     const int dockLightIntensity = 255;
     const int departingDockLightPin = 2;
     const int arrivingDockLightPin = 15;
