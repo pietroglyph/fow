@@ -69,8 +69,6 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
 }
 
 void ServoClockOutputManager::updateOutput(DataManager::FerryData data, PercentageServo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
-  servo->write(1 - data.progress);
-
   if (data.progress == 0 || data.progress == 1) {
     lights->setMode(FerryHelper::Modes::DOCKED);
     if (data.progress == 0) *arrivingDockLightVal = 1;
@@ -78,7 +76,10 @@ void ServoClockOutputManager::updateOutput(DataManager::FerryData data, Percenta
     
     digitalWrite(servo->getPin(), LOW);
   }
-  else lights->setMode(FerryHelper::Modes::RUNNING);
+  else {
+    lights->setMode(FerryHelper::Modes::RUNNING);
+    servo->write(1 - data.progress);
+  }
 
   lights->setDirection(data.direction);
   lights->update();
