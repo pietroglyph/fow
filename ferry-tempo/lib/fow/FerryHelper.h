@@ -48,10 +48,10 @@ class FerryHelper {
 
     const double blinkDuration = 800; // In milleseconds
 
-    int redIntensity;
-    int greenIntensity;
-    int arrivingPin;
-    int departingPin;
+    const int redIntensity;
+    const int greenIntensity;
+    const int arrivingPin;
+    const int departingPin;
 };
 
 #endif

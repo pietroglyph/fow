@@ -38,7 +38,7 @@ class DataManager {
 
     void update(String rawDataString);
     bool shouldUpdate();
-    FerryData getProgress(int i);
+    FerryData getProgress(unsigned int i);
   private:
     typedef struct {
       unsigned long startTimeOffset = 0;
@@ -48,10 +48,23 @@ class DataManager {
     } Progress;
 
     unsigned long lastUpdated = 0;
-    std::vector<Progress> progresses;
-    unsigned long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first. This is the default value, but it is changed based on server output
+    std::vector<Progress> progresses{};
+    long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first. This is the default value, but it is changed based on server output
 
-    std::vector<String> split(const String& text, char sep);
+    std::vector<String> split(const String& text, char sep) const {
+      std::vector<String> tokens;
+      size_t start = 0, end = 0;
+      while ((end = text.indexOf(sep, start)) != -1) {
+        if (end != start) {
+          tokens.push_back(text.substring(start, end));
+        }
+        start = end + 1;
+      }
+      if (end != start) {
+        tokens.push_back(text.substring(start));
+      }
+      return tokens;
+    };
 };
 
 #endif

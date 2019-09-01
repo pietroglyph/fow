@@ -57,7 +57,7 @@ void SettingsManager::updateFullResetTimer() {
 String SettingsManager::getSetting(Setting setting) {
   String resultBuf;
   int startAddress = getAddressForSetting(setting);
-  for (int i = 0; i < maximumSettingLength; i++) {
+  for (unsigned int i = 0; i < maximumSettingLength; i++) {
     byte b = EEPROM.read(startAddress + i);
     if (b == '\0') break;
     else resultBuf += static_cast<char>(b);
@@ -67,7 +67,7 @@ String SettingsManager::getSetting(Setting setting) {
 
 void SettingsManager::setSetting(Setting setting, String value) {
   int startAddress = getAddressForSetting(setting);
-  for (int i = 0; i < value.length() + 1 && i < maximumSettingLength; i++) { // We add 1 to value.length() to get the NUL character at the end
+  for (unsigned int i = 0; i < value.length() + 1 && i < maximumSettingLength; i++) { // We add 1 to value.length() to get the NUL character at the end
     EEPROM.write(startAddress + i, value.charAt(i));
   }
   EEPROM.commit();
@@ -81,8 +81,4 @@ void SettingsManager::exitSetupMode() {
   byte flagByte = EEPROM.read(flagByteAddress);
   EEPROM.write(flagByteAddress, flagByte | 0x80); // Set the first bit to 1
   EEPROM.commit();
-}
-
-int SettingsManager::getAddressForSetting(Setting setting) {
-  return static_cast<int>(setting) * maximumSettingLength + 1; // We add 1 because the first byte of the EEPROM holds the reset timer flags and the setup mode flag
 }

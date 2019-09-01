@@ -27,9 +27,7 @@ void DataManager::update(String rawDataString) {
   compositeResponse = split(rawDataString, ':');
   lastUpdated = millis();
 
-  char* end;
-
-  endDurationAhead = strtoul(compositeResponse.back().c_str(), &end, 10);
+  endDurationAhead = std::atol(compositeResponse.back().c_str());
   if (endDurationAhead == -1) {
     // -1 means that the data on the server is stale, so we set it up to check back soon
     lastUpdated += refreshRate * 0.8;
@@ -50,13 +48,13 @@ void DataManager::update(String rawDataString) {
       return;
     }
 
-    Progress progress;
+    Progress progress{};
 
-    progress.start = atof(response.at(0).c_str());
-    progress.end = atof(response.at(1).c_str());
+    progress.start = std::atof(response.at(0).c_str());
+    progress.end = std::atof(response.at(1).c_str());
 
     // startTimeOffset is how long ago (in milliseconds) the first number was valid
-    progress.startTimeOffset = strtoul(response.at(2).c_str(), &end, 10);
+    progress.startTimeOffset = std::strtoul(response.at(2).c_str(), nullptr, 0);
 
     const String directionString = response.at(3);
     if (directionString == "DEPARTING") progress.direction = FerryHelper::Directions::DEPARTING;
@@ -74,7 +72,7 @@ bool DataManager::shouldUpdate() {
   return !(millis() - lastUpdated < refreshRate);
 }
 
-DataManager::FerryData DataManager::getProgress(int i) {
+DataManager::FerryData DataManager::getProgress(unsigned int i) {
   FerryData result;
 
   if (i >= progresses.size()) {
@@ -92,19 +90,4 @@ DataManager::FerryData DataManager::getProgress(int i) {
   result.progress = ((static_cast<long double>(millis()) - (lastUpdated - progress.startTimeOffset)) * percentPerMsec) + progress.start;
 
   return result;
-}
-
-std::vector<String> DataManager::split(const String &text, char sep) {
-  std::vector<String> tokens;
-  size_t start = 0, end = 0;
-  while ((end = text.indexOf(sep, start)) != -1) {
-    if (end != start) {
-      tokens.push_back(text.substring(start, end));
-    }
-    start = end + 1;
-  }
-  if (end != start) {
-    tokens.push_back(text.substring(start));
-  }
-  return tokens;
 }

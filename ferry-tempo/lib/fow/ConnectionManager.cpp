@@ -181,18 +181,6 @@ bool ConnectionManager::handleRequestedFile(String path) {
   return true; // You can't return a 404 if you want the captive portal popup to show
 }
 
-String ConnectionManager::getContentType(String filename){
-  if(filename.endsWith(".htm")) return "text/html";
-  else if(filename.endsWith(".html")) return "text/html";
-  else if(filename.endsWith(".css")) return "text/css";
-  else if(filename.endsWith(".js")) return "application/javascript";
-  else if(filename.endsWith(".png")) return "image/png";
-  else if(filename.endsWith(".gif")) return "image/gif";
-  else if(filename.endsWith(".jpg")) return "image/jpeg";
-  else if(filename.endsWith(".ico")) return "image/x-icon";
-  return "text/plain";
-}
-
 bool ConnectionManager::ready() {
   return isConnectedToWiFi();
 }

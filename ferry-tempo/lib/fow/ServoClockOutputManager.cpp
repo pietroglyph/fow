@@ -21,7 +21,7 @@
 
 #include "ServoClockOutputManager.h"
 
-ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity) : servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition) {
+ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity) : servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition), primaryLights(FerryHelper(5, 14, redIntensity, greenIntensity)), secondaryLights(FerryHelper(4, 12, redIntensity, greenIntensity)) {
   // These magic numbers are the servo GPIO pins
   primaryServo.attach(13);
   secondaryServo.attach(0);
@@ -29,18 +29,18 @@ ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMi
   secondaryServo.write(0.5);
 
   // These magic numbers are the pins for the lights (departing, arriving, light intensity)
-  primaryLights = new FerryHelper(5, 14, redIntensity, greenIntensity);
-  secondaryLights = new FerryHelper(4, 12, redIntensity, greenIntensity);
-  primaryLights->setupPins();
-  secondaryLights->setupPins();
+  // primaryLights = FerryHelper(5, 14, redIntensity, greenIntensity);
+  // secondaryLights = FerryHelper(4, 12, redIntensity, greenIntensity);
+  primaryLights.setupPins();
+  secondaryLights.setupPins();
 
   pinMode(departingDockLightPin, OUTPUT);
   pinMode(arrivingDockLightPin, OUTPUT);
   analogWrite(departingDockLightPin, 0);
   analogWrite(arrivingDockLightPin, 0);
 
-  primaryLights->setDirection(FerryHelper::Directions::ARRIVING);
-  secondaryLights->setDirection(FerryHelper::Directions::DEPARTING);
+  primaryLights.setDirection(FerryHelper::Directions::ARRIVING);
+  secondaryLights.setDirection(FerryHelper::Directions::DEPARTING);
 
   updateLightMode(FerryHelper::Modes::DISCONNECTED);
 }
@@ -61,35 +61,35 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
   int arrivingDockLightVal = 0;
 
   // We know which index is which because these are always ordered the same by the server
-  updateOutput(dataSupplier(0), &primaryServo, primaryLights, &departingDockLightVal, &arrivingDockLightVal);
-  updateOutput(dataSupplier(1), &secondaryServo, secondaryLights, &departingDockLightVal, &arrivingDockLightVal);
+  updateOutput(dataSupplier(0), primaryServo, primaryLights, departingDockLightVal, arrivingDockLightVal);
+  updateOutput(dataSupplier(1), secondaryServo, secondaryLights, departingDockLightVal, arrivingDockLightVal);
 
   analogWrite(departingDockLightPin, departingDockLightVal * dockLightIntensity);
   analogWrite(arrivingDockLightPin, arrivingDockLightVal * dockLightIntensity);
 }
 
-void ServoClockOutputManager::updateOutput(DataManager::FerryData data, PercentageServo* servo, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal) {
+void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, PercentageServo &servo, FerryHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal) {
   if (data.progress == 0 || data.progress == 1) {
-    lights->setMode(FerryHelper::Modes::DOCKED);
-    if (data.progress == 0) *arrivingDockLightVal = 1;
-    else if (data.progress == 1) *departingDockLightVal = 1;
+    lights.setMode(FerryHelper::Modes::DOCKED);
+    if (data.progress == 0) arrivingDockLightVal = 1;
+    else if (data.progress == 1) departingDockLightVal = 1;
     
-    digitalWrite(servo->getPin(), LOW);
+    digitalWrite(servo.getPin(), LOW);
   }
   else {
-    lights->setMode(FerryHelper::Modes::RUNNING);
-    servo->write(1 - data.progress);
+    lights.setMode(FerryHelper::Modes::RUNNING);
+    servo.write(1 - data.progress);
   }
 
-  lights->setDirection(data.direction);
-  lights->update();
+  lights.setDirection(data.direction);
+  lights.update();
 }
 
 void ServoClockOutputManager::updateLightMode(FerryHelper::Modes mode) {
-  primaryLights->setMode(mode);
-  secondaryLights->setMode(mode);
-  primaryLights->update();
-  secondaryLights->update();
+  primaryLights.setMode(mode);
+  secondaryLights.setMode(mode);
+  primaryLights.update();
+  secondaryLights.update();
 }
 
 #endif

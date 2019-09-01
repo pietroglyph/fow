@@ -38,7 +38,7 @@ class SettingsManager {
     void exitSetupMode(); // There is no way to enter setup mode because that only happens on a full reset, which is handled internally
     void updateFullResetTimer();
 
-    const int maximumSettingLength = 128; // In bytes
+    const unsigned int maximumSettingLength = 128; // In bytes
   private:
     // maximum amount of time allowed between reset button presses for a full reset to occur, in milleseconds
     const unsigned long fullResetButtonPressDelay = 3000;
@@ -50,7 +50,10 @@ class SettingsManager {
     bool hasTurnedOffResetBit = false;
     byte originalFlagByte;
 
-    int getAddressForSetting(Setting setting);
+    int getAddressForSetting(Setting setting) const {
+      // We add 1 because the first byte of the EEPROM holds the reset timer flags and the setup mode flag
+      return static_cast<int>(setting) * maximumSettingLength + 1;
+    };
 };
 
 #endif

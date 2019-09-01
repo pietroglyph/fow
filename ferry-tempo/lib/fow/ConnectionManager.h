@@ -62,9 +62,9 @@ class ConnectionManager {
     unsigned long lastPeriodicReconnectAttempt = 0;
 
     ESP8266WebServer* server = new ESP8266WebServer(80);
-    SettingsManager settingsManager = SettingsManager();
+    SettingsManager settingsManager;
 
-    // The esp8266 library provides an mDNS server, but mDNS is flaky as hell so we just go ahead and set up a captive portal
+    // The esp8266 library provides an mDNS server, but mDNS is flaky as hell so we just set up a captive portal
     DNSServer dnsServer;
     const unsigned int dnsPort = 53;
 
@@ -78,7 +78,18 @@ class ConnectionManager {
     bool connectionTimedOut = false;
     bool isConnecting = false;
 
-    static String getContentType(String filename);
+    static String getContentType(String filename) {
+      if (filename.endsWith(".htm")) return "text/html";
+      else if (filename.endsWith(".html")) return "text/html";
+      else if (filename.endsWith(".css")) return "text/css";
+      else if (filename.endsWith(".js")) return "application/javascript";
+      else if (filename.endsWith(".png")) return "image/png";
+      else if (filename.endsWith(".gif")) return "image/gif";
+      else if (filename.endsWith(".jpg")) return "image/jpeg";
+      else if (filename.endsWith(".ico")) return "image/x-icon";
+      return "text/plain";
+    };
+
     bool handleRequestedFile(String path);
     void connectToWiFiNetwork(bool noTimeout = false);
 };
