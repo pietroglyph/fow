@@ -48,7 +48,7 @@ class DataManager {
     } Progress;
 
     unsigned long lastUpdated = 0;
-    std::vector<Progress> progresses{};
+    std::vector<Progress> progresses;
     long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first. This is the default value, but it is changed based on server output
 
     std::vector<String> split(const String& text, char sep) const {
