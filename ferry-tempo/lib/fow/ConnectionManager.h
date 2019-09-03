@@ -72,6 +72,7 @@ class ConnectionManager {
     HTTPClient http;
 
     String name;
+    String chipIdStr;
     String ssid = "";
     String password = "";
     bool setupMode = true;

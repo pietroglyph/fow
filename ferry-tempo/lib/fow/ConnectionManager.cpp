@@ -48,13 +48,14 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
   const uint32_t chipIdUint = ESP.getChipId();
   char chipId[sizeof(chipIdUint)] = {0};
   sprintf(chipId, "%06X", chipIdUint);
+  chipIdStr = String(chipId);
 
   // Set a user agent so we can get some device info on the serverside if we ever want to
   http.setUserAgent(name + "/" + VERSION + "/" + chipId);
 
   // Setup in soft access point mode
   WiFi.mode(WIFI_AP_STA);
-  WiFi.softAP(name + "-" + chipId);
+  WiFi.softAP(name + "-" + chipIdStr);
   IPAddress deviceIP = WiFi.softAPIP();
 
   // Set up a captive portal
@@ -66,7 +67,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
 
   SPIFFS.begin();
 
-  server->on("/connect", [&]() {
+  server->on("/connect", [this]() {
     if (server->hasArg("ssid")) {
       ssid = server->arg("ssid");
       password = server->arg("password");
@@ -81,7 +82,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     }
   });
 
-  server->on("/status", [&]() {
+  server->on("/status", [this]() {
       if (isConnecting) {
         server->send(HTTP_CODE_BAD_REQUEST, "text/plain", "Still connecting");
         return;
@@ -112,7 +113,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
       server->send(HTTP_CODE_OK, "text/plain", connStatus);
   });
 
-  server->on("/exitsetup", [&]() {
+  server->on("/exitsetup", [this]() {
     if (!isConnectedToWiFi()) {
       server->send(HTTP_CODE_BAD_REQUEST, "text/plain", "Can't exit setup because you're not connected to WiFi.");
       return;
@@ -134,7 +135,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     settingsManager.exitSetupMode();
   });
 
-  server->on("/networks", [&]() {
+  server->on("/networks", [this]() {
     int numNetworks = WiFi.scanNetworks();
 
     if (numNetworks <= 0) {
@@ -153,11 +154,11 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     server->send(HTTP_CODE_OK, "text/plain", openNetworks + "\n" + networksList);
   });
 
-  server->on("/info", [&]() {
-    server->send(HTTP_CODE_OK, "text/plain", String("Chip ID: ") + chipId + "\nFERRY TEMPO Software Version: " + VERSION + "\nBuild Info: " + BUILD_INFO);
+  server->on("/info", [this]() {
+    server->send(HTTP_CODE_OK, "text/plain", String("Chip ID: ") + chipIdStr + "\nFirmware Version: " + VERSION + "\nBuild Info: " + BUILD_INFO);
   });
 
-  server->onNotFound([&]() {
+  server->onNotFound([this]() {
     if (!handleRequestedFile(server->uri()))
       server->send(HTTP_CODE_NOT_FOUND, "text/plain", "404 Not Found");
   });
