@@ -49,7 +49,7 @@ class LightHelper {
     Modes mode;
     Directions direction;
 
-    static const double blinkDuration = 800; // In milleseconds
+    static constexpr double blinkDuration = 800; // In milleseconds
 
     const int redIntensity;
     const int greenIntensity;
