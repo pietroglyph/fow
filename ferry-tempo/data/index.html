@@ -11,8 +11,8 @@
 </head>
 
 <body>
-  <div id="header">
-    <svg id="FERRY" class="FT centerLarge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 93.87">
+  <div class="header">
+    <svg class="logoLine ferry centerLarge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 93.87">
       <defs>
         <style>
           .a {
@@ -45,7 +45,7 @@
       </path>
     </svg>
 
-    <svg id="TEMPO" class="FT centerLarge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 93.87">
+    <svg class="logoLine tempo centerLarge" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 288 93.87">
       <defs>
         <style>
           .a {
@@ -82,7 +82,7 @@
     <p id="infoBox" class="slideUpFade" aria-hidden="true"></p>
   </div>
 
-  <div id="title">
+  <div class="title">
     <h1 class="kernIn">FerryClock Guided Set Up</h1>
   </div>
 
@@ -102,7 +102,7 @@
     </div>
     <div class="step hidden">
       <h1><label for="networks">Select a WiFi Network</label></h1>
-      <select id="networks" class="focusMe" size="8" onblur="window.ssidSelectorOnChange(this.options[this.selectedIndex])" disabled>
+      <select id="networks" class="focusMe" size="8" onfocus="this.selectedIndex = 0;" onblur="window.ssidSelectorOnChange(this.options[this.selectedIndex])" disabled>
         <option>Loading...</option>
         <!-- More networks added here by js -->
       </select>

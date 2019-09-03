@@ -17,7 +17,7 @@ html {
     min-width: 350px;
   }
 
-  #header {
+  .header {
     width: 100%;
     height: 175px;
     margin: 0;
@@ -27,7 +27,7 @@ html {
     overflow: hidden;
   }
 
-  #title {
+  .title {
     width: auto;
     height: 40px;
     margin: 0;
@@ -37,17 +37,7 @@ html {
     animation: OpacityFadeIn 1s 1s both;
   }
 
-  .Footer {
-    position: absolute;
-    bottom: 20px;
-    left: 0;
-    width: 100%;
-    height: auto;
-    text-align: center;
-    animation: OpacityFadeIn 7s 7s both;
-  }
-
-  .FT {
+  .logoLine {
     height: 70%;
     position: absolute;
     margin: auto;
@@ -58,25 +48,19 @@ html {
     transition: all 200ms linear;
   }
 
-  .FT.centerLarge {
+  .logoLine.centerLarge {
     height: 80%;
     left: 0;
   }
 
-  #FERRY {
+  .logoLine.ferry {
     animation: SplashAnimR 2s;
     transform: translateZ(0);
     backface-visibility: hidden;
   }
 
-  #TEMPO {
+  .logoLine.tempo {
     animation: SplashAnimL 2.5s 0s both;
-  }
-
-
-  #FOW {
-    bottom: 0;
-    width: 90%;
   }
 
   h1 {
@@ -242,10 +226,13 @@ html {
   }
 
   #infoBox {
-    transition: all 400ms linear;
+    overflow-y: auto;
+    margin-top: 12px;
     width: 35%;
+    height: calc(100% - 12px);
     color: black;
     font-family: monospace;
+    transition: all 400ms linear;
   }
 
   .hidden {
@@ -406,6 +393,10 @@ html {
     #back {
         width: 20%;
     }
+
+    #infoBox {
+      width: 45%;
+    }
   }
 
   @media only screen and (max-width: 430px) {
@@ -415,13 +406,13 @@ html {
   }
 
   @media only screen and (max-width: 520px) {
-      .FT {
+      .logoLine {
           height: 40%;
       }
   }
 
   @media only screen and (min-width: 1040px) {
-      .FT {
+      .logoLine {
           height: 80%;
           left: 0;
       }

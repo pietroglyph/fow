@@ -72,54 +72,75 @@ window.onload = () => {
         ssidSelector.disabled = true;
         ssidNextButton.disabled = true;
 
-        fetch("/networks").then(r => r.text().then(body => {
-            if (!body) {
-                dispNoNetworksFound();
-                return;
+        fetch("/networks").then(r => {
+            if (!r.ok) {
+                return Promise.reject(r.statusText);
             }
 
-            let lines = body.split("\n");
-            if (lines.length <= 1) {
-                dispNoNetworksFound();
-                return;
-            }
+            r.text().then(body => {
+                if (!body) {
+                    dispNoNetworksFound();
+                    return;
+                }
 
+                let lines = body.split("\n");
+                if (lines.length <= 1) {
+                    dispNoNetworksFound();
+                    return;
+                }
+
+                ssidSelector.innerHTML = "";
+                ssidSelector.disabled = false;
+                ssidSelector.onchange = (s) => {
+                    window.ssidSelectorOnChange(s.explicitOriginalTarget);
+                };
+                ssidSelector.onclick = () => {
+                    window.ssidSelectorOnChange(ssidSelector.options[ssidSelector.selectedIndex]);
+                };
+
+                let openNetworksList = lines[0].split(",");
+                for (let i = 1; i < lines.length; i++) {
+                    if (lines[i] == "") continue;
+
+                    let passwordRequired = true;
+                    for (const openIdx of openNetworksList)
+                        if (new String(i - 1) == openIdx) passwordRequired = false;
+
+                    let newOption = document.createElement("option");
+                    newOption.dataset.passwordRequired = passwordRequired;
+                    newOption.dataset.ssid = lines[i];
+                    newOption.textContent = (passwordRequired ? "🔒" : "") + lines[i];
+                    ssidSelector.appendChild(newOption);
+                }
+            });
+        }).catch(error => {
             ssidSelector.innerHTML = "";
-            ssidSelector.disabled = false;
-            ssidSelector.onchange = (s) => {
-                window.ssidSelectorOnChange(s.explicitOriginalTarget);
-            };
-            ssidSelector.onclick = () => {
-                window.ssidSelectorOnChange(ssidSelector.options[ssidSelector.selectedIndex]);
-            };
 
-            let openNetworksList = lines[0].split(",");
-            for (let i = 1; i < lines.length; i++) {
-                if (lines[i] == "") continue;
+            let errorIndicatorOption = document.createElement("option");
+            errorIndicatorOption.style.color = "red";
+            errorIndicatorOption.textContent = `Scanning failed (${error})... Are you still connected to the setup access point?`;
+            ssidSelector.appendChild(errorIndicatorOption);
 
-                let passwordRequired = true;
-                for (const openIdx of openNetworksList)
-                    if (new String(i - 1) == openIdx) passwordRequired = false;
-
-                ssidSelector.innerHTML += `<option data-password-required="${passwordRequired}" data-ssid="${lines[i]}">${lines[i]} ${passwordRequired ? "🔒" : ""}</option>`;
-            }
-        })).catch(error => {
-            ssidSelector.innerHTML = `<option style="color: red;">Scanning failed (${error})... Are you still connected to the setup access point?</option>`;
+            ssidSelector.selectedIndex = 0;
         });
     };
     rescan();
 
     let infoBox = document.querySelector("#infoBox");
     fetch("/info").then(r => {
-        infoBox.innerText = "(c) Declan Freeman-Gleason and other contributors. This software is licensed under the GNU GPL v3 or above. See /LICENSE.\n\n"
-        if (r.ok) r.text().then(text => infoBox.innerText += text);
-        else infoBox.innerText += "Couldn't get info from /info. Are you connected?";
+        infoBox.innerHTML =
+            `(c) Declan Freeman-Gleason and other contributors.
+             This software is licensed under the GNU GPL v3 or above.
+             <a href="/LICENSE">See the full license</a>.
+             <br><br>`;
+        if (r.ok) r.text().then(text => infoBox.innerHTML += text.replace("\n", "<br>"));
+        else infoBox.innerHTML += "Couldn't get info from /info. Are you connected?";
     });
 
     document.querySelector("#infoButton").onclick = () => {
         infoBox.classList.toggle("slideUpFade");
 
-        let logos = document.querySelectorAll(".FT");
+        let logos = document.querySelectorAll(".logoLine");
         for (const e of logos)
             e.classList.toggle("centerLarge");
     };
