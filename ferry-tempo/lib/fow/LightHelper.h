@@ -17,17 +17,16 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef FerryHelper_h
-#define FerryHelper_h
+#ifndef LightHelper_h
+#define LightHelper_h
 
-#include <Wire.h>
+#include "Arduino.h"
 #include <vector>
-#include "Arduino.h" // XXX: I have no idea why this needs to be included
-#include <math.h>
+#include <cmath>
 
-class FerryHelper {
+class LightHelper {
   public:
-    FerryHelper(int arrivingPin, int departingPin, int redIntensity, int greenIntensity);
+    LightHelper(int arrivingPin, int departingPin, int redIntensity, int greenIntensity);
 
     enum class Modes {
       RUNNING,
@@ -42,11 +41,15 @@ class FerryHelper {
     void setMode(Modes mode);
     void setDirection(Directions direction);
     void setupPins();
+    static int getPulsingIntensity(int maxIntensity) {
+      double scaledLightIntensity = (static_cast<double>(maxIntensity)) / 2.0;
+      return round(std::sin(static_cast<double>(millis()) / (blinkDuration / PI)) * scaledLightIntensity + scaledLightIntensity);
+    };
   private:
     Modes mode;
     Directions direction;
 
-    const double blinkDuration = 800; // In milleseconds
+    static const double blinkDuration = 800; // In milleseconds
 
     const int redIntensity;
     const int greenIntensity;

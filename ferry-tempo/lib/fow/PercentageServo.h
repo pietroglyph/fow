@@ -21,7 +21,6 @@
 #define PercentageServo_h
 
 #include <Servo.h>
-#include <math.h>
 
 class PercentageServo : public Servo {
   public:

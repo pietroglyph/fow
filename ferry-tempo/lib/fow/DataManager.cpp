@@ -57,11 +57,11 @@ void DataManager::update(String rawDataString) {
     progress.startTimeOffset = std::strtoul(response.at(2).c_str(), nullptr, 0);
 
     const String directionString = response.at(3);
-    if (directionString == "DEPARTING") progress.direction = FerryHelper::Directions::DEPARTING;
-    else if (directionString == "ARRIVING") progress.direction = FerryHelper::Directions::ARRIVING;
+    if (directionString == "DEPARTING") progress.direction = LightHelper::Directions::DEPARTING;
+    else if (directionString == "ARRIVING") progress.direction = LightHelper::Directions::ARRIVING;
     else {
       Serial.println(String("Unknown direction string of ") + directionString);
-      progress.direction = FerryHelper::Directions::DEPARTING;
+      progress.direction = LightHelper::Directions::DEPARTING;
     }
 
     progresses.push_back(progress);

@@ -21,16 +21,16 @@
 
 #include "ServoClockOutputManager.h"
 
-ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity) : servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition), primaryLights(FerryHelper(5, 14, redIntensity, greenIntensity)), secondaryLights(FerryHelper(4, 12, redIntensity, greenIntensity)) {
+ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity) :
+  servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition),
+  // Below magic numbers are the light pins
+  primaryLights(LightHelper(5, 14, redIntensity, greenIntensity)),
+  secondaryLights(LightHelper(4, 12, redIntensity, greenIntensity)) {
+
   // These magic numbers are the servo GPIO pins
   primaryServo.attach(13);
   secondaryServo.attach(0);
-  primaryServo.write(0.5);
-  secondaryServo.write(0.5);
 
-  // These magic numbers are the pins for the lights (departing, arriving, light intensity)
-  // primaryLights = FerryHelper(5, 14, redIntensity, greenIntensity);
-  // secondaryLights = FerryHelper(4, 12, redIntensity, greenIntensity);
   primaryLights.setupPins();
   secondaryLights.setupPins();
 
@@ -39,14 +39,30 @@ ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMi
   analogWrite(departingDockLightPin, 0);
   analogWrite(arrivingDockLightPin, 0);
 
-  primaryLights.setDirection(FerryHelper::Directions::ARRIVING);
-  secondaryLights.setDirection(FerryHelper::Directions::DEPARTING);
+  primaryLights.setDirection(LightHelper::Directions::ARRIVING);
+  secondaryLights.setDirection(LightHelper::Directions::DEPARTING);
 
-  updateLightMode(FerryHelper::Modes::DISCONNECTED);
+  updateLightMode(LightHelper::Modes::DISCONNECTED);
+
+  calibrationStartTime = millis();
 }
 
 void ServoClockOutputManager::calibrate() {
-  updateLightMode(FerryHelper::Modes::DISCONNECTED);
+  updateLightMode(LightHelper::Modes::DISCONNECTED);
+
+  int intensity = LightHelper::getPulsingIntensity(dockLightIntensity);
+  analogWrite(departingDockLightPin, intensity);
+  analogWrite(arrivingDockLightPin, intensity);
+
+  double calibrationSegment = static_cast<double>(millis() - calibrationStartTime) / calibrationHoldTime;
+  double pos = 0.5;
+  if (calibrationSegment <= 1)
+    pos = 0.25;
+  else if (calibrationSegment <= 2)
+    pos = 0.75;
+
+  primaryServo.write(pos);
+  secondaryServo.write(pos);
 
   state = OutputManagerInterface::States::RUNNING; // We can't track servo progress, so we just go straight to RUNNING
 }
@@ -68,16 +84,16 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
   analogWrite(arrivingDockLightPin, arrivingDockLightVal * dockLightIntensity);
 }
 
-void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, PercentageServo &servo, FerryHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal) {
+void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, PercentageServo &servo, LightHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal) {
   if (data.progress == 0 || data.progress == 1) {
-    lights.setMode(FerryHelper::Modes::DOCKED);
+    lights.setMode(LightHelper::Modes::DOCKED);
     if (data.progress == 0) arrivingDockLightVal = 1;
     else if (data.progress == 1) departingDockLightVal = 1;
     
     digitalWrite(servo.getPin(), LOW);
   }
   else {
-    lights.setMode(FerryHelper::Modes::RUNNING);
+    lights.setMode(LightHelper::Modes::RUNNING);
     servo.write(1 - data.progress);
   }
 
@@ -85,7 +101,7 @@ void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, P
   lights.update();
 }
 
-void ServoClockOutputManager::updateLightMode(FerryHelper::Modes mode) {
+void ServoClockOutputManager::updateLightMode(LightHelper::Modes mode) {
   primaryLights.setMode(mode);
   secondaryLights.setMode(mode);
   primaryLights.update();

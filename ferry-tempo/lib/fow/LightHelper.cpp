@@ -17,11 +17,12 @@
     along with this Ferries Over Winslow.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include "FerryHelper.h"
+#include "LightHelper.h"
+#include "Wire.h"
 
-FerryHelper::FerryHelper(int departingPin, int arrivingPin, int redIntensity, int greenIntensity) : departingPin(departingPin), arrivingPin(arrivingPin), redIntensity(redIntensity), greenIntensity(greenIntensity) {}
+LightHelper::LightHelper(int departingPin, int arrivingPin, int redIntensity, int greenIntensity) : departingPin(departingPin), arrivingPin(arrivingPin), redIntensity(redIntensity), greenIntensity(greenIntensity) {}
 
-void FerryHelper::update() {
+void LightHelper::update() {
   switch (mode) {
     case Modes::RUNNING :
       // Assumes that ARRIVING == red light
@@ -43,23 +44,22 @@ void FerryHelper::update() {
         maxIntensity = redIntensity;
       }
       
-      double scaledLightIntensity = (static_cast<double>(maxIntensity)) / 2.0;
-      double pulsingIntensity = sin(static_cast<double>(millis()) / (blinkDuration / PI)) * scaledLightIntensity + scaledLightIntensity;
+      double pulsingIntensity = getPulsingIntensity(maxIntensity);
       if (this->direction == Directions::ARRIVING) analogWrite(arrivingPin, pulsingIntensity);
       else analogWrite(departingPin, pulsingIntensity);
       break;
   }
 }
 
-void FerryHelper::setupPins() {
+void LightHelper::setupPins() {
   pinMode(arrivingPin, OUTPUT);
   pinMode(departingPin, OUTPUT);
 }
 
-void FerryHelper::setMode(Modes mode) {
+void LightHelper::setMode(Modes mode) {
   this->mode = mode;
 }
 
-void FerryHelper::setDirection(Directions direction) {
+void LightHelper::setDirection(Directions direction) {
   this->direction = direction;
 }

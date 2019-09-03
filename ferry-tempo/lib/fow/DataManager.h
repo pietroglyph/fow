@@ -23,7 +23,7 @@
 #include <vector>
 #include <float.h> // for finding the maximum capacity of doubles
 #include <Arduino.h>
-#include "FerryHelper.h"
+#include "LightHelper.h"
 
 class DataManager {
   public:
@@ -31,7 +31,7 @@ class DataManager {
 
     typedef struct {
       double progress = 0;
-      FerryHelper::Directions direction;
+      LightHelper::Directions direction;
     } FerryData;
 
     const unsigned long refreshRate = 5000; // in milliseconds
@@ -44,7 +44,7 @@ class DataManager {
       unsigned long startTimeOffset = 0;
       double start = 0;
       double end = 0;
-      FerryHelper::Directions direction;
+      LightHelper::Directions direction;
     } Progress;
 
     unsigned long lastUpdated = 0;

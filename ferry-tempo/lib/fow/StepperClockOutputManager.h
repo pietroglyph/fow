@@ -23,7 +23,7 @@
 #define StepperClockOutputManager_h
 
 #include <functional>
-#include "FerryHelper.h"
+#include "LightHelper.h"
 #include "OutputManagerInterface.h"
 #include <Wire.h>
 #include <AccelStepper.h>
@@ -46,11 +46,11 @@ class StepperClockOutputManager : public OutputManagerInterface {
     const unsigned long recalibrationOverdriveTime = 1000; // In milleseconds
     const uint8_t steppingMode = DOUBLE;
 
-    void updateLightMode(FerryHelper::Modes mode);
-    void updateOutput(DataManager::FerryData data, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, FerryHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal, unsigned long* recalibrationTime);
+    void updateLightMode(LightHelper::Modes mode);
+    void updateOutput(DataManager::FerryData data, AccelStepper* stepper, Adafruit_StepperMotor* rawStepper, LightHelper* lights, int* departingDockLightVal, int* arrivingDockLightVal, unsigned long* recalibrationTime);
 
-    FerryHelper* primaryLights;
-    FerryHelper* secondaryLights;
+    LightHelper* primaryLights;
+    LightHelper* secondaryLights;
     OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
     Adafruit_MotorShield motorShield;
     Adafruit_StepperMotor* primaryAdafruitStepper = NULL;

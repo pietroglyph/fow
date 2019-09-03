@@ -18,6 +18,7 @@
 */
 
 #include "PercentageServo.h"
+#include <cmath>
 
 PercentageServo::PercentageServo(int minimumPosition, int maximumPosition, boolean isInverted) : isInverted(isInverted) {
   this->minimumPosition = static_cast<double>(minimumPosition);

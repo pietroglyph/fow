@@ -23,7 +23,7 @@
 #define ServoClockOutputManager_h
 
 #include <functional>
-#include "FerryHelper.h"
+#include "LightHelper.h"
 #include "OutputManagerInterface.h"
 #include <Wire.h>
 #include "PercentageServo.h"
@@ -41,13 +41,16 @@ class ServoClockOutputManager : public OutputManagerInterface {
     const int departingDockLightPin = 2;
     const int arrivingDockLightPin = 15;
 
-    void updateLightMode(FerryHelper::Modes mode);
-    void updateOutput(const DataManager::FerryData &data, PercentageServo &servo, FerryHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal);
+    const unsigned long calibrationHoldTime = 2000; // Milliseconds
+    unsigned long calibrationStartTime = 0;
+
+    void updateLightMode(LightHelper::Modes mode);
+    void updateOutput(const DataManager::FerryData &data, PercentageServo &servo, LightHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal);
 
     PercentageServo primaryServo = PercentageServo(servoMinPosition, servoMaxPosition, false);
     PercentageServo secondaryServo = PercentageServo(servoMinPosition, servoMaxPosition, false);
-    FerryHelper primaryLights;
-    FerryHelper secondaryLights;
+    LightHelper primaryLights;
+    LightHelper secondaryLights;
     OutputManagerInterface::States state = OutputManagerInterface::States::UNCALIBRATED;
 };
 
