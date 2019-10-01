@@ -58,7 +58,7 @@ If you still cannot connect to the setup network (the name should look something
 
 If you still cannot find the network, please [create a new issue](https://github.com/pietroglyph/fow/issues/new) with a description of your problem. (Note: if you are more technically inclined then you might try looking at the serial output before you open an issue).
 ### The setup page doesn't open
-If the setup page doesn't open automatically on your device, and you've tried conecting to both [setup.ferries-over-winslow.org](http://setup.ferries-over-winslow.org) and [192.168.4.1](http://192.168.4.1), then you should make sure that you're connected to setup WiFi network and within range. Also make sure that no other devices are connected to the setup WiFi network (more than a few connected devices can overload the microcontroller).
+If the setup page doesn't open automatically on your device, and you've tried conecting to both [setup.ferrytempo.com](http://setup.ferrytempo.com) and [192.168.4.1](http://192.168.4.1), then you should make sure that you're connected to setup WiFi network and within range. Also make sure that no other devices are connected to the setup WiFi network (more than a few connected devices can overload the microcontroller).
 
 If none of the above work then you should try connecting to the setup WiFi network from a different device and a different web browser. If that doesn't work then you should [create a new issue](https://github.com/pietroglyph/fow/issues/new) with a description of your problem.
 ### I can't connect my device to my home WiFi network
