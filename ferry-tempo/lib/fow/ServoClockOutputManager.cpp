@@ -90,9 +90,16 @@ void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, P
     if (data.progress == 0) arrivingDockLightVal = 1;
     else if (data.progress == 1) departingDockLightVal = 1;
     
-    digitalWrite(servo.getPin(), LOW);
+    if (dockStartTime == 0) {
+      dockStartTime = millis();
+    } else if (millis() - dockStartTime <= dockZeroingTime) {
+      servo.write(1 - data.progress);
+    } else {
+      digitalWrite(servo.getPin(), LOW);
+    }
   }
   else {
+    dockStartTime = 0;
     lights.setMode(LightHelper::Modes::RUNNING);
     servo.write(1 - data.progress);
   }

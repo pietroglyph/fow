@@ -77,6 +77,10 @@ var (
 )
 
 func progressHandler(w http.ResponseWriter, r *http.Request) {
+	if config.dumpUserAgents {
+		log.Println("Progress request from", r.UserAgent())
+	}
+
 	data.updateMux.RLock()
 
 	lastRequestTimeMux.Lock()

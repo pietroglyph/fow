@@ -62,8 +62,8 @@ type configuration struct {
 	minimumFerries           int
 	debugMode                bool
 	debugPagePath            string
-	maxDataStaleness         float64
 	updatesDirectory         string
+	dumpUserAgents           bool
 }
 
 var (
@@ -85,7 +85,7 @@ func main() {
 	flag.IntVarP(&config.minimumFerries, "minimum-ferries", "m", 2, "The server will ensure that it returns values (default or otherwise) for at least this number of ferries.")
 	flag.BoolVar(&config.debugMode, "debug", false, "Serve a debugging page on /debug.")
 	flag.StringVar(&config.debugPagePath, "debug-path", "./debug.html", "Path to the debug.html file.")
-	flag.Float64VarP(&config.maxDataStaleness, "max-staleness", "S", 18, "Maximum staleness of WSF data, in seconds (setting this to nonnegative values will enable staleness compensation, which may increase update frequency)")
+	flag.BoolVar(&config.dumpUserAgents, "dump-user-agents", false, "If true we will dump all user agents to stdout.")
 	flag.StringVarP(&config.updatesDirectory, "updates-dir", "U", "", "Specify a directory where updates are kept. Their names should be in the format \"<VERSION>@<UPDATE CHANNEL>:<HARDWARE REVISION>:<TYPE>.bin\"")
 	flag.Parse()
 

@@ -23,6 +23,7 @@
 #include "Arduino.h"
 #include <vector>
 #include <cmath>
+#include <tuple>
 
 class LightHelper {
   public:
@@ -43,18 +44,20 @@ class LightHelper {
     void setupPins();
     static int getPulsingIntensity(int maxIntensity) {
       double scaledLightIntensity = (static_cast<double>(maxIntensity)) / 2.0;
-      return round(std::sin(static_cast<double>(millis()) / (blinkDuration / PI)) * scaledLightIntensity + scaledLightIntensity);
+
+      return round(std::sin(static_cast<double>(millis()) / (pulseDuration / PI)) * scaledLightIntensity + scaledLightIntensity);
     };
   private:
     Modes mode;
     Directions direction;
+    int lastGetPulsingIntensity = 0;
 
-    static constexpr double blinkDuration = 800; // In milleseconds
+    static constexpr double pulseDuration = 800; // In milleseconds
 
     const int redIntensity;
     const int greenIntensity;
-    const int arrivingPin;
-    const int departingPin;
+    const uint8_t arrivingPin;
+    const uint8_t departingPin;
 };
 
 #endif

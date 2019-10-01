@@ -43,10 +43,21 @@ void LightHelper::update() {
       if (this->direction == Directions::ARRIVING) {
         maxIntensity = redIntensity;
       }
-      
-      double pulsingIntensity = getPulsingIntensity(maxIntensity);
-      if (this->direction == Directions::ARRIVING) analogWrite(arrivingPin, pulsingIntensity);
-      else analogWrite(departingPin, pulsingIntensity);
+
+      int pulsingIntensity = getPulsingIntensity(maxIntensity);
+      if (pulsingIntensity < lastGetPulsingIntensity) {
+        this->direction =
+          (this->direction == Directions::ARRIVING) ? Directions::DEPARTING : Directions::ARRIVING;
+      }
+      lastGetPulsingIntensity = pulsingIntensity;
+
+      if (this->direction == Directions::ARRIVING) {
+         analogWrite(arrivingPin, pulsingIntensity);
+         analogWrite(departingPin, LOW);
+      } else {
+         analogWrite(arrivingPin, LOW);
+         analogWrite(departingPin, pulsingIntensity);
+      }
       break;
   }
 }

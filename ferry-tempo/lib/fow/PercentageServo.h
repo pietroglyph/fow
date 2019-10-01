@@ -24,7 +24,7 @@
 
 class PercentageServo : public Servo {
   public:
-    PercentageServo(int minimumPosition, int maximumPosition, boolean isInverted);
+    PercentageServo(int minimumPosition, int maximumPosition, bool isInverted);
     void write(int value) = delete;
     void write(double percentage);
     int getPin();
@@ -32,7 +32,7 @@ class PercentageServo : public Servo {
   private:
     int pin;
     double minimumPosition, maximumPosition, range;
-    boolean isInverted;
+    bool isInverted;
 };
 
 #endif

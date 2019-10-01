@@ -56,19 +56,6 @@ func (d *ferryData) keepUpdated(wsfClient *wsf.Client) {
 		d.locations = vesselLocations
 		d.updateMux.Unlock()
 
-		// Attempt to keep ourselves relatively synchronized with the WSF server
-		// (they say they update every 15 seconds, which means wost case is 30
-		// seconds off, which isn't really great and makes for a jerky user experience)
-		// XXX: Assumes that the TimeStamp of vessel 0 is the same as that of all others
-		if config.maxDataStaleness > 0 && len(*vesselLocations) >= 1 {
-			requestDurationAgo := time.Now().Sub(time.Time((*vesselLocations)[0].TimeStamp))
-			if requestDurationAgo > time.Duration(config.maxDataStaleness)*time.Second {
-				log.Println("Data is stale by", requestDurationAgo, "seconds, catching up...")
-				time.Sleep(time.Duration(requestDurationAgo.Seconds()+likelyRequestDelayMs) * time.Second)
-				ticker = makeNewTicker()
-				continue
-			}
-		}
 		<-ticker.C
 	}
 }

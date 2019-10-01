@@ -2,6 +2,7 @@ package main
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -39,6 +40,10 @@ func updateHandler(w http.ResponseWriter, r *http.Request) {
 	if !ok {
 		http.Error(w, "Update of that channel, hardware revision, or type not found", http.StatusBadRequest)
 		return
+	}
+
+	if config.dumpUserAgents {
+		log.Println("Got valid update check from", r.UserAgent(), "(Full version header is "+r.Header.Get(versionHeader)+")")
 	}
 
 	if selectedUpdateInfo.version == updateInfo[0] {

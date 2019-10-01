@@ -41,6 +41,8 @@ class ServoClockOutputManager : public OutputManagerInterface {
     const int departingDockLightPin = 2;
     const int arrivingDockLightPin = 15;
 
+    const unsigned long dockZeroingTime = 500;      // Milliseconds
+    unsigned long dockStartTime = 0;
     const unsigned long calibrationHoldTime = 2000; // Milliseconds
     unsigned long calibrationStartTime = 0;
 
