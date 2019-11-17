@@ -11,4 +11,8 @@ fi
 OUT="$OUT-"$(git symbolic-ref --short -q HEAD || echo "detached")
 OUT="$OUT"$(git diff-index --quiet HEAD -- || echo "-dirty")
 
-echo "-DVERSION=\"\\\"$OUT\\\"\""
+if [[ "$1" != "--raw" ]]; then
+	echo "-DVERSION=\"\\\"$OUT\\\"\""
+else
+	echo "$OUT"
+fi
