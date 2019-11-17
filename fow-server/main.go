@@ -81,7 +81,7 @@ func main() {
 	flag.IntVar(&config.secondaryTerminal, "secondary-terminal", 7, "The other terminal on the route. Must match with the route.")                    // 7 is Seattle
 	flag.Float64VarP(&config.updateFrequency, "update", "u", 15, "Frequency in seconds to update data from the REST API.")
 	flag.Float64VarP(&config.idleAfter, "idle", "i", 60, "Time in seconds after an update to stop updating.")
-	flag.Float64VarP(&config.subdividedSegmentMaxSize, "segment-size", "s", 10e-6, "The minimum size of a segment on the subdivided reference ferry path. The smaller the smoother and more accurate the estimates.")
+	flag.Float64VarP(&config.subdividedSegmentMaxSize, "segment-size", "s", 10e-6, "The maximum size of a segment on the subdivided reference ferry path. The smaller the smoother and more accurate the estimates.")
 	flag.IntVarP(&config.minimumFerries, "minimum-ferries", "m", 2, "The server will ensure that it returns values (default or otherwise) for at least this number of ferries.")
 	flag.BoolVar(&config.debugMode, "debug", false, "Serve a debugging page on /debug.")
 	flag.StringVar(&config.debugPagePath, "debug-path", "./debug.html", "Path to the debug.html file.")

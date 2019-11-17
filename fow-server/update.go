@@ -25,6 +25,10 @@ type updateInfo struct {
 }
 
 func updateHandler(w http.ResponseWriter, r *http.Request) {
+	if config.dumpUserAgents {
+		log.Println("Got request on /updates: ", r.Header)
+	}
+
 	if r.URL.Query().Get(typeQueryKey) == "" {
 		http.Error(w, "Invalid type query parameter", http.StatusBadRequest)
 		return

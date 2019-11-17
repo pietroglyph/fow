@@ -21,11 +21,12 @@
 
 #include "ServoClockOutputManager.h"
 
-ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity) :
+ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity, std::tuple<bool, bool> servosReversed) :
   servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition),
   // Below magic numbers are the light pins
   primaryLights(LightHelper(5, 14, redIntensity, greenIntensity)),
-  secondaryLights(LightHelper(4, 12, redIntensity, greenIntensity)) {
+  secondaryLights(LightHelper(4, 12, redIntensity, greenIntensity)),
+  servosReversed(servosReversed) {
 
   // These magic numbers are the servo GPIO pins
   primaryServo.attach(13);
@@ -77,14 +78,18 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
   int arrivingDockLightVal = 0;
 
   // We know which index is which because these are always ordered the same by the server
-  updateOutput(dataSupplier(0), primaryServo, primaryLights, departingDockLightVal, arrivingDockLightVal);
-  updateOutput(dataSupplier(1), secondaryServo, secondaryLights, departingDockLightVal, arrivingDockLightVal);
+  updateOutput(dataSupplier(0), primaryServo, primaryLights, departingDockLightVal, arrivingDockLightVal, std::get<0>(servosReversed));
+  updateOutput(dataSupplier(1), secondaryServo, secondaryLights, departingDockLightVal, arrivingDockLightVal, std::get<1>(servosReversed));
 
   analogWrite(departingDockLightPin, departingDockLightVal * dockLightIntensity);
   analogWrite(arrivingDockLightPin, arrivingDockLightVal * dockLightIntensity);
 }
 
-void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, PercentageServo &servo, LightHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal) {
+void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, PercentageServo &servo, LightHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal, const bool servoReversed) {
+  auto getProgress = [&] {
+    return servoReversed ? data.progress : 1 - data.progress;
+  };
+
   if (data.progress == 0 || data.progress == 1) {
     lights.setMode(LightHelper::Modes::DOCKED);
     if (data.progress == 0) arrivingDockLightVal = 1;
@@ -93,7 +98,7 @@ void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, P
     if (dockStartTime == 0) {
       dockStartTime = millis();
     } else if (millis() - dockStartTime <= dockZeroingTime) {
-      servo.write(1 - data.progress);
+      servo.write(getProgress());
     } else {
       digitalWrite(servo.getPin(), LOW);
     }
@@ -101,7 +106,7 @@ void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, P
   else {
     dockStartTime = 0;
     lights.setMode(LightHelper::Modes::RUNNING);
-    servo.write(1 - data.progress);
+    servo.write(getProgress());
   }
 
   lights.setDirection(data.direction);
