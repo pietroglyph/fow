@@ -24,6 +24,11 @@ LightHelper::LightHelper(int departingPin, int arrivingPin, int redIntensity, in
 
 void LightHelper::update() {
   switch (mode) {
+    case Modes::OFF :
+      analogWrite(arrivingPin, LOW);
+      analogWrite(departingPin, LOW);
+      break;
+    case Modes::SELF_TEST :
     case Modes::RUNNING :
       // Assumes that ARRIVING == red light
       if (this->direction == Directions::ARRIVING) {
@@ -39,18 +44,15 @@ void LightHelper::update() {
       analogWrite(departingPin, LOW);
       break;
     case Modes::DISCONNECTED :
+      // The idea here is to switch between the two lights as fast as we can to give the appearance of them both being on at once
+      this->direction = this->direction == Directions::ARRIVING ? Directions::DEPARTING : Directions::ARRIVING;
+
       double maxIntensity = greenIntensity;
       if (this->direction == Directions::ARRIVING) {
         maxIntensity = redIntensity;
       }
 
-      int pulsingIntensity = getPulsingIntensity(maxIntensity);
-      if (pulsingIntensity < lastGetPulsingIntensity) {
-        this->direction =
-          (this->direction == Directions::ARRIVING) ? Directions::DEPARTING : Directions::ARRIVING;
-      }
-      lastGetPulsingIntensity = pulsingIntensity;
-
+      double pulsingIntensity = getPulsingIntensity(maxIntensity);
       if (this->direction == Directions::ARRIVING) {
          analogWrite(arrivingPin, pulsingIntensity);
          analogWrite(departingPin, LOW);

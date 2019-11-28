@@ -91,6 +91,7 @@ class ConnectionManager {
       return "text/plain";
     };
 
+    void downloadAndFlashUpdates();
     bool handleRequestedFile(String path);
     void connectToWiFiNetwork(bool noTimeout = false);
 };

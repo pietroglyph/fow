@@ -32,7 +32,9 @@ class LightHelper {
     enum class Modes {
       RUNNING,
       DOCKED,
-      DISCONNECTED
+      DISCONNECTED,
+      SELF_TEST,
+      OFF
     };
     enum class Directions {
       DEPARTING, ARRIVING
@@ -42,15 +44,15 @@ class LightHelper {
     void setMode(Modes mode);
     void setDirection(Directions direction);
     void setupPins();
-    static int getPulsingIntensity(int maxIntensity) {
-      double scaledLightIntensity = (static_cast<double>(maxIntensity)) / 2.0;
+    static double getPulsingIntensity(int maxIntensity) {
+      double scaledMaxIntensity = static_cast<double>(maxIntensity) / 2.0;
+      double percentIntensity = std::sin(static_cast<double>(millis()) / (pulseDuration / PI));
 
-      return round(std::sin(static_cast<double>(millis()) / (pulseDuration / PI)) * scaledLightIntensity + scaledLightIntensity);
+      return round(percentIntensity * scaledMaxIntensity + scaledMaxIntensity);
     };
   private:
     Modes mode;
     Directions direction;
-    int lastGetPulsingIntensity = 0;
 
     static constexpr double pulseDuration = 800; // In milleseconds
 

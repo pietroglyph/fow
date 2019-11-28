@@ -44,7 +44,7 @@ class ServoClockOutputManager : public OutputManagerInterface {
 
     const unsigned long dockZeroingTime = 500;      // Milliseconds
     unsigned long dockStartTime = 0;
-    const unsigned long calibrationHoldTime = 2000; // Milliseconds
+    const double calibrationHoldTime = 2000; // Milliseconds
     unsigned long calibrationStartTime = 0;
 
     void updateLightMode(LightHelper::Modes mode);

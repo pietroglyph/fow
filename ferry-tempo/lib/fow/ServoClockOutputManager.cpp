@@ -49,21 +49,53 @@ ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMi
 }
 
 void ServoClockOutputManager::calibrate() {
-  updateLightMode(LightHelper::Modes::DISCONNECTED);
-
-  int intensity = LightHelper::getPulsingIntensity(dockLightIntensity);
-  analogWrite(departingDockLightPin, intensity);
-  analogWrite(arrivingDockLightPin, intensity);
+  std::tuple<double, double> intensities{0, 0};
+  std::tuple<double, double> positions{0.5, 0.5};
 
   double calibrationSegment = static_cast<double>(millis() - calibrationStartTime) / calibrationHoldTime;
-  double pos = 0.5;
-  if (calibrationSegment <= 1)
-    pos = 0.25;
-  else if (calibrationSegment <= 2)
-    pos = 0.75;
+  if (calibrationSegment <= 1) {
+    std::get<0>(positions) = std::get<0>(servosReversed) ? 0.25 : 0.75;
+    std::get<1>(intensities) = dockLightIntensity;
+    primaryLights.setDirection(LightHelper::Directions::ARRIVING);
+  } else if (calibrationSegment <= 2) {
+    std::get<0>(positions) = std::get<0>(servosReversed) ? 0.75 : 0.25;
+    std::get<0>(intensities) = dockLightIntensity;
+    primaryLights.setDirection(LightHelper::Directions::DEPARTING);
+  } else if (calibrationSegment <= 3) {
+    // Let everything come back home
+    updateLightMode(LightHelper::Modes::OFF);
+  } else if (calibrationSegment <= 4) {
+    std::get<1>(positions) = std::get<1>(servosReversed) ? 0.25 : 0.75;
+    std::get<1>(intensities) = dockLightIntensity;
+    secondaryLights.setDirection(LightHelper::Directions::ARRIVING);
+  } else if (calibrationSegment <= 5) {
+    std::get<1>(positions) = std::get<1>(servosReversed) ? 0.75 : 0.25;
+    std::get<0>(intensities) = dockLightIntensity;
+    secondaryLights.setDirection(LightHelper::Directions::DEPARTING);
+  } else {
+    double intensity = LightHelper::getPulsingIntensity(dockLightIntensity);
+    std::get<1>(intensities) = intensity;
+    std::get<0>(intensities) = intensity;
+    updateLightMode(LightHelper::Modes::DISCONNECTED);
+  }
 
-  primaryServo.write(pos);
-  secondaryServo.write(pos);
+  if (calibrationSegment <= 2) {
+    primaryLights.setMode(LightHelper::Modes::SELF_TEST);
+    secondaryLights.setMode(LightHelper::Modes::OFF);
+    primaryLights.update();
+    secondaryLights.update();
+  } else if (calibrationSegment > 3 && calibrationSegment <= 5) {
+    primaryLights.setMode(LightHelper::Modes::OFF);
+    secondaryLights.setMode(LightHelper::Modes::SELF_TEST);
+    primaryLights.update();
+    secondaryLights.update();
+  }
+
+  primaryServo.write(std::get<0>(positions));
+  secondaryServo.write(std::get<1>(positions));
+
+  analogWrite(departingDockLightPin, std::get<0>(intensities));
+  analogWrite(arrivingDockLightPin, std::get<1>(intensities));
 
   state = OutputManagerInterface::States::RUNNING; // We can't track servo progress, so we just go straight to RUNNING
 }
@@ -86,7 +118,7 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
 }
 
 void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, PercentageServo &servo, LightHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal, const bool servoReversed) {
-  auto getProgress = [&] {
+  auto getOutputPercentage = [&servoReversed, &data] {
     return servoReversed ? data.progress : 1 - data.progress;
   };
 
@@ -98,15 +130,14 @@ void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, P
     if (dockStartTime == 0) {
       dockStartTime = millis();
     } else if (millis() - dockStartTime <= dockZeroingTime) {
-      servo.write(getProgress());
+      servo.write(getOutputPercentage());
     } else {
       digitalWrite(servo.getPin(), LOW);
     }
-  }
-  else {
+  } else {
     dockStartTime = 0;
     lights.setMode(LightHelper::Modes::RUNNING);
-    servo.write(getProgress());
+    servo.write(getOutputPercentage());
   }
 
   lights.setDirection(data.direction);

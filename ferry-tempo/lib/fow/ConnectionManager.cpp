@@ -193,26 +193,33 @@ void ConnectionManager::update() {
     dnsServer.processNextRequest();
     server->handleClient();
   } else if (isConnectedToWiFi() && millis() - lastUpdateAttempt >= updateCheckDelay) {
-    lastUpdateAttempt = millis();
-
-    ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW);
-
-    Serial.println("Checking for SPIFFS update...");
-    t_httpUpdate_return ret = ESPhttpUpdate.updateSpiffs(wifiClient, baseURL + updateSPIFFSPath, updateVersionHeader);
-    if (ret == HTTP_UPDATE_OK) Serial.println("SPIFFS update was successful.");
-    else if (ret == HTTP_UPDATE_NO_UPDATES) Serial.println("No new SPIFFS update found.");
-    else
-      Serial.printf("SPIFFS update failed: (%d) %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-
-    Serial.println("Checking for flash update...");
-    ret = ESPhttpUpdate.update(wifiClient, baseURL + updateFlashPath, updateVersionHeader);
-    if (ret == HTTP_UPDATE_FAILED) Serial.printf("Flash update failed: (%d) %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
-    else if (ret == HTTP_UPDATE_NO_UPDATES) Serial.println("No new flash update found.");
-  }
-  // Periodically attempt to reconnect if we're not in setup mode, and still disconnected.
-  else if (!isConnectedToWiFi() && millis() - lastPeriodicReconnectAttempt >= periodicReconnectDelay) {
+    downloadAndFlashUpdates();
+  } else if (!isConnectedToWiFi() && millis() - lastPeriodicReconnectAttempt >= periodicReconnectDelay) {
+    // Periodically attempt to reconnect if we're not in setup mode, and still disconnected.
     connectToWiFiNetwork();
   }
+}
+
+void ConnectionManager::downloadAndFlashUpdates() {
+  lastUpdateAttempt = millis();
+
+  ESPhttpUpdate.setLedPin(LED_BUILTIN, LOW);
+
+  Serial.println("Checking for SPIFFS update...");
+  t_httpUpdate_return ret = ESPhttpUpdate.updateSpiffs(wifiClient, baseURL + updateSPIFFSPath, updateVersionHeader);
+  if (ret == HTTP_UPDATE_OK)
+    Serial.println("SPIFFS update was successful.");
+  else if (ret == HTTP_UPDATE_NO_UPDATES)
+    Serial.println("No new SPIFFS update found.");
+  else
+    Serial.printf("SPIFFS update failed: (%d) %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+
+  Serial.println("Checking for flash update...");
+  ret = ESPhttpUpdate.update(wifiClient, baseURL + updateFlashPath, updateVersionHeader);
+  if (ret == HTTP_UPDATE_FAILED)
+    Serial.printf("Flash update failed: (%d) %s", ESPhttpUpdate.getLastError(), ESPhttpUpdate.getLastErrorString().c_str());
+  else if (ret == HTTP_UPDATE_NO_UPDATES)
+    Serial.println("No new flash update found.");
 }
 
 String ConnectionManager::get() {
