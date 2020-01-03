@@ -1,5 +1,23 @@
 # Ferries Over Winslow
-This is the code for robotic ferries running on a wire over a street, tracking the progress of the actual boats. There is also code here for miniature Arduino-powered ferries that have the same functionality as the large one.
+This is the code for electromechanical "ferry tracker clock" devices. This repository includes both the server, written in Go, and the client, which runs on an ESP8266 microcontroller and is written in C++. There are currently three non-prototype hardware revisions (and many more prototypes). Here are some pictures of the different models we've produced:
+
+<p align="center">
+ <strong>Mainsail v1</strong> (retail model)
+ <br>
+ <img src="https://raw.githubusercontent.com/pietroglyph/fow/master/readme_images/Mainsail_v1.jpeg" alt="The Mainsail v1 ferry tracker clock hardware revision" width="500px"/>
+ <br>
+ <strong>Kitty v2</strong> (kit model)
+ <br>
+ <img src="https://raw.githubusercontent.com/pietroglyph/fow/master/readme_images/Kitty_v2.jpg" alt="The Kitty v2 ferry tracker clock hardware revision" width="500px"/>
+ <br>
+ <strong>Kitty v1*</strong>
+ <br>
+ <img src="https://raw.githubusercontent.com/pietroglyph/fow/master/readme_images/Kitty_v1.jpg" alt="The Kitty v1 ferry tracker clock hardware revision" width="500px"/>
+</p>
+
+*Kitty v1 is no longer being sold as a kit.*
+
+
 ## Communication and Processing
 The code is based upon a client-server model. The client is a small microcontroller that controls actuators and sensors. It communicates over HTTP with a more powerful computer running the server.
 ## Server
