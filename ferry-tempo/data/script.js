@@ -11,7 +11,10 @@ var setupInfo = {
         this.networkRequiresPassword = true;
     },
     attemptConnection: function (onsuccess, onfailure) {
-        let url = `/connect?ssid=${this.ssid}&password=${this.password || ""}`;
+        let url = new URL(document.location.origin);
+        url.pathname = "/connect";
+        url.searchParams.set("ssid", this.ssid);
+        url.searchParams.set("password", this.password || "");
 
         fetch(url).catch(onfailure);
         let checkIsConnected = () => {
