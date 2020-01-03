@@ -29,8 +29,7 @@ void DataManager::update(String rawDataString) {
 
   endDurationAhead = std::atol(compositeResponse.back().c_str());
   if (endDurationAhead == -1) {
-    // -1 means that the data on the server is stale, so we set it up to check back soon
-    lastUpdated += refreshRate * 0.8;
+    // -1 means that the data on the server is stale
     return;
   }
   progresses.clear();
@@ -69,16 +68,19 @@ void DataManager::update(String rawDataString) {
 }
 
 bool DataManager::shouldUpdate() {
-  return !(millis() - lastUpdated < refreshRate);
+  return millis() - lastUpdated > refreshRate;
 }
 
 DataManager::FerryData DataManager::getProgress(unsigned int i) {
-  FerryData result;
+  FerryData result{};
 
   if (i >= progresses.size()) {
     Serial.println(String("Attempt to get progress of nonexistant ferry index ") + i);
+    result.isValid = false;
     return result; // Empty struct, see definition for default values
   }
+
+  result.isNew = (millis() - lastUpdated) < isNewDuration;
 
   Progress progress = progresses.at(i);
   result.direction = progress.direction;
@@ -86,8 +88,17 @@ DataManager::FerryData DataManager::getProgress(unsigned int i) {
     result.progress = progress.start;
     return result; // If the offset is zero, then the ferry is docked
   }
-  long double percentPerMsec = (progress.end - progress.start) / endDurationAhead;
-  result.progress = ((static_cast<long double>(millis()) - (lastUpdated - progress.startTimeOffset)) * percentPerMsec) + progress.start;
 
+  if (PREVENT_BUZZING) {
+    result.progress = progress.start;
+    return result;
+  }
+
+  // Care must be taken here to:
+  // a. Avoid narrowing conversions (hence the use of Uniform Initialization).
+  // b. Avoid truncating when casting. This isn't much of a problem because unsigned long (uint32) fits within a double (real64).
+  double percentPerMsec{(progress.end - progress.start) / static_cast<double>(endDurationAhead)};
+  double msecSinceUpdate{millis() - (lastUpdated - progress.startTimeOffset)};
+  result.progress = double{(msecSinceUpdate * percentPerMsec) + progress.start};
   return result;
 }

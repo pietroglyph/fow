@@ -31,10 +31,12 @@ class DataManager {
 
     typedef struct {
       double progress = 0;
-      LightHelper::Directions direction;
+      LightHelper::Directions direction{};
+      bool isNew = false;
+      bool isValid = true;
     } FerryData;
 
-    const unsigned long refreshRate = 5000; // in milliseconds
+    const unsigned long refreshRate = PREVENT_BUZZING ? 15000 : 5000; // in milliseconds
 
     void update(String rawDataString);
     bool shouldUpdate();
@@ -47,9 +49,11 @@ class DataManager {
       LightHelper::Directions direction;
     } Progress;
 
+    static constexpr unsigned long isNewDuration = 500; // in milleseconds
+
     unsigned long lastUpdated = 0;
     std::vector<Progress> progresses;
-    long endDurationAhead = 5000; // The end's progress is 5 seconds ahead of the first. This is the default value, but it is changed based on server output
+    long endDurationAhead = 5000; // The end's progress is 5000 ms ahead of the first. This is the default value, but it is changed based on server output
 
     std::vector<String> split(const String& text, char sep) const {
       std::vector<String> tokens;

@@ -34,7 +34,7 @@ ConnectionManager::ConnectionManager(const String programName) : name(programNam
     ssid = settingsManager.getSetting(SettingsManager::Setting::SSID);
     password = settingsManager.getSetting(SettingsManager::Setting::PASSWORD);
 
-    Serial.printf("Saved credentials found. SSID: %s, Password: %s.\n", ssid.c_str(), password.c_str());
+    Serial.printf("Saved credentials found. SSID: %s\n", ssid.c_str());
 
     WiFi.softAPdisconnect(true); // Make sure that we don't broadcast
     connectToWiFiNetwork();

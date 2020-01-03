@@ -48,7 +48,7 @@ void loop() {
     if (data->shouldUpdate()) data->update(conn->get());
     output->update([](int ferryIndex) {
       return data->getProgress(ferryIndex);
-    }); // We wrap this in a lambda because std::function won't take a member function
+    });
   } else {
     output->calibrate();
   }

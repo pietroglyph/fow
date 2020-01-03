@@ -21,7 +21,7 @@
 
 #include "ServoClockOutputManager.h"
 
-ServoClockOutputManager::ServoClockOutputManager(int servMaxPosition, int servMinPosition, int redIntensity, int greenIntensity, std::tuple<bool, bool> servosReversed) :
+ServoClockOutputManager::ServoClockOutputManager(const int servMaxPosition, const int servMinPosition, const int redIntensity, const int greenIntensity, const std::tuple<bool, bool> servosReversed) :
   servoMaxPosition(servMaxPosition), servoMinPosition(servMinPosition),
   // Below magic numbers are the light pins
   primaryLights(LightHelper(5, 14, redIntensity, greenIntensity)),
@@ -54,22 +54,22 @@ void ServoClockOutputManager::calibrate() {
 
   double calibrationSegment = static_cast<double>(millis() - calibrationStartTime) / calibrationHoldTime;
   if (calibrationSegment <= 1) {
-    std::get<0>(positions) = std::get<0>(servosReversed) ? 0.25 : 0.75;
+    std::get<0>(positions) = std::get<0>(servosReversed) ? 0 : 1;
     std::get<1>(intensities) = dockLightIntensity;
     primaryLights.setDirection(LightHelper::Directions::ARRIVING);
   } else if (calibrationSegment <= 2) {
-    std::get<0>(positions) = std::get<0>(servosReversed) ? 0.75 : 0.25;
+    std::get<0>(positions) = std::get<0>(servosReversed) ? 1 : 0;
     std::get<0>(intensities) = dockLightIntensity;
     primaryLights.setDirection(LightHelper::Directions::DEPARTING);
   } else if (calibrationSegment <= 3) {
     // Let everything come back home
     updateLightMode(LightHelper::Modes::OFF);
   } else if (calibrationSegment <= 4) {
-    std::get<1>(positions) = std::get<1>(servosReversed) ? 0.25 : 0.75;
+    std::get<1>(positions) = std::get<1>(servosReversed) ? 0 : 1;
     std::get<1>(intensities) = dockLightIntensity;
     secondaryLights.setDirection(LightHelper::Directions::ARRIVING);
   } else if (calibrationSegment <= 5) {
-    std::get<1>(positions) = std::get<1>(servosReversed) ? 0.75 : 0.25;
+    std::get<1>(positions) = std::get<1>(servosReversed) ? 1 : 0;
     std::get<0>(intensities) = dockLightIntensity;
     secondaryLights.setDirection(LightHelper::Directions::DEPARTING);
   } else {
@@ -117,27 +117,31 @@ void ServoClockOutputManager::update(std::function<DataManager::FerryData (int)>
   analogWrite(arrivingDockLightPin, arrivingDockLightVal * dockLightIntensity);
 }
 
-void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, PercentageServo &servo, LightHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal, const bool servoReversed) {
+void ServoClockOutputManager::updateOutput(const DataManager::FerryData &data, PercentageServo &servo, LightHelper &lights, int &departingDockLightVal, int &arrivingDockLightVal, const bool servoReversed) {  
   auto getOutputPercentage = [&servoReversed, &data] {
     return servoReversed ? data.progress : 1 - data.progress;
   };
 
-  if (data.progress == 0 || data.progress == 1) {
+  if (!data.isValid) {
+    lights.setMode(LightHelper::Modes::OFF);
+    digitalWrite(servo.getPin(), LOW);
+  } else if (data.progress == 0 || data.progress == 1) {
     lights.setMode(LightHelper::Modes::DOCKED);
     if (data.progress == 0) arrivingDockLightVal = 1;
     else if (data.progress == 1) departingDockLightVal = 1;
     
-    if (dockStartTime == 0) {
-      dockStartTime = millis();
-    } else if (millis() - dockStartTime <= dockZeroingTime) {
+    if (data.isNew) {
       servo.write(getOutputPercentage());
     } else {
       digitalWrite(servo.getPin(), LOW);
     }
   } else {
-    dockStartTime = 0;
     lights.setMode(LightHelper::Modes::RUNNING);
-    servo.write(getOutputPercentage());
+    if (!PREVENT_BUZZING || data.isNew) {
+      servo.write(getOutputPercentage());
+    } else {
+      digitalWrite(servo.getPin(), LOW);
+    }
   }
 
   lights.setDirection(data.direction);
